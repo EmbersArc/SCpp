@@ -13,9 +13,9 @@ class ode_dPhidt{
 public:
     ode_dPhidt(const Vector3d &u_t, const Vector3d &u_t1, const double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
 
-    void operator()(const MatrixXd &V, MatrixXd &dVdt, double t){
+    void operator()(const MatrixXd &V, MatrixXd &dVdt, const double t){
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
-        cout << dVdt.cols() << dVdt.rows() << endl;
+        cout << dVdt.cols() << dVdt.rows() << endl;  //prints 00 instead of 1415
         dVdt.col(0) = sigma * f(V.col(0), u);
         dVdt.rightCols(14) = A(V.col(0), u, sigma) * V.rightCols(14);
 
@@ -28,7 +28,7 @@ class ode_dVdt{
 public:
     ode_dVdt(const Vector3d &u_t, const Vector3d &u_t1, const double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
 
-    void operator()(const MatrixXd &V, MatrixXd &dVdt, double t){
+    void operator()(const MatrixXd &V, MatrixXd &dVdt, const double t){
 
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
 
@@ -41,12 +41,12 @@ public:
 
         ode_dPhidt dPhidt(u_t, u_t1, sigma);
         integrate_const(stepper, dPhidt, Phi_A_xi, t, dt, dt/10.);
-        dVdt.block<14, 1>(0, 0) = sigma * f(dVdt.col(0), u);
+        dVdt.block<14, 1>(0, 0) = sigma * f(V.col(0), u);
         dVdt.block<14, 14>(0, 1) = A(V.col(0), u, sigma) * Phi_A_xi.block<14,14>(0,1);
         dVdt.block<14, 3>(0, 15) = Phi_A_xi.block<14,14>(0,1) * B(V.col(0), u, sigma) * alpha;
         dVdt.block<14, 3>(0, 18) = Phi_A_xi.block<14,14>(0,1) * B(V.col(0), u, sigma) * beta;
         dVdt.block<14, 1>(0, 21) = Phi_A_xi.block<14,14>(0,1) * f(V.col(0), u);
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi.block<14,14>(0,1) * (-A(V.col(0), u, sigma) * V.row(0).transpose() - B(V.col(0), u, sigma) * u);
+        dVdt.block<14, 1>(0, 22) = Phi_A_xi.block<14,14>(0,1) * (-A(V.col(0), u, sigma) * V.col(0) - B(V.col(0), u, sigma) * u);
     }
 };
 
