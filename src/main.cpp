@@ -9,7 +9,6 @@ runge_kutta_dopri5<MatrixXd, double, MatrixXd, double, vector_space_algebra> ste
 class ode_dPhidt{
     double sigma;
     Vector3d u_t, u_t1;
-
 public:
     ode_dPhidt(const Vector3d &u_t, const Vector3d &u_t1, const double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
 
@@ -37,10 +36,13 @@ public:
 
         MatrixXd Phi_A_xi(14,15);
         Phi_A_xi.col(0) = V.col(0);
-        Phi_A_xi.block<14,14>(0, 1).setIdentity();
+        Phi_A_xi.rightCols(14).setIdentity();
 
-        ode_dPhidt dPhidt(u_t, u_t1, sigma);
-        integrate_const(stepper, dPhidt, Phi_A_xi, t, dt, dt/10.);
+        //ode_dPhidt dPhidt(u_t, u_t1, sigma);
+        //integrate_const(stepper, dPhidt, Phi_A_xi, t, dt, dt/10.);
+        
+        cout << dVdt.cols() << dVdt.rows() << endl;  //prints 00 instead of 1415
+
         dVdt.block<14, 1>(0, 0) = sigma * f(V.col(0), u);
         dVdt.block<14, 14>(0, 1) = A(V.col(0), u, sigma) * Phi_A_xi.block<14,14>(0,1);
         dVdt.block<14, 3>(0, 15) = Phi_A_xi.block<14,14>(0,1) * B(V.col(0), u, sigma) * alpha;

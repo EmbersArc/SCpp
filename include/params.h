@@ -8,6 +8,7 @@
 #include <Eigen/Core>
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
+#include <boost/numeric/odeint/algebra/vector_space_algebra.hpp>
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -21,7 +22,7 @@ typedef Matrix<double, 14, 14> Matrix14d;
 typedef Matrix<double, 14, 3> Matrix14x3d;
 
 //trajectory points
-unsigned int K = 50;
+const unsigned int K = 50;
 double dt = 1 / 50;
 
 int iterations = 15;
