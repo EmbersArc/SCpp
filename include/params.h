@@ -3,12 +3,11 @@
 
 #include <iostream>
 #include <cmath>
+#include <ctime>
 
 #include <Eigen/Dense>
-#include <Eigen/Core>
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
-#include <boost/numeric/odeint/algebra/vector_space_algebra.hpp>
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -22,10 +21,10 @@ typedef Matrix<double, 14, 14> Matrix14d;
 typedef Matrix<double, 14, 3> Matrix14x3d;
 
 //trajectory points
-const unsigned int K = 50;
-double dt = 1 / 50;
+const int K = 50;
+double dt = 1 / double(K-1);
 
-int iterations = 15;
+const int iterations = 15;
 
 double sigma_guess = 2.;
 
@@ -54,9 +53,11 @@ double alpha_m = 0.02;
 
 //A matrix
 Matrix14d A(Vector14d x, Vector3d u, double sigma){
+
     double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24;
     double t25, t26, t27, t28, t29, t30, t31, t32;
     Matrix14d A;
+    A.setZero();
     t2 = 1.0/(x[0]*x[0]);
     t3 = 1.0/x[0];
     t4 = x[10]*x[10];
@@ -136,56 +137,26 @@ Matrix14d A(Vector14d x, Vector3d u, double sigma){
     A(12, 13) = -t29*(t32-J_B[2]*x[11]);
     A(13, 11) = -t31*(t30-J_B[0]*x[12]);
     A(13, 12) = t31*(t32-J_B[1]*x[11]);
+
     return sigma * A;
 }
+
 //B matrix
 Matrix14x3d B(Vector14d x, Vector3d u, double sigma){
-    double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24;
+
     Matrix14x3d B;
-    t2 = fabs(u[0]);
-    t3 = fabs(u[1]);
-    t4 = fabs(u[2]);
-    t5 = t2*t2;
-    t6 = t3*t3;
-    t7 = t4*t4;
-    t8 = t5+t6+t7;
-    t9 = 1.0/sqrt(t8);
-    t10 = 1.0/x[0];
-    t11 = x[7]*x[10]*2.0;
-    t12 = x[8]*x[9]*2.0;
-    t13 = x[10]*x[10];
-    t14 = t13*2.0;
-    t15 = x[7]*x[9]*2.0;
-    t16 = x[7]*x[8]*2.0;
-    t17 = x[9]*x[10]*2.0;
-    t18 = x[8]*x[8];
-    t19 = t18*2.0;
-    t20 = x[9]*x[9];
-    t21 = t20*2.0;
-    t22 = 1.0/J_B[0];
-    t23 = 1.0/J_B[1];
-    t24 = 1.0/J_B[2];
-    B(0, 0) = -alpha_m*t2*t9*((u[0]/fabs(u[0])));
-    B(0, 1) = -alpha_m*t3*t9*((u[1]/fabs(u[1])));
-    B(0, 2) = -alpha_m*t4*t9*((u[2]/fabs(u[2])));
-    B(4, 0) = -t10*(t14+t21-1.0);
-    B(4, 1) = t10*(t11+t12);
-    B(4, 2) = -t10*(t15-x[8]*x[10]*2.0);
-    B(5, 0) = -t10*(t11-t12);
-    B(5, 1) = -t10*(t14+t19-1.0);
-    B(5, 2) = t10*(t16+t17);
-    B(6, 0) = t10*(t15+x[8]*x[10]*2.0);
-    B(6, 1) = -t10*(t16-t17);
-    B(6, 2) = -t10*(t19+t21-1.0);
-    B(11, 1) = -r_T_B[2]*t22;
-    B(11, 2) = r_T_B[1]*t22;
-    B(12, 0) = r_T_B[2]*t23;
-    B(12, 2) = -r_T_B[0]*t23;
-    B(13, 0) = -r_T_B[1]*t24;
-    B(13, 1) = r_T_B[0]*t24;
+    B.setZero();
+    B.row(0) << -alpha_m*u[0]/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
+    B.row(4) << -(2*pow(x[9],2) + 2*pow(x[10],2) - 1)/x[0], (2*x[7]*x[10] + 2*x[8]*x[9])/x[0], -(2*x[7]*x[9] - 2*x[8]*x[10])/x[0];
+    B.row(5) << -(2*x[7]*x[10] - 2*x[8]*x[9])/x[0], -(2*pow(x[8],2) + 2*pow(x[10],2) - 1)/x[0], (2*x[7]*x[8] + 2*x[9]*x[10])/x[0];
+    B.row(6) << (2*x[7]*x[9] + 2*x[8]*x[10])/x[0], -(2*x[7]*x[8] - 2*x[9]*x[10])/x[0], -(2*pow(x[8],2) + 2*pow(x[9],2) - 1)/x[0];
+    B.row(11) << 0., -r_T_B[2]/J_B[0], r_T_B[1]/J_B[0];
+    B.row(12) << r_T_B[2]/J_B[1], 0., -r_T_B[0]/J_B[1];
+    B.row(13) << -r_T_B[1]/J_B[2], r_T_B[0]/J_B[2], 0.;
 
     return sigma * B;
 }
+
 //f vector
 Vector14d f(Vector14d x, Vector3d u){
     Vector14d f;
