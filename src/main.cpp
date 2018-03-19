@@ -5,19 +5,24 @@ using namespace boost::numeric::odeint;
 
 typedef Matrix<double,14,23> state_type1;
 typedef Matrix<double,14,15> state_type2;
-runge_kutta_dopri5<state_type1, double, state_type1, double, vector_space_algebra> stepper1;
-runge_kutta_dopri5<state_type2, double, state_type2, double, vector_space_algebra> stepper2;
+
+AMatrix A;
+BMatrix B;
+fVector f;
 
 class ode_dPhidt{
     double sigma;
     Vector3d u_t, u_t1;
 public:
-    ode_dPhidt(const Vector3d &u_t, const Vector3d &u_t1, const double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
+    ode_dPhidt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
 
     void operator()(const state_type2 &V, state_type2 &dVdt, const double t){
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
-        dVdt.col(0) = sigma * f(V.col(0), u);
-        dVdt.rightCols(14) = A(V.col(0), u, sigma) * V.rightCols(14);
+        A.Update(V.col(0), u, sigma);
+        f.Update(V.col(0), u);
+
+        dVdt.col(0) = sigma * f();
+        dVdt.rightCols(14) = A() * V.rightCols(14);
     }
 };
 
@@ -25,11 +30,14 @@ class ode_dVdt{
     double sigma;
     Vector3d u_t, u_t1;
 public:
-    ode_dVdt(const Vector3d &u_t, const Vector3d &u_t1, const double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
+    ode_dVdt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
 
     void operator()(const state_type1 &V, state_type1 &dVdt, const double t){
         dVdt.setZero();
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
+        A.Update(V.col(0), u, sigma);
+        B.Update(V.col(0), u, sigma);
+        f.Update(V.col(0), u);
 
         double alpha = t / dt;
         double beta = 1 - alpha;
@@ -38,19 +46,21 @@ public:
         Phi_A_xi.rightCols(14).setIdentity();
 
         ode_dPhidt dPhidt(u_t, u_t1, sigma);
+        runge_kutta_dopri5<state_type2, double, state_type2, double, vector_space_algebra> stepper2;
         integrate_adaptive(make_controlled( 1E-12 , 1E-12 , stepper2 ), dPhidt, Phi_A_xi, t, dt, dt/5.);
 
-        dVdt.block<14, 1>(0, 0) = sigma * f(V.col(0), u);
-        dVdt.block<14, 14>(0, 1) = A(V.col(0), u, sigma) * Phi_A_xi.block<14,14>(0,1);
-        dVdt.block<14, 3>(0, 15) = Phi_A_xi.block<14,14>(0,1) * B(V.col(0), u, sigma) * alpha;
-        dVdt.block<14, 3>(0, 18) = Phi_A_xi.block<14,14>(0,1) * B(V.col(0), u, sigma) * beta;
-        dVdt.block<14, 1>(0, 21) = Phi_A_xi.block<14,14>(0,1) * f(V.col(0), u);
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi.block<14,14>(0,1) * (-A(V.col(0), u, sigma) * V.col(0) - B(V.col(0), u, sigma) * u);
+        dVdt.block<14, 1>(0, 0) = sigma * f();
+        dVdt.block<14, 14>(0, 1) = A()* Phi_A_xi.block<14,14>(0,1);
+        dVdt.block<14, 3>(0, 15) = Phi_A_xi.block<14,14>(0,1) * B() * alpha;
+        dVdt.block<14, 3>(0, 18) = Phi_A_xi.block<14,14>(0,1) * B() * beta;
+        dVdt.block<14, 1>(0, 21) = Phi_A_xi.block<14,14>(0,1) * f();
+        dVdt.block<14, 1>(0, 22) = Phi_A_xi.block<14,14>(0,1) * (-A() * V.col(0) - B() * u);
 
     }
 };
 
 int main(){
+
 
     x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
     x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
@@ -90,6 +100,7 @@ int main(){
             V.block<14,14>(0, 1).setIdentity();
 
             ode_dVdt dVdt(U.col(k), U.col(k+1), sigma);
+            runge_kutta_dopri5<state_type1, double, state_type1, double, vector_space_algebra> stepper1;
             integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper1), dVdt, V, 0., dt, dt/5.);
 
         }
