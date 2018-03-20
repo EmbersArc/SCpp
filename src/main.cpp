@@ -11,10 +11,12 @@ BMatrix B;
 fVector f;
 
 class ode_dPhidt{
-    double sigma;
+private:
     Vector3d u_t, u_t1;
+    double sigma;
+
 public:
-    ode_dPhidt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
+    ode_dPhidt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(move(u_t)), u_t1(move(u_t1)), sigma(sigma){}
 
     void operator()(const state_type2 &V, state_type2 &dVdt, const double t){
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
@@ -22,15 +24,17 @@ public:
         f.Update(V.col(0), u);
 
         dVdt.col(0) = sigma * f();
-        dVdt.rightCols(14) = A() * V.rightCols(14);
+        dVdt.block<14, 14>(0, 1) = A() * V.block<14, 14>(0, 1);
     }
 };
 
 class ode_dVdt{
-    double sigma;
+private:
     Vector3d u_t, u_t1;
+    double sigma;
+
 public:
-    ode_dVdt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(u_t), u_t1(u_t1), sigma(sigma){}
+    ode_dVdt(Vector3d u_t, Vector3d u_t1, double sigma) : u_t(move(u_t)), u_t1(move(u_t1)), sigma(sigma){}
 
     void operator()(const state_type1 &V, state_type1 &dVdt, const double t){
         dVdt.setZero();
@@ -77,7 +81,7 @@ int main(){
         alpha2 = double(k)/K;
         X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
-        X.col(k).segment(7, 4) << 1, 0, 0, 0;
+        X.col(k).segment(7, 4) << 1., 0., 0., 0.;
         X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
         U.col(k) = X(0, k) * -g_I;
@@ -86,12 +90,21 @@ int main(){
     cout << "Initialization finished." << endl;
 
 //START SUCCESSIVE CONVEXIFICATION
-    double sigma = sigma_guess;
+    double sigma;
+    sigma = sigma_guess;
+
     state_type1 V;
+
+    vector<Matrix14d> A_bar(K);
+    vector<Matrix14x3d> B_bar(K);
+    vector<Matrix14x3d> C_bar(K);
+    vector<Vector14d> Sigma_bar(K);
+    vector<Vector14d> z_bar(K);
 
     for(int it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
+
         const clock_t begin_time = clock();
 
         for (int k = 0; k < K-1; k++) {
@@ -103,9 +116,14 @@ int main(){
             runge_kutta_dopri5<state_type1, double, state_type1, double, vector_space_algebra> stepper1;
             integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper1), dVdt, V, 0., dt, dt/5.);
 
+            A_bar[k] = V.block<14,14>(0, 1);
+            B_bar[k] = V.block<14,3>(0, 15);
+            C_bar[k] = V.block<14,3>(0, 18);
+            Sigma_bar[k] = V.block<14,1>(0, 21);
+            z_bar[k] = V.block<14,1>(0, 22);
         }
-        cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
+        cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
     }
 
