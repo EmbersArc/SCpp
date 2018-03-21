@@ -9,25 +9,6 @@ AMatrix A;
 BMatrix B;
 fVector f;
 
-class ode_dPhidt{
-private:
-    Vector3d u_t, u_t1;
-    double sigma;
-
-public:
-    ode_dPhidt(Vector3d u_t, Vector3d u_t1, double sigma):
-            u_t(move(u_t)), u_t1(move(u_t1)), sigma(sigma){}
-
-    void operator()(const state_type &V, state_type &dVdt, const double t){
-        Vector3d u = u_t + t / dt * (u_t1 - u_t);
-        A.Update(V.col(0), u, sigma);
-        f.Update(V.col(0), u);
-
-        dVdt.col(0) = sigma * f();
-        dVdt.block<14, 14>(0, 1) = A() * V.block<14, 14>(0, 1);
-    }
-};
-
 class ode_dVdt{
 private:
     Vector3d u_t, u_t1;
