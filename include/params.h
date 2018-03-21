@@ -16,9 +16,9 @@ using Eigen::Vector3d;
 using Eigen::Vector4d;
 using Eigen::Matrix;
 
-typedef Matrix<double, 14, 1> Vector14d;
-typedef Matrix<double, 14, 14> Matrix14d;
-typedef Matrix<double, 14, 3> Matrix14x3d;
+typedef Eigen::Matrix<double, 14, 1> Vector14d;
+typedef Eigen::Matrix<double, 14, 14> Matrix14d;
+typedef Eigen::Matrix<double, 14, 3> Matrix14x3d;
 
 //trajectory points
 const int K = 50;
@@ -26,7 +26,7 @@ double dt = 1 / double(K-1);
 
 const int iterations = 15;
 
-double sigma_guess = 2.;
+double sigma_guess = 3.;
 
 //initial state
 double m_wet = 2;
@@ -61,10 +61,11 @@ private:
 
 public:
     Matrix14d operator()(){
-            return sigma * A;
+        return A * sigma;
     }
 
-    void Update(Vector14d x, Vector3d u, double sigma){
+    void Update(const Vector14d &x, const Vector3d &u, const double &s){
+        sigma = s;
         A.setZero();
         t2 = 1.0/(x[0]*x[0]);
         t3 = 1.0/x[0];
@@ -156,10 +157,11 @@ private:
 
 public:
     Matrix14x3d operator()(){
-            return sigma * B;
+            return B * sigma;
     }
 
-    void Update(Vector14d x, Vector3d u, double sigma){
+    void Update(const Vector14d &x, const Vector3d &u, const double &s){
+        sigma = s;
         B.setZero();
         B.row(0) << -alpha_m*u[0]/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
         B.row(4) << -(2*pow(x[9],2) + 2*pow(x[10],2) - 1)/x[0], (2*x[7]*x[10] + 2*x[8]*x[9])/x[0], -(2*x[7]*x[9] - 2*x[8]*x[10])/x[0];
@@ -180,7 +182,7 @@ public:
             return f;
     }
 
-    void Update(Vector14d x, Vector3d u){
+    void Update(const Vector14d &x, const Vector3d &u){
         f <<
           -alpha_m * u.norm(),
                 x[4],
