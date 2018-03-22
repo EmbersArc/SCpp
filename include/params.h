@@ -10,11 +10,8 @@
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
 
 using namespace std;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::Vector3d;
-using Eigen::Vector4d;
-using Eigen::Matrix;
+using namespace Eigen;
+using namespace boost::numeric::odeint;
 
 typedef Eigen::Matrix<double, 14, 1> Vector14d;
 typedef Eigen::Matrix<double, 14, 14> Matrix14d;
