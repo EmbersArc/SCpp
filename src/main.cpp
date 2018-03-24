@@ -120,11 +120,12 @@ int main() {
             dVdt.Update(U.col(k), U.col(k+1), sigma, dt);
             integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper), dVdt, V, 0., dt, dt/10.);
 
-            A_bar[k] = V.block<14,14>(0, 1);
-            B_bar[k] = V.block<14,14>(0, 1) * V.block<14,3>(0, 15);
-            C_bar[k] = V.block<14,14>(0, 1) * V.block<14,3>(0, 18);
-            Sigma_bar[k] = V.block<14,14>(0, 1) * V.block<14,1>(0, 21);
-            z_bar[k] = V.block<14,14>(0, 1) * V.block<14,1>(0, 22);
+            size_t cols = 1;
+            A_bar[k]      =            V.block<Model::n_states,Model::n_states>(0, cols);   cols += Model::n_states;
+            B_bar[k]      = A_bar[k] * V.block<Model::n_states,Model::n_inputs>(0, cols);   cols += Model::n_inputs;
+            C_bar[k]      = A_bar[k] * V.block<Model::n_states,Model::n_inputs>(0, cols);   cols += Model::n_inputs;
+            Sigma_bar[k]  = A_bar[k] * V.block<Model::n_states,1>(0, cols);                 cols += 1;
+            z_bar[k]      = A_bar[k] * V.block<Model::n_states,1>(0, cols);
 
             // debug print for refactoring, remove later
             cout << A_bar[k] << endl;
