@@ -14,10 +14,15 @@ class model_landing_6dof {
 
 public:
 
-    using StateVector   = Eigen::Matrix<double, 14,  1>;
-    using ControlVector = Eigen::Matrix<double,  3,  1>;
-    using StateMatrix   = Eigen::Matrix<double, 14, 14>;
-    using ControlMatrix = Eigen::Matrix<double, 14,  3>;
+    static constexpr size_t n_states = 14;
+    static constexpr size_t n_inputs = 3;
+
+    using StateVector   = Eigen::Matrix<double, n_states,        1>;
+    using ControlVector = Eigen::Matrix<double, n_inputs,        1>;
+    using StateMatrix   = Eigen::Matrix<double, n_states, n_states>;
+    using ControlMatrix = Eigen::Matrix<double, n_states, n_inputs>;
+
+    double total_time_guess() { return 3; }
 
     void initialize(int K, MatrixXd &X, MatrixXd &U);
 

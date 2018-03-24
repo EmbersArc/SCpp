@@ -1,6 +1,7 @@
 #include "model_landing_6dof.h"
 
 #include <iostream>
+#include <array>
 #include <cmath>
 #include <ctime>
 
@@ -14,9 +15,6 @@ using namespace boost::numeric::odeint;
 using Model = model_landing_6dof;
 model_landing_6dof model;
 
-//trajectory points
-const int K = 50;
-double dt = 1 / double(K-1);
 
 const int iterations = 15;
 
@@ -24,11 +22,12 @@ typedef Eigen::Matrix<double,14,23> state_type;
 
 class ode_dVdt{
 private:
-    Vector3d u_t, u_t1;
-    double sigma;
+    Model::ControlVector u_t, u_t1;
+    double sigma, dt;
 
 public:
-    void Update(const Vector3d &u_t, const Vector3d &u_t1, const double &sigma){
+    void Update(const Model::ControlVector &u_t, const Model::ControlVector &u_t1, const double &sigma, double dt){
+        this->dt = dt;
         this->u_t = u_t;
         this->u_t1 = u_t1;
         this->sigma = sigma;
@@ -37,7 +36,7 @@ public:
     void operator()(const state_type &V, state_type &dVdt, const double t){
 
         const Model::StateVector &x = V.col(0);
-        const Vector3d u = u_t + t / dt * (u_t1 - u_t);
+        const Model::ControlVector u = u_t + t / dt * (u_t1 - u_t);
 
         const double alpha = t / dt;
         const double beta = 1. - alpha;
@@ -47,45 +46,59 @@ public:
         const Model::StateVector   f      =         model.ode(x, u);
 
 
-        Model::StateMatrix Phi_A_xi = V.block<14, 14>(0, 1);
+        Model::StateMatrix Phi_A_xi = V.block<Model::n_states, Model::n_states>(0, 1);
         Model::StateMatrix Phi_A_xi_inverse = Phi_A_xi.inverse();
 
-        dVdt.block<14, 1>(0, 0) = sigma * f;
-        dVdt.block<14, 14>(0, 1) = A_bar * Phi_A_xi;
-        dVdt.block<14, 3>(0, 15) = Phi_A_xi_inverse * B_bar * alpha;
-        dVdt.block<14, 3>(0, 18) = Phi_A_xi_inverse * B_bar * beta;
-        dVdt.block<14, 1>(0, 21) = Phi_A_xi_inverse * f;
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        size_t cols = 0;
+
+        dVdt.block<Model::n_states, 1>(0, cols) = sigma * f;
+        cols += 1;
+
+        dVdt.block<Model::n_states, Model::n_states>(0, cols) = A_bar * Phi_A_xi;
+        cols += Model::n_states;
+
+        dVdt.block<Model::n_states, Model::n_inputs>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
+        cols += Model::n_inputs;
+        
+        dVdt.block<Model::n_states, Model::n_inputs>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
+        cols += Model::n_inputs;
+        
+        dVdt.block<Model::n_states, 1>(0, cols) = Phi_A_xi_inverse * f;
+        cols += 1;
+        
+        dVdt.block<Model::n_states, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+
+        
 
     }
 };
 
 int main() {
 
-    MatrixXd X(14, K);
+    //trajectory points
+    constexpr int K = 50;
+    const double dt = 1 / double(K-1);
+
+    MatrixXd X(Model::n_states, K);
     MatrixXd U(3, K);
 
 
-//START INITIALIZATION
+    // START INITIALIZATION
     cout << "Starting initialization." << endl;
-
     model.initialize(K, X, U);
-
     cout << "Initialization finished." << endl;
 
-//START SUCCESSIVE CONVEXIFICATION
+    // START SUCCESSIVE CONVEXIFICATION
     
-    const double sigma_guess = 3.;// TODO from model
-    double sigma = sigma_guess;
+    double sigma = model.total_time_guess();
 
     state_type V;
 
-    // TODO array<> instead of vector<>
-    vector<Model::StateMatrix> A_bar(K);
-    vector<Model::ControlMatrix> B_bar(K);
-    vector<Model::ControlMatrix> C_bar(K);
-    vector<Model::StateVector> Sigma_bar(K);
-    vector<Model::StateVector> z_bar(K);
+    array<Model::StateMatrix,   K> A_bar;
+    array<Model::ControlMatrix, K> B_bar;
+    array<Model::ControlMatrix, K> C_bar;
+    array<Model::StateVector,   K> Sigma_bar;
+    array<Model::StateVector,   K> z_bar;
 
     runge_kutta_dopri5<state_type, double, state_type, double, vector_space_algebra> stepper;
     ode_dVdt dVdt;
@@ -99,9 +112,9 @@ int main() {
         for (int k = 0; k < K-1; k++) {
             V.setZero();
             V.col(0) = X.col(k);
-            V.block<14,14>(0, 1).setIdentity();
+            V.block<Model::n_states,Model::n_states>(0, 1).setIdentity();
 
-            dVdt.Update(U.col(k), U.col(k+1), sigma);
+            dVdt.Update(U.col(k), U.col(k+1), sigma, dt);
             integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper), dVdt, V, 0., dt, dt/10.);
 
             A_bar[k] = V.block<14,14>(0, 1);
