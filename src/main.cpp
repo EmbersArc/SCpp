@@ -26,19 +26,19 @@ public:
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
         A.Update(V.col(0), u, sigma);
         B.Update(V.col(0), u, sigma);
-        f.Update(V.col(0), u);
+        f.Update(V.col(0), u, sigma);
 
         alpha = t / dt;
         beta = 1. - alpha;
 
         Phi_A_xi = V.block<14, 14>(0, 1).inverse();
 
-        dVdt.block<14, 1>(0, 0) = sigma * f();
-        dVdt.block<14, 14>(0, 1) = A()* V.block<14, 14>(0, 1);
-        dVdt.block<14, 3>(0, 15) = Phi_A_xi * B() * alpha;
-        dVdt.block<14, 3>(0, 18) = Phi_A_xi * B() * beta;
-        dVdt.block<14, 1>(0, 21) = Phi_A_xi * f();
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi * (-A() * V.col(0) - B() * u);
+        dVdt.block<14, 1>(0, 0) = sigma * f.get_f();
+        dVdt.block<14, 14>(0, 1) = A.get_A()* V.block<14, 14>(0, 1);
+        dVdt.block<14, 3>(0, 15) = Phi_A_xi * B.get_B() * alpha;
+        dVdt.block<14, 3>(0, 18) = Phi_A_xi * B.get_B() * beta;
+        dVdt.block<14, 1>(0, 21) = Phi_A_xi * f.get_f();
+        dVdt.block<14, 1>(0, 22) = Phi_A_xi * (-A.get_A() * V.col(0) - B.get_B() * u);
 
     }
 };

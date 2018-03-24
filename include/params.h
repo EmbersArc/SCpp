@@ -39,7 +39,7 @@ private:
     Matrix14d A;
 
 public:
-    Matrix14d operator()(){
+    Matrix14d get_A(){
         return A * sigma;
     }
 
@@ -137,7 +137,7 @@ private:
     Matrix14x3d B;
 
 public:
-    Matrix14x3d operator()(){
+    Matrix14x3d get_B(){
         return B * sigma;
     }
 
@@ -159,11 +159,11 @@ private:
     Vector14d f;
 
 public:
-    Vector14d operator()(){
-            return f;
+    Vector14d get_f(){
+        return f;
     }
 
-    void Update(const Vector14d &x, const Vector3d &u){
+    void Update(const Vector14d &x, const Vector3d &u, const double &s){
         f <<
             -alpha_m * u.norm(),
             x[4],
