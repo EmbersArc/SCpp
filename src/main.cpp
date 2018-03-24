@@ -1,9 +1,24 @@
-#include "params.h"
 #include "model_landing_6dof.h"
 
-AMatrix A;
+#include <iostream>
+#include <cmath>
+#include <ctime>
 
-void foo(int i);
+#include <boost/numeric/odeint.hpp>
+#include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
+
+using namespace std;
+using namespace boost::numeric::odeint;
+
+
+using Model = model_landing_6dof;
+model_landing_6dof model;
+
+//trajectory points
+const int K = 50;
+double dt = 1 / double(K-1);
+
+const int iterations = 15;
 
 typedef Eigen::Matrix<double,14,23> state_type;
 
@@ -11,7 +26,6 @@ class ode_dVdt{
 private:
     Vector3d u_t, u_t1;
     double sigma;
-    double alpha, beta;
 
 public:
     void Update(const Vector3d &u_t, const Vector3d &u_t1, const double &sigma){
@@ -22,20 +36,19 @@ public:
 
     void operator()(const state_type &V, state_type &dVdt, const double t){
 
-        const Vector14d &x = V.col(0);
-        Vector3d u = u_t + t / dt * (u_t1 - u_t);
-        //A.Update(x, u);
+        const Model::StateVector &x = V.col(0);
+        const Vector3d u = u_t + t / dt * (u_t1 - u_t);
 
-        alpha = t / dt;
-        beta = 1. - alpha;
+        const double alpha = t / dt;
+        const double beta = 1. - alpha;
 
-        Matrix14d A_bar = sigma * A.get_A(x, u);
-        Matrix14x3d B_bar = sigma * A.get_B(x, u);
-        Vector14d f = A.get_f(x, u);
+        const Model::StateMatrix   A_bar  = sigma * model.state_jacobian(x, u);
+        const Model::ControlMatrix B_bar  = sigma * model.control_jacobian(x, u);
+        const Model::StateVector   f      =         model.ode(x, u);
 
 
-        Matrix14d Phi_A_xi = V.block<14, 14>(0, 1);
-        Matrix14d Phi_A_xi_inverse = Phi_A_xi.inverse();
+        Model::StateMatrix Phi_A_xi = V.block<14, 14>(0, 1);
+        Model::StateMatrix Phi_A_xi_inverse = Phi_A_xi.inverse();
 
         dVdt.block<14, 1>(0, 0) = sigma * f;
         dVdt.block<14, 14>(0, 1) = A_bar * Phi_A_xi;
@@ -49,8 +62,6 @@ public:
 
 int main() {
 
-    model_landing_6dof model;
-
     MatrixXd X(14, K);
     MatrixXd U(3, K);
 
@@ -63,16 +74,18 @@ int main() {
     cout << "Initialization finished." << endl;
 
 //START SUCCESSIVE CONVEXIFICATION
-    double sigma;
-    sigma = sigma_guess;
+    
+    const double sigma_guess = 3.;// TODO from model
+    double sigma = sigma_guess;
 
     state_type V;
 
-    vector<Matrix14d> A_bar(K);
-    vector<Matrix14x3d> B_bar(K);
-    vector<Matrix14x3d> C_bar(K);
-    vector<Vector14d> Sigma_bar(K);
-    vector<Vector14d> z_bar(K);
+    // TODO array<> instead of vector<>
+    vector<Model::StateMatrix> A_bar(K);
+    vector<Model::ControlMatrix> B_bar(K);
+    vector<Model::ControlMatrix> C_bar(K);
+    vector<Model::StateVector> Sigma_bar(K);
+    vector<Model::StateVector> z_bar(K);
 
     runge_kutta_dopri5<state_type, double, state_type, double, vector_space_algebra> stepper;
     ode_dVdt dVdt;
