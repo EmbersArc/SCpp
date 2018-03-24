@@ -25,22 +25,6 @@ const int iterations = 15;
 
 double sigma_guess = 3.;
 
-//initial state
-double m_wet = 2;
-Vector3d r_I_init(4., 4., 0.);
-Vector3d v_I_init(0., -2., -2.);
-Vector4d q_B_I_init(1.0, 0.0, 0.0, 0.0);
-Vector3d w_B_init(0., 0., 0.);
-VectorXd x_init(14);
-
-//final state
-double m_dry = 1;
-Vector3d r_I_final(0., 0., 0.);
-Vector3d v_I_final(-1e-1, 0., 0.);
-Vector4d q_B_I_final(1.0, 0.0, 0.0, 0.0);
-Vector3d w_B_final(0., 0., 0.);
-VectorXd x_final(14);
-
 //gravity vector
 Vector3d g_I(-1, 0, 0);
 Vector3d J_B(1e-2, 1e-2, 1e-2);
@@ -51,8 +35,6 @@ double alpha_m = 0.02;
 //A matrix
 class AMatrix{
 private:
-    double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24;
-    double t25, t26, t27, t28, t29, t30, t31, t32;
     double sigma;
     Matrix14d A;
 
@@ -62,6 +44,8 @@ public:
     }
 
     void Update(const Vector14d &x, const Vector3d &u, const double &s){
+        double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24;
+        double t25, t26, t27, t28, t29, t30, t31, t32;
         sigma = s;
         A.setZero();
         t2 = 1.0/(x[0]*x[0]);
@@ -154,7 +138,7 @@ private:
 
 public:
     Matrix14x3d operator()(){
-            return B * sigma;
+        return B * sigma;
     }
 
     void Update(const Vector14d &x, const Vector3d &u, const double &s){
@@ -181,23 +165,20 @@ public:
 
     void Update(const Vector14d &x, const Vector3d &u){
         f <<
-          -alpha_m * u.norm(),
-                x[4],
-                x[5],
-                x[6],
-                g_I[0] - (u[0] * (2 * pow(x[9], 2) + 2 * pow(x[10], 2) - 1)) / x[0] + (u[1] * (2 * x[7] * x[10] + 2 * x[8] * x[9])) / x[0] - (
-                                                                                                                                                     u[2] * (2 * x[7] * x[9] - 2 * x[8] * x[10])) / x[0],
-                g_I[1] - (u[1] * (2 * pow(x[8], 2) + 2 * pow(x[10], 2) - 1)) / x[0] - (u[0] * (2 * x[7] * x[10] - 2 * x[8] * x[9])) / x[0] + (
-                                                                                                                                                     u[2] * (2 * x[7] * x[8] + 2 * x[9] * x[10])) / x[0],
-                g_I[2] - (u[2] * (2 * pow(x[8], 2) + 2 * pow(x[9], 2) - 1)) / x[0] + (u[0] * (2 * x[7] * x[9] + 2 * x[8] * x[10])) / x[0] - (
-                                                                                                                                                    u[1] * (2 * x[7] * x[8] - 2 * x[9] * x[10])) / x[0],
-                - (x[8] * x[11]) / 2 - (x[9] * x[12]) / 2 - (x[10] * x[13]) / 2,
-                (x[7] * x[11]) / 2 + (x[9] * x[13]) / 2 - (x[10] * x[12]) / 2,
-                (x[7] * x[12]) / 2 - (x[8] * x[13]) / 2 + (x[10] * x[11]) / 2,
-                (x[7] * x[13]) / 2 + (x[8] * x[12]) / 2 - (x[9] * x[11]) / 2,
-                (r_T_B[1] * u[2] - r_T_B[2] * u[1] + J_B[1] * x[12] * x[13] - J_B[2] * x[12] * x[13]) / J_B[0],
-                - (r_T_B[0] * u[2] - r_T_B[2] * u[0] + J_B[0] * x[11] * x[13] - J_B[2] * x[11] * x[13]) / J_B[1],
-                (r_T_B[0] * u[1] - r_T_B[1] * u[0] + J_B[0] * x[11] * x[12] - J_B[1] * x[11] * x[12]) / J_B[2];
+            -alpha_m * u.norm(),
+            x[4],
+            x[5],
+            x[6],
+            g_I[0] - (u[0] * (2 * pow(x[9], 2) + 2 * pow(x[10], 2) - 1)) / x[0] + (u[1] * (2 * x[7] * x[10] + 2 * x[8] * x[9])) / x[0] - (u[2] * (2 * x[7] * x[9] - 2 * x[8] * x[10])) / x[0],
+            g_I[1] - (u[1] * (2 * pow(x[8], 2) + 2 * pow(x[10], 2) - 1)) / x[0] - (u[0] * (2 * x[7] * x[10] - 2 * x[8] * x[9])) / x[0] + (u[2] * (2 * x[7] * x[8] + 2 * x[9] * x[10])) / x[0],
+            g_I[2] - (u[2] * (2 * pow(x[8], 2) + 2 * pow(x[9], 2) - 1)) / x[0] + (u[0] * (2 * x[7] * x[9] + 2 * x[8] * x[10])) / x[0] - (u[1] * (2 * x[7] * x[8] - 2 * x[9] * x[10])) / x[0],
+            - (x[8] * x[11]) / 2 - (x[9] * x[12]) / 2 - (x[10] * x[13]) / 2,
+            (x[7] * x[11]) / 2 + (x[9] * x[13]) / 2 - (x[10] * x[12]) / 2,
+            (x[7] * x[12]) / 2 - (x[8] * x[13]) / 2 + (x[10] * x[11]) / 2,
+            (x[7] * x[13]) / 2 + (x[8] * x[12]) / 2 - (x[9] * x[11]) / 2,
+            (r_T_B[1] * u[2] - r_T_B[2] * u[1] + J_B[1] * x[12] * x[13] - J_B[2] * x[12] * x[13]) / J_B[0],
+            - (r_T_B[0] * u[2] - r_T_B[2] * u[0] + J_B[0] * x[11] * x[13] - J_B[2] * x[11] * x[13]) / J_B[1],
+            (r_T_B[0] * u[1] - r_T_B[1] * u[0] + J_B[0] * x[11] * x[12] - J_B[1] * x[11] * x[12]) / J_B[2];
 
     }
 };

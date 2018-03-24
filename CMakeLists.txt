@@ -17,4 +17,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_executable(OptimalLanding
     include/params.h
-    src/main.cpp)
+    src/main.cpp
+    include/model_landing_6dof.h
+    src/model_landing_6dof.cpp
+)

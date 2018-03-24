@@ -1,5 +1,5 @@
-#include <params.h>
-
+#include "params.h"
+#include "model_landing_6dof.h"
 
 AMatrix A;
 BMatrix B;
@@ -43,10 +43,9 @@ public:
     }
 };
 
-int main(){
+int main() {
 
-    x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-    x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
+    model_landing_6dof model;
 
     MatrixXd X(14, K);
     MatrixXd U(3, K);
@@ -54,17 +53,8 @@ int main(){
 
 //START INITIALIZATION
     cout << "Starting initialization." << endl;
-    double alpha1, alpha2;
-    for(int k=0; k<K; k++){
-        alpha1 = double(K-k)/K;
-        alpha2 = double(k)/K;
-        X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
-        X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
-        X.col(k).segment(7, 4) << 1., 0., 0., 0.;
-        X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
-        U.col(k) = X(0, k) * -g_I;
-    }
+    model.initialize(K, X, U);
 
     cout << "Initialization finished." << endl;
 
