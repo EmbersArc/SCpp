@@ -37,6 +37,8 @@ class AMatrix{
 private:
     double sigma;
     Matrix14d A;
+    Matrix14x3d B;
+    Vector14d f;
 
 public:
     Matrix14d get_A(){
@@ -127,21 +129,9 @@ public:
         A(12, 13) = -t29*(t32-J_B[2]*x[11]);
         A(13, 11) = -t31*(t30-J_B[0]*x[12]);
         A(13, 12) = t31*(t32-J_B[1]*x[11]);
-    }
-};
 
-//B matrix
-class BMatrix{
-private:
-    double sigma;
-    Matrix14x3d B;
 
-public:
-    Matrix14x3d get_B(){
-        return B * sigma;
-    }
 
-    void Update(const Vector14d &x, const Vector3d &u, const double &s){
         sigma = s;
         B.setZero();
         B.row(0) << -alpha_m*u[0]/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
@@ -151,19 +141,9 @@ public:
         B.row(11) << 0., -r_T_B[2]/J_B[0], r_T_B[1]/J_B[0];
         B.row(12) << r_T_B[2]/J_B[1], 0., -r_T_B[0]/J_B[1];
         B.row(13) << -r_T_B[1]/J_B[2], r_T_B[0]/J_B[2], 0.;
-    }
-};
-//f vector
-class fVector{
-private:
-    Vector14d f;
 
-public:
-    Vector14d get_f(){
-        return f;
-    }
 
-    void Update(const Vector14d &x, const Vector3d &u, const double &s){
+
         f <<
             -alpha_m * u.norm(),
             x[4],
@@ -179,8 +159,22 @@ public:
             (r_T_B[1] * u[2] - r_T_B[2] * u[1] + J_B[1] * x[12] * x[13] - J_B[2] * x[12] * x[13]) / J_B[0],
             - (r_T_B[0] * u[2] - r_T_B[2] * u[0] + J_B[0] * x[11] * x[13] - J_B[2] * x[11] * x[13]) / J_B[1],
             (r_T_B[0] * u[1] - r_T_B[1] * u[0] + J_B[0] * x[11] * x[12] - J_B[1] * x[11] * x[12]) / J_B[2];
-
     }
+
+
+
+
+
+    Matrix14x3d get_B(){
+        return B * sigma;
+    }
+
+
+
+    Vector14d get_f(){
+        return f;
+    }
+
 };
 
 #endif //OPTIMALLANDING_PARAMS_H

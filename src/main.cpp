@@ -2,8 +2,6 @@
 #include "model_landing_6dof.h"
 
 AMatrix A;
-BMatrix B;
-fVector f;
 
 typedef Eigen::Matrix<double,14,23> state_type;
 
@@ -25,20 +23,18 @@ public:
         dVdt.setZero();
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
         A.Update(V.col(0), u, sigma);
-        B.Update(V.col(0), u, sigma);
-        f.Update(V.col(0), u, sigma);
 
         alpha = t / dt;
         beta = 1. - alpha;
 
         Phi_A_xi = V.block<14, 14>(0, 1).inverse();
 
-        dVdt.block<14, 1>(0, 0) = sigma * f.get_f();
+        dVdt.block<14, 1>(0, 0) = sigma * A.get_f();
         dVdt.block<14, 14>(0, 1) = A.get_A()* V.block<14, 14>(0, 1);
-        dVdt.block<14, 3>(0, 15) = Phi_A_xi * B.get_B() * alpha;
-        dVdt.block<14, 3>(0, 18) = Phi_A_xi * B.get_B() * beta;
-        dVdt.block<14, 1>(0, 21) = Phi_A_xi * f.get_f();
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi * (-A.get_A() * V.col(0) - B.get_B() * u);
+        dVdt.block<14, 3>(0, 15) = Phi_A_xi * A.get_B() * alpha;
+        dVdt.block<14, 3>(0, 18) = Phi_A_xi * A.get_B() * beta;
+        dVdt.block<14, 1>(0, 21) = Phi_A_xi * A.get_f();
+        dVdt.block<14, 1>(0, 22) = Phi_A_xi * (-A.get_A() * V.col(0) - A.get_B() * u);
 
     }
 };
@@ -92,8 +88,15 @@ int main() {
             C_bar[k] = V.block<14,14>(0, 1) * V.block<14,3>(0, 18);
             Sigma_bar[k] = V.block<14,14>(0, 1) * V.block<14,1>(0, 21);
             z_bar[k] = V.block<14,14>(0, 1) * V.block<14,1>(0, 22);
+
+            // debug print for refactoring, remove later
+            cout << A_bar[k] << endl;
+            cout << B_bar[k] << endl;
+            cout << C_bar[k] << endl;
+            cout << Sigma_bar[k] << endl;
+            cout << z_bar[k] << endl;
         }
-        cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
+        //cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
         // TODO: Solve problem.
 
