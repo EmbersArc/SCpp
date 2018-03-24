@@ -79,8 +79,11 @@ int main() {
     constexpr int K = 50;
     const double dt = 1 / double(K-1);
 
-    MatrixXd X(Model::n_states, K);
-    MatrixXd U(3, K);
+    const size_t n_states = Model::n_states;
+    MatrixXd X(n_states, K);
+
+    const size_t n_inputs = Model::n_inputs;
+    MatrixXd U(n_inputs, K);
 
 
     // START INITIALIZATION
