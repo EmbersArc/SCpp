@@ -3,13 +3,14 @@
 
 AMatrix A;
 
+void foo(int i);
+
 typedef Eigen::Matrix<double,14,23> state_type;
 
 class ode_dVdt{
 private:
     Vector3d u_t, u_t1;
     double sigma;
-    Matrix14d Phi_A_xi;
     double alpha, beta;
 
 public:
@@ -20,21 +21,28 @@ public:
     }
 
     void operator()(const state_type &V, state_type &dVdt, const double t){
-        dVdt.setZero();
+
+        const Vector14d &x = V.col(0);
         Vector3d u = u_t + t / dt * (u_t1 - u_t);
-        A.Update(V.col(0), u, sigma);
+        //A.Update(x, u);
 
         alpha = t / dt;
         beta = 1. - alpha;
 
-        Phi_A_xi = V.block<14, 14>(0, 1).inverse();
+        Matrix14d A_bar = sigma * A.get_A(x, u);
+        Matrix14x3d B_bar = sigma * A.get_B(x, u);
+        Vector14d f = A.get_f(x, u);
 
-        dVdt.block<14, 1>(0, 0) = sigma * A.get_f();
-        dVdt.block<14, 14>(0, 1) = A.get_A()* V.block<14, 14>(0, 1);
-        dVdt.block<14, 3>(0, 15) = Phi_A_xi * A.get_B() * alpha;
-        dVdt.block<14, 3>(0, 18) = Phi_A_xi * A.get_B() * beta;
-        dVdt.block<14, 1>(0, 21) = Phi_A_xi * A.get_f();
-        dVdt.block<14, 1>(0, 22) = Phi_A_xi * (-A.get_A() * V.col(0) - A.get_B() * u);
+
+        Matrix14d Phi_A_xi = V.block<14, 14>(0, 1);
+        Matrix14d Phi_A_xi_inverse = Phi_A_xi.inverse();
+
+        dVdt.block<14, 1>(0, 0) = sigma * f;
+        dVdt.block<14, 14>(0, 1) = A_bar * Phi_A_xi;
+        dVdt.block<14, 3>(0, 15) = Phi_A_xi_inverse * B_bar * alpha;
+        dVdt.block<14, 3>(0, 18) = Phi_A_xi_inverse * B_bar * beta;
+        dVdt.block<14, 1>(0, 21) = Phi_A_xi_inverse * f;
+        dVdt.block<14, 1>(0, 22) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
 
     }
 };
