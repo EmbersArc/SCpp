@@ -7,7 +7,7 @@ execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DI
 
 
 set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-Wall -Wextra -Wpedantic -O1)
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -O1)
 
 find_package(Boost REQUIRED)   
 find_package(OpenMP REQUIRED)
@@ -26,8 +26,20 @@ link_libraries(ecos)
 
 add_executable(OptimalLanding
     src/main.cpp
+
     include/model_landing_6dof.h
-    src/model_landing_6dof.cpp
+        src/model_landing_6dof.cpp
+
     include/model_simple_4th_order.hpp
-    src/model_simple_4th_order.cpp
+        src/model_simple_4th_order.cpp
+
+    include/EcosWrapper.hpp
+        src/EcosWrapper.cpp
+)
+
+add_executable(test_ecos_wrapper
+    test/test_ecos_wrapper.cpp
+
+    include/EcosWrapper.hpp
+        src/EcosWrapper.cpp
 )
