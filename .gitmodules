@@ -2,3 +2,6 @@
 	path = eigen
     url = https://github.com/eigenteam/eigen-git-mirror.git
 	branch = 3.2.10
+[submodule "ecos"]
+	path = ecos
+	url = https://github.com/embotech/ecos.git
