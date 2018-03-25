@@ -6,8 +6,8 @@ project(OptimalLanding)
 execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ecos")
 
 
-set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -O1)
+set(CMAKE_CXX_STANDARD 14)
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 
 find_package(Boost REQUIRED)   
 find_package(OpenMP REQUIRED)
@@ -37,9 +37,14 @@ add_executable(OptimalLanding
         src/EcosWrapper.cpp
 )
 
-add_executable(test_ecos_wrapper
-    test/test_ecos_wrapper.cpp
+add_executable(test_ecos_wrapper_indices
+    test/test_ecos_wrapper_indices.cpp
+    include/EcosWrapper.hpp
+        src/EcosWrapper.cpp
+)
 
+add_executable(test_ecos_wrapper_expressions
+    test/test_ecos_wrapper_expressions.cpp
     include/EcosWrapper.hpp
         src/EcosWrapper.cpp
 )

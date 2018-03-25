@@ -4,10 +4,59 @@
 #include <map>
 #include <string>
 #include <cassert>
+#include <sstream> 
+#include <experimental/optional> 
 using std::vector;
 using std::string;
 using std::map;
+using std::experimental::optional;
 
+namespace optimization_problem {
+    struct Variable {
+        string name;
+        vector<size_t> tensor_indices;
+        size_t problem_index;
+        string print();
+    };
+
+    struct AffineTerm;
+
+    struct AffineExpression {
+        vector<AffineTerm> terms;
+        string print();
+    };
+
+    struct Parameter {
+        const double* value_ptr = NULL;
+        string print();
+        operator AffineTerm();
+        operator AffineExpression();
+    };
+
+    struct AffineTerm {
+        Parameter parameter;
+        optional<Variable> variable;
+        string print();
+        operator AffineExpression();
+    };
+
+    struct Norm2 {
+        vector<AffineExpression> arguments;
+        string print();
+    };
+
+    struct SecondOrderConeConstraint {
+        Norm2 lhs;
+        AffineExpression rhs;
+        string print();
+    };
+
+    AffineTerm operator*(const Parameter &parameter, const Variable &variable);
+    AffineExpression operator+(const AffineExpression &lhs, const AffineExpression &rhs);
+    Norm2 norm2(const vector<AffineExpression> &affineExpressions);
+    SecondOrderConeConstraint operator<=(const Norm2 &lhs, const AffineExpression &rhs);
+
+}
 
 
 inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &dimensions) {
@@ -16,6 +65,8 @@ inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &
     for (size_t d = 0; d < indices.size(); ++d) index = index * dimensions[d] + indices[d];
     return index;
 }
+
+
 
 class EcosWrapper {
     size_t n_variables = 0;
@@ -45,5 +96,13 @@ public:
 
     size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
         return tensor_variable_indices[name][tensor_index(indices,tensor_variable_dimensions[name])];
+    }
+
+    optimization_problem::Variable get_variable(const string &name, const vector<size_t> &indices) {
+        optimization_problem::Variable var;
+        var.name = name;
+        var.tensor_indices = indices;
+        var.problem_index = get_tensor_variable_index(name, indices);
+        return var;
     }
 };
