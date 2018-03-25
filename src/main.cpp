@@ -1,4 +1,5 @@
 #include "model_landing_6dof.h"
+#include "model_simple_4th_order.hpp"
 
 #include <iostream>
 #include <array>
@@ -12,7 +13,8 @@ using std::array;
 using std::cout;
 using std::endl;
 
-using Model = model_landing_6dof;
+//using Model = model_landing_6dof;
+using Model = model_simple_4th_order;
 
 class DiscretizationODE {
 private:
@@ -70,7 +72,7 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr int K = 50;
+    constexpr int K = 5;
     const double dt = 1 / double(K-1);
 
     const size_t n_states = Model::n_states;
@@ -100,7 +102,7 @@ int main() {
     using namespace boost::numeric::odeint;
     runge_kutta_dopri5<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-    const int iterations = 15;
+    const int iterations = 1;
     for(int it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
@@ -123,6 +125,16 @@ int main() {
             Sigma_bar[k]  = A_bar[k] * V.block<Model::n_states,1>(0, cols);                 cols += 1;
             z_bar[k]      = A_bar[k] * V.block<Model::n_states,1>(0, cols);
 
+            cout << "A_bar " << k << endl;
+            cout << A_bar[k] << endl << endl;
+            cout << "B_bar " << k << endl;
+            cout << B_bar[k] << endl << endl;
+            cout << "C_bar " << k << endl;
+            cout << C_bar[k] << endl << endl;
+            cout << "Sigma_bar " << k << endl;
+            cout << Sigma_bar[k] << endl << endl;
+            cout << "z_bar " << k << endl;
+            cout << z_bar[k] << endl << endl;
         }
         cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 

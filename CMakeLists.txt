@@ -19,4 +19,6 @@ add_executable(OptimalLanding
     src/main.cpp
     include/model_landing_6dof.h
     src/model_landing_6dof.cpp
+    include/model_simple_4th_order.hpp
+    src/model_simple_4th_order.cpp
 )
