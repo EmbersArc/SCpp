@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(OptimalLanding)
 
+
+# Build ECOS shared library
+execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ecos")
+
+
 set(CMAKE_CXX_STANDARD 11)
 add_compile_options(-Wall -Wextra -Wpedantic -O1)
 
