@@ -12,7 +12,7 @@ using std::map;
 using std::experimental::optional;
 
 namespace optimization_problem {
-    struct Variable {
+    struct Variable { // represents an optimization variable x_i
         string name;
         vector<size_t> tensor_indices;
         size_t problem_index;
@@ -21,30 +21,33 @@ namespace optimization_problem {
 
     struct AffineTerm;
 
-    struct AffineExpression {
+    struct AffineExpression { // represents a term like (p_1*x_1 + p_2*x_2 + b)
         vector<AffineTerm> terms;
         string print();
     };
 
-    struct Parameter {
+    struct Parameter { // represents a parameter p_i in the opt-problem that can be changed between problem evaluations.
         const double* value_ptr = NULL;
         string print();
         operator AffineTerm();
         operator AffineExpression();
     };
 
-    struct AffineTerm {
+    struct AffineTerm { // represents a linear term (p_1*x_1) or constant term (p_1)
         Parameter parameter;
         optional<Variable> variable;
         string print();
         operator AffineExpression();
     };
 
-    struct Norm2 {
+    struct Norm2 { // represents a term like norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
         vector<AffineExpression> arguments;
         string print();
     };
 
+    // represents a term like 
+    //      norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
+    //        <= p_5*x_5 + p_6*x_6 + b_3
     struct SecondOrderConeConstraint {
         Norm2 lhs;
         AffineExpression rhs;
