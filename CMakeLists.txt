@@ -14,6 +14,10 @@ set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS
 include_directories(./include)
 include_directories(eigen)
 include_directories(ecos/include)
+include_directories(ecos/external/SuiteSparse_config)
+
+link_directories(ecos)
+link_libraries(ecos)
 
 add_executable(OptimalLanding
     src/main.cpp

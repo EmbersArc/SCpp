@@ -1,5 +1,6 @@
 #include "model_landing_6dof.h"
 #include "model_simple_4th_order.hpp"
+#include "ecos.h"
 
 #include <iostream>
 #include <array>
@@ -140,7 +141,65 @@ int main() {
 
         // TODO: Solve problem.
 
+    }
 
+
+    // ECOS test
+    {
+        /*
+            Toy problem:
+
+            variables [x, y]
+            parameters [a, g]
+            minimize (-x)
+            constraints
+                (x/a)^2 + y^2 < 1
+                y > g
+
+
+            Expected solution (if 1 < g):
+                infeasible
+
+            Expected solution (if 1 > g > 0):
+                x = a * sqrt(1-g^2)
+                y = g
+
+            Expected solution (if g < 0):
+                x = a
+                y = 0
+
+        */
+        double a = 10;
+        double g = 0.98;
+
+        idxint n = 2;
+        idxint m = 4;
+        idxint p = 0;
+        idxint l = 1;
+        idxint ncones = 1;
+        idxint q[] = {3};
+        idxint nex = 0;
+        pfloat Gpr[] = {-1./a, -1, -1};
+        idxint Gjc[] = {0,1,3};
+        idxint Gir[] = {2,0,3};
+        pfloat* Apr = NULL;
+        idxint* Ajc = NULL;
+        idxint* Air = NULL;
+        pfloat c[] = {-1, 0};
+        pfloat h[] = {-g,1,0,0};
+        pfloat* b = NULL;
+
+        pwork *mywork = ECOS_setup(n,m,p,l,ncones,q,nex,Gpr,Gjc,Gir,Apr,Ajc,Air,c,h,b);
+        if( mywork ){
+            idxint exitflag = ECOS_solve(mywork); 
+            if(exitflag == ECOS_OPTIMAL) {
+                cout << "x: " << mywork->x[0] << endl;
+                cout << "y: " << mywork->x[1] << endl;
+            } else {
+                cout << "optimal solution not found" << endl;
+            }
+        }
+        ECOS_cleanup(mywork, 0);
     }
 
 }
