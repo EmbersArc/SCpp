@@ -18,5 +18,6 @@ include_directories(ecos/include)
 add_executable(OptimalLanding
     src/main.cpp
     include/model_landing_6dof.h
-    src/model_landing_6dof.cpp
-)
+        src/model_landing_6dof.cpp
+    include/check_jacobian.h
+        src/check_jacobian.cpp)
