@@ -1,9 +1,18 @@
 #include "EcosWrapper.hpp"
 #include <stdexcept>
+#include <algorithm>
+#include <map>
+#include <utility>
+#include <tuple>
+
+using std::map;
+using std::pair;
+using std::tuple;
+using std::make_pair;
 
 namespace optimization_problem {
 
-    string Variable::print() {
+    string Variable::print() const {
         std::ostringstream s;
         s << name;
         if(tensor_indices.size()>0) {
@@ -18,7 +27,7 @@ namespace optimization_problem {
         return s.str();
     }
 
-    string Parameter::print() {
+    string Parameter::print() const {
         std::ostringstream s;
         s << "(" << get_value()  << ")";
         return s.str();
@@ -42,14 +51,14 @@ namespace optimization_problem {
         return result;
     }
 
-    string AffineTerm::print() {
+    string AffineTerm::print() const {
         std::ostringstream s;
         s << parameter.print();
         if(variable) s << "*" << variable.value().print();
         return s.str();
     }
 
-    string AffineExpression::print() {
+    string AffineExpression::print() const {
         std::ostringstream s;
         for (size_t i = 0; i < terms.size(); ++i) {
             if(i) s << "  + ";
@@ -88,7 +97,7 @@ namespace optimization_problem {
     }
 
 
-    string Norm2::print() {
+    string Norm2::print() const {
         std::ostringstream s;
         s << "norm2([ ";
         for (size_t i = 0; i < arguments.size(); ++i)
@@ -100,20 +109,20 @@ namespace optimization_problem {
         return s.str();
     }
 
-    string PostiveConstraint::print() {
+    string PostiveConstraint::print() const {
         std::ostringstream s;
         s << lhs.print() << " >= 0";
         return s.str();
     }
 
-    string EqualityConstraint::print() {
+    string EqualityConstraint::print() const {
         std::ostringstream s;
         s << lhs.print() << " == 0";
         return s.str();
     }
 
 
-    string SecondOrderConeConstraint::print() {
+    string SecondOrderConeConstraint::print() const {
         std::ostringstream s;
         s << lhs.print() << " <= " << rhs.print();
         return s.str();
@@ -218,6 +227,104 @@ void EcosWrapper::set_cost_function(optimization_problem::AffineExpression c) {
     costFunction = c;
 }
 
+
+template<typename T>
+inline bool contains(const vector<T> &v, const T &x)
+{ return std::find(v.begin(), v.end(), x) != v.end(); }
+
+
+
+bool check_unique_variables_in_affine_expression(const optimization_problem::AffineExpression &affineExpression) {
+    // check if a variable is used more than once in an expression
+
+    vector<size_t> variable_indices;
+    for(auto const& term:affineExpression.terms) {
+        if(term.variable) { // only consider linear terms, not constant terms
+            size_t idx = term.variable.value().problem_index;
+            if(contains(variable_indices, idx)) {
+                // duplicate found!
+                return false;
+            }
+            variable_indices.push_back(idx);
+        }
+    }
+    return true;
+}
+
+size_t count_constants_in_affine_expression(const optimization_problem::AffineExpression &affineExpression) {
+    size_t count = 0;
+    for(auto const& term:affineExpression.terms) {
+        if(!term.variable) { // only consider constant terms, not linear terms
+            count++;
+        }
+    }
+    return count;
+}
+
+void error_check_affine_expression(const optimization_problem::AffineExpression &affineExpression) {
+    if(!check_unique_variables_in_affine_expression(affineExpression)) {
+        throw std::runtime_error("Error: Duplicate variable in the expression: \n" + affineExpression.print());
+    }
+    if(count_constants_in_affine_expression(affineExpression) > 1) {
+        throw std::runtime_error("Error: More than one constant in the expression: \n" + affineExpression.print());
+    }
+}
+
+optimization_problem::Parameter get_constant_or_zero(const optimization_problem::AffineExpression &affineExpression) {
+    for(auto const& term:affineExpression.terms) {
+        if(!term.variable) { // only consider constant terms, not linear terms
+            return term.parameter;
+        }
+    }
+    return optimization_problem::Parameter(0.0);
+}
+
+// convert sparse matrix format "Dictionary of keys" to "column compressed storage"
+void sparse_DOK_to_CCS(
+    const map< pair<idxint, idxint>, optimization_problem::Parameter > &sparse_DOK, 
+    vector<optimization_problem::Parameter> &data_CCS, 
+    vector<idxint> &columns_CCS, 
+    vector<idxint> &rows_CCS,
+    size_t n_columns) 
+{
+    using std::get;
+    assert(data_CCS.empty());
+    assert(columns_CCS.empty());
+    assert(rows_CCS.empty());
+
+
+    // convert to coordinate list
+    vector< tuple<idxint, idxint, optimization_problem::Parameter> > sparse_COO;
+    for (auto const& e : sparse_DOK) {
+        sparse_COO.emplace_back(e.first.first, e.first.second, e.second);
+        //               row index ^    column index ^      value ^
+    }
+
+    // sort coordinate list by column, then by row
+    std::sort(sparse_COO.begin(), sparse_COO.end(), 
+        []( const tuple<idxint, idxint, optimization_problem::Parameter> & a, 
+            const tuple<idxint, idxint, optimization_problem::Parameter> & b) -> bool
+    {
+        // define coordinate list order
+        if(get<1>(a) == get<1>(b)) {
+            return get<0>(a) < get<0>(b);
+        }
+        return get<1>(a) < get<1>(b);
+    });
+
+    // create CSS format
+    vector<size_t> non_zero_count_per_column(n_columns, 0);
+    for (size_t i = 0; i < sparse_COO.size(); ++i) {
+        data_CCS.push_back(get<2>(sparse_COO[i]));
+        rows_CCS.push_back(get<0>(sparse_COO[i]));
+        non_zero_count_per_column[get<1>(sparse_COO[i])]++;
+    }
+    columns_CCS.push_back(0);
+    for(auto column_count:non_zero_count_per_column) {
+        columns_CCS.push_back(column_count + columns_CCS.back());
+    }
+}
+
 void EcosWrapper::compile_problem_structure() {
     ecos_cone_constraint_dimensions.clear();
     ecos_G_data_CSS.clear();
@@ -231,7 +338,7 @@ void EcosWrapper::compile_problem_structure() {
     ecos_b.clear();
 
 
-
+    /* ECOS size parameters */
     ecos_n_variables = n_variables;
     ecos_n_cone_constraints = secondOrderConeConstraints.size();
     ecos_n_equalities = equalityConstraints.size();
@@ -243,4 +350,43 @@ void EcosWrapper::compile_problem_structure() {
         ecos_cone_constraint_dimensions.push_back(1 + cone.lhs.arguments.size());
     }
 
+
+    /* Error checking for the problem description */
+    for(auto const& cone: secondOrderConeConstraints) {
+        error_check_affine_expression(cone.rhs);
+        for(auto const& affine_expression:cone.lhs.arguments) {
+            error_check_affine_expression(affine_expression);
+        }
+    }
+    for(auto const& postiveConstraint:postiveConstraints) {
+        error_check_affine_expression(postiveConstraint.lhs);
+    }
+    for(auto const& equalityConstraint:equalityConstraints) {
+        error_check_affine_expression(equalityConstraint.lhs);
+    }
+    error_check_affine_expression(costFunction);
+
+
+    /* Build equality constraint parameters (b - A*x == 0) */
+    {
+        // Construct the sparse A matrix in the "Dictionary of keys" format
+        map< pair<idxint, idxint>, optimization_problem::Parameter > A_sparse_DOK;
+        vector< optimization_problem::Parameter > b(equalityConstraints.size());
+
+        for (size_t i = 0; i < equalityConstraints.size(); ++i) {
+            auto const& affine_expression = equalityConstraints[i].lhs;
+            b[i] = get_constant_or_zero(affine_expression);
+
+            for(auto const& term:affine_expression.terms) {
+                if(term.variable) { // only consider linear terms, not constant terms
+                    size_t column_index = term.variable.value().problem_index;
+                    A_sparse_DOK[make_pair(i, column_index)] = term.parameter;
+                }
+            }
+        }
+
+        // Convert A to "column compressed storage"
+        sparse_DOK_to_CCS(A_sparse_DOK, ecos_A_data_CCS, ecos_A_columns_CCS, ecos_A_rows_CCS, ecos_n_variables);
+        ecos_b = b;
+    }
 }

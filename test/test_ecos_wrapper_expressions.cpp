@@ -46,6 +46,6 @@ int main() {
     wrapper.add_constraint(  norm2({  param(a) * var("x"), (1.0) * var("y")  }) <= (1.0)  );
     wrapper.add_constraint(  (1.0) * var("x") + (1.0) * var("y") + (-1.0) * var("z") == 0  );
     wrapper.add_constraint(  (1.0) * var("y") + param(g) >= 0  );
-
+    wrapper.compile_problem_structure();
 
 }

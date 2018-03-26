@@ -17,14 +17,14 @@ namespace optimization_problem {
         string name;
         vector<size_t> tensor_indices;
         size_t problem_index;
-        string print();
+        string print() const;
     };
 
     struct AffineTerm;
 
     struct AffineExpression { // represents a term like (p_1*x_1 + p_2*x_2 + b)
         vector<AffineTerm> terms;
-        string print();
+        string print() const;
     };
 
     class Parameter { // represents a parameter p_i in the opt-problem that can be changed between problem evaluations.
@@ -36,11 +36,12 @@ namespace optimization_problem {
             if(dynamic_value_ptr == NULL) throw std::runtime_error("Null Pointer Error: Parameter(NULL)");
         }
         Parameter(double const_value):const_value(const_value),is_const(true){}
-        double get_value() {
+        Parameter():const_value(0),is_const(true){}
+        double get_value() const {
             if(is_const) return const_value;
             return *dynamic_value_ptr;
         }
-        string print();
+        string print() const;
         operator AffineTerm();
         operator AffineExpression();
     };
@@ -48,13 +49,13 @@ namespace optimization_problem {
     struct AffineTerm { // represents a linear term (p_1*x_1) or constant term (p_1)
         Parameter parameter = Parameter(0.0);
         optional<Variable> variable;
-        string print();
+        string print() const;
         operator AffineExpression();
     };
 
     struct Norm2 { // represents a term like norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
         vector<AffineExpression> arguments;
-        string print();
+        string print() const;
     };
 
     // represents a constraint like 
@@ -63,7 +64,7 @@ namespace optimization_problem {
     struct SecondOrderConeConstraint {
         Norm2 lhs;
         AffineExpression rhs;
-        string print();
+        string print() const;
     };
 
 
@@ -72,7 +73,7 @@ namespace optimization_problem {
     struct PostiveConstraint
     {
         AffineExpression lhs;
-        string print();
+        string print() const;
     };
 
     // represents a constraint like 
@@ -80,7 +81,7 @@ namespace optimization_problem {
     struct EqualityConstraint
     {
         AffineExpression lhs;
-        string print();
+        string print() const;
     };
 
     AffineTerm operator*(const Parameter &parameter, const Variable &variable);
@@ -119,15 +120,15 @@ class EcosWrapper {
     idxint         ecos_n_cone_constraints;
     vector<idxint> ecos_cone_constraint_dimensions;
     idxint         ecos_n_exponential_cones;
-    vector<double> ecos_G_data_CSS;
+    vector<optimization_problem::Parameter> ecos_G_data_CSS;
     vector<idxint> ecos_G_columns_CCS;
-    vector<idxint> ecos_G_rows_CCS ;
-    vector<double> ecos_A_data_CCS;
+    vector<idxint> ecos_G_rows_CCS;
+    vector<optimization_problem::Parameter> ecos_A_data_CCS;
     vector<idxint> ecos_A_columns_CCS;
-    vector<idxint> ecos_A_rows_CCS ;
-    vector<double> ecos_cost_function_weights;
-    vector<double> ecos_h;
-    vector<double> ecos_b;
+    vector<idxint> ecos_A_rows_CCS;
+    vector<optimization_problem::Parameter> ecos_cost_function_weights;
+    vector<optimization_problem::Parameter> ecos_h;
+    vector<optimization_problem::Parameter> ecos_b;
 
 
     size_t allocate_variable_index();
