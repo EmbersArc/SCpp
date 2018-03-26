@@ -3,7 +3,6 @@
 
 #include "model_landing_6dof.h"
 
-#include <iostream>
 #include <Eigen/Dense>
 
 using Model = model_landing_6dof;

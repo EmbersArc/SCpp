@@ -19,7 +19,6 @@ bool test_model() {
             dX(j) = epsilon;
             lin = model.state_jacobian(X, U)(i, j);
             ode = (model.ode(X + dX, U) - model.ode(X, U))(i) / epsilon;
-            std::cout << abs(lin - ode) << std::endl;
 
             if(abs(lin - ode) > 1e-5){
                 return false;
@@ -34,7 +33,6 @@ bool test_model() {
 
             lin = model.control_jacobian(X, U)(i, j);
             ode = (model.ode(X, U + dU) - model.ode(X, U))(i) / epsilon;
-            std::cout << abs(lin - ode) << std::endl;
 
             if(abs(lin - ode) > 1e-5){
                 return false;
