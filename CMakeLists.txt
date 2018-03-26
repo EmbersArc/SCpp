@@ -48,8 +48,8 @@ add_executable(test_ecos_wrapper_indices
     test/test_ecos_wrapper_indices.cpp
 )
 
-add_executable(test_ecos_wrapper_expressions
-    test/test_ecos_wrapper_expressions.cpp
+add_executable(test_ecos_wrapper
+    test/test_ecos_wrapper.cpp
 )
 
 add_executable(test_ecos_wrapper_sparse_conversion

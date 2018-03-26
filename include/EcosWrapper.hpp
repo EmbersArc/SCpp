@@ -129,7 +129,7 @@ class EcosWrapper {
     idxint         ecos_n_cone_constraints;
     vector<idxint> ecos_cone_constraint_dimensions;
     idxint         ecos_n_exponential_cones;
-    vector<optimization_problem::Parameter> ecos_G_data_CSS;
+    vector<optimization_problem::Parameter> ecos_G_data_CCS;
     vector<idxint> ecos_G_columns_CCS;
     vector<idxint> ecos_G_rows_CCS;
     vector<optimization_problem::Parameter> ecos_A_data_CCS;
@@ -139,6 +139,9 @@ class EcosWrapper {
     vector<optimization_problem::Parameter> ecos_h;
     vector<optimization_problem::Parameter> ecos_b;
 
+    /* ECOS result */
+    vector<double> ecos_solution_vector;
+    idxint ecos_exitflag;
 
     size_t allocate_variable_index();
 
@@ -152,4 +155,13 @@ public:
     void add_constraint(optimization_problem::EqualityConstraint c);
     void set_cost_function(optimization_problem::AffineExpression c);
     void compile_problem_structure();
+    void solve_problem();
+
+    double get_solution_value(size_t problem_index) {
+        return ecos_solution_vector[problem_index];
+    }
+
+    double get_solution_value(const string &name, const vector<size_t> &indices) {
+        return ecos_solution_vector[get_variable(name, indices).problem_index];
+    }
 };

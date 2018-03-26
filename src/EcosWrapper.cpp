@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 #include <tuple>
+#include <iostream>
 
 using std::pair;
 using std::tuple;
@@ -161,7 +162,7 @@ namespace optimization_problem {
         return result;
     }
 
-}
+} // end namespace optimization_problem
 
 
 
@@ -310,7 +311,7 @@ void sparse_DOK_to_CCS(
         return get<1>(a) < get<1>(b);
     });
 
-    // create CSS format
+    // create CCS format
     vector<size_t> non_zero_count_per_column(n_columns, 0);
     for (size_t i = 0; i < sparse_COO.size(); ++i) {
         data_CCS.push_back(get<2>(sparse_COO[i]));
@@ -323,9 +324,22 @@ void sparse_DOK_to_CCS(
     }
 }
 
+void copy_affine_expression_linear_parts_to_sparse_DOK(
+    map< pair<idxint, idxint>, optimization_problem::Parameter > &sparse_DOK, 
+    const optimization_problem::AffineExpression &affineExpression,
+    size_t row_index) 
+{
+    for(auto const& term:affineExpression.terms) {
+        if(term.variable) { // only consider linear terms, not constant terms
+            size_t column_index = term.variable.value().problem_index;
+            sparse_DOK[make_pair(row_index, column_index)] = term.parameter;
+        }
+    }
+}
+
 void EcosWrapper::compile_problem_structure() {
     ecos_cone_constraint_dimensions.clear();
-    ecos_G_data_CSS.clear();
+    ecos_G_data_CCS.clear();
     ecos_G_columns_CCS.clear();
     ecos_G_rows_CCS.clear();
     ecos_A_data_CCS.clear();
@@ -374,17 +388,115 @@ void EcosWrapper::compile_problem_structure() {
         for (size_t i = 0; i < equalityConstraints.size(); ++i) {
             auto const& affine_expression = equalityConstraints[i].lhs;
             b[i] = get_constant_or_zero(affine_expression);
-
-            for(auto const& term:affine_expression.terms) {
-                if(term.variable) { // only consider linear terms, not constant terms
-                    size_t column_index = term.variable.value().problem_index;
-                    A_sparse_DOK[make_pair(i, column_index)] = term.parameter;
-                }
-            }
+            copy_affine_expression_linear_parts_to_sparse_DOK(A_sparse_DOK, affine_expression, i);
         }
 
         // Convert A to "column compressed storage"
         sparse_DOK_to_CCS(A_sparse_DOK, ecos_A_data_CCS, ecos_A_columns_CCS, ecos_A_rows_CCS, ecos_n_variables);
         ecos_b = b;
     }
+
+
+    /* Build inequality constraint parameters */
+    {
+        // Construct the sparse G matrix in the "Dictionary of keys" format
+        map< pair<idxint, idxint>, optimization_problem::Parameter > G_sparse_DOK;
+        vector< optimization_problem::Parameter > h(ecos_n_constraint_rows);
+
+        size_t row_index = 0;
+
+        for(const auto& postiveConstraint:postiveConstraints) {
+            h[row_index] = get_constant_or_zero(postiveConstraint.lhs);
+            copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, postiveConstraint.lhs, row_index);
+            row_index++;
+        }
+
+        for(const auto& secondOrderConeConstraint:secondOrderConeConstraints) {
+            h[row_index] = get_constant_or_zero(secondOrderConeConstraint.rhs);
+            copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, secondOrderConeConstraint.rhs, row_index);
+            row_index++;
+
+            for(const auto& norm2argument:secondOrderConeConstraint.lhs.arguments) {
+                h[row_index] = get_constant_or_zero(norm2argument);
+                copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, norm2argument, row_index);
+                row_index++;
+            }            
+        }
+
+        assert(row_index == ecos_n_constraint_rows); // all rows used?
+
+        // Convert G to "column compressed storage"
+        sparse_DOK_to_CCS(G_sparse_DOK, ecos_G_data_CCS, ecos_G_columns_CCS, ecos_G_rows_CCS, ecos_n_variables);
+        ecos_h = h;
+    }
+
+    /* Build cost function parameters */
+    {
+        vector< optimization_problem::Parameter > c(ecos_n_variables);
+        for(const auto& term:costFunction.terms) {
+            if(term.variable) {
+                c[term.variable.value().problem_index] = term.parameter;
+            }
+        }
+        ecos_cost_function_weights = c;
+    }
+}
+
+inline vector<double> get_parameter_values(const vector<optimization_problem::Parameter> &params, double factor) {
+    vector<double> result(params.size(), 0.0);
+    for (size_t i = 0; i < params.size(); ++i) {
+        result[i] = params[i].get_value() * factor;
+    }
+    return result;
+}
+
+void EcosWrapper::solve_problem() {
+
+
+
+    vector<double> ecos_cost_function_weights_values = get_parameter_values(ecos_cost_function_weights, 1.0);
+    vector<double> ecos_h_values                     = get_parameter_values(ecos_h, 1.0);
+    vector<double> ecos_b_values                     = get_parameter_values(ecos_b, 1.0);
+    vector<double> ecos_G_data_CCS_values            = get_parameter_values(ecos_G_data_CCS, -1.0);
+    vector<double> ecos_A_data_CCS_values            = get_parameter_values(ecos_A_data_CCS, -1.0);
+    // The signs for A and G must be flipped because they are negative in the ECOS interface
+
+
+
+
+    pwork *mywork = ECOS_setup(
+        ecos_n_variables,
+        ecos_n_constraint_rows,
+        ecos_n_equalities,
+        ecos_n_positive_constraints,
+        ecos_n_cone_constraints,
+        ecos_cone_constraint_dimensions.data(),
+        ecos_n_exponential_cones,
+        ecos_G_data_CCS_values.data(),
+        ecos_G_columns_CCS.data(),
+        ecos_G_rows_CCS.data(),
+        ecos_A_data_CCS_values.data(),
+        ecos_A_columns_CCS.data(),
+        ecos_A_rows_CCS.data(),
+        ecos_cost_function_weights_values.data(),
+        ecos_h_values.data(),
+        ecos_b_values.data()
+    );
+
+    if( mywork ){
+        ecos_exitflag = ECOS_solve(mywork); 
+
+        // copy solution
+        ecos_solution_vector.resize(ecos_n_variables);
+        for (int i = 0; i < ecos_n_variables; ++i) {
+            ecos_solution_vector[i] = mywork->x[i];
+        }        
+
+        if(ecos_exitflag == ECOS_OPTIMAL) {
+            std::cout << "optimal solution found" << std::endl;
+        } else {
+            std::cout << "optimal solution not found" << std::endl;
+        }
+    }
+    ECOS_cleanup(mywork, 0);
 }

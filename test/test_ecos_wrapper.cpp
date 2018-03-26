@@ -48,4 +48,18 @@ int main() {
     wrapper.add_constraint(  (1.0) * var("y") + param(g) >= 0  );
     wrapper.compile_problem_structure();
 
+    wrapper.solve_problem();
+    cout << "a = " << a << endl;
+    cout << "x: " << wrapper.get_solution_value("x", {}) << endl;
+    cout << "y: " << wrapper.get_solution_value("y", {}) << endl;
+    cout << "z: " << wrapper.get_solution_value("z", {}) << endl;
+
+
+    a = 0.2; // can change parameter and solve again immediately
+    wrapper.solve_problem();
+    cout << "a = " << a << endl;
+    cout << "x: " << wrapper.get_solution_value("x", {}) << endl;
+    cout << "y: " << wrapper.get_solution_value("y", {}) << endl;
+    cout << "z: " << wrapper.get_solution_value("z", {}) << endl;
+
 }
