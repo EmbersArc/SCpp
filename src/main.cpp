@@ -1,5 +1,4 @@
-#include "model_landing_6dof.h"
-#include "model_simple_4th_order.hpp"
+#include "active_model.hpp"
 #include "ecos.h"
 
 #include <iostream>
@@ -14,8 +13,6 @@ using std::array;
 using std::cout;
 using std::endl;
 
-//using Model = model_landing_6dof;
-using Model = model_simple_4th_order;
 
 class DiscretizationODE {
 private:

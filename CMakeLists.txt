@@ -55,3 +55,7 @@ add_executable(test_ecos_wrapper
 add_executable(test_ecos_wrapper_sparse_conversion
     test/test_ecos_wrapper_sparse_conversion.cpp
 )
+
+add_executable(test_check_jacobian
+    test/test_check_jacobian.cpp
+)
