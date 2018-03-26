@@ -7,6 +7,6 @@
 
 using Model = model_landing_6dof;
 
-bool test_model();
+bool check_jacobian();
 
 #endif //OPTIMALLANDING_CHECK_JACOBIAN_H
