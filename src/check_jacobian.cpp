@@ -1,4 +1,5 @@
 #include "check_jacobian.h"
+#include "active_model.hpp"
 
 bool check_jacobian() {
     Model model;
@@ -8,9 +9,6 @@ bool check_jacobian() {
     X.setRandom();
     U.setRandom().normalize();
 
-
-    double lin, ode;
-
     double epsilon = 1e-6;
 
     auto state_jacobian = model.state_jacobian(X, U);
@@ -19,10 +17,10 @@ bool check_jacobian() {
         for(int j = 0; j < Model::n_states; j++) {
             dX.setZero();
             dX(j) = epsilon;
-            lin = state_jacobian(i, j);
-            ode = (model.ode(X + dX, U) - model.ode(X, U))(i) / epsilon;
+            double analytic_derivative = state_jacobian(i, j);
+            double numeric_derivative = (model.ode(X + dX, U) - model.ode(X, U))(i) / epsilon;
 
-            if(abs(lin - ode) > 1e-5){
+            if(abs(analytic_derivative - numeric_derivative) > 1e-5){
                 return false;
             };
         }
@@ -35,10 +33,10 @@ bool check_jacobian() {
             dU.setZero();
             dU(j) = epsilon;
 
-            lin = control_jacobian(i, j);
-            ode = (model.ode(X, U + dU) - model.ode(X, U))(i) / epsilon;
+            double analytic_derivative = control_jacobian(i, j);
+            double numeric_derivative = (model.ode(X, U + dU) - model.ode(X, U))(i) / epsilon;
 
-            if(abs(lin - ode) > 1e-5){
+            if(abs(analytic_derivative - numeric_derivative) > 1e-5){
                 return false;
             };
         }
