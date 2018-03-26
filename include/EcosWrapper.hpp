@@ -6,6 +6,7 @@
 #include <cassert>
 #include <sstream> 
 #include <experimental/optional> 
+#include "ecos.h"
 using std::vector;
 using std::string;
 using std::map;
@@ -100,8 +101,34 @@ namespace optimization_problem {
 class EcosWrapper {
     size_t n_variables = 0;
 
+    /* Set of named tensor variables in the optimization problem */
     map<string, vector<size_t>> tensor_variable_dimensions;
     map<string, vector<size_t>> tensor_variable_indices;
+
+    /* High-level optimization problem description */
+    vector<optimization_problem::SecondOrderConeConstraint> secondOrderConeConstraints;
+    vector<optimization_problem::PostiveConstraint> postiveConstraints;
+    vector<optimization_problem::EqualityConstraint> equalityConstraints;
+    optimization_problem::AffineExpression costFunction;
+
+    /* ECOS problem parameters */
+    idxint         ecos_n_variables;
+    idxint         ecos_n_constraint_rows;
+    idxint         ecos_n_equalities;
+    idxint         ecos_n_positive_constraints;
+    idxint         ecos_n_cone_constraints;
+    vector<idxint> ecos_cone_constraint_dimensions;
+    idxint         ecos_n_exponential_cones;
+    vector<double> ecos_G_data_CSS;
+    vector<idxint> ecos_G_columns_CCS;
+    vector<idxint> ecos_G_rows_CCS ;
+    vector<double> ecos_A_data_CCS;
+    vector<idxint> ecos_A_columns_CCS;
+    vector<idxint> ecos_A_rows_CCS ;
+    vector<double> ecos_cost_function_weights;
+    vector<double> ecos_h;
+    vector<double> ecos_b;
+
 
     size_t allocate_variable_index();
 
@@ -114,4 +141,5 @@ public:
     void add_constraint(optimization_problem::PostiveConstraint c);
     void add_constraint(optimization_problem::EqualityConstraint c);
     void set_cost_function(optimization_problem::AffineExpression c);
+    void compile_problem_structure();
 };

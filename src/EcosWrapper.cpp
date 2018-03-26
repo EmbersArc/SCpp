@@ -203,17 +203,44 @@ optimization_problem::Variable EcosWrapper::get_variable(const string &name, con
 }
 
 void EcosWrapper::add_constraint(optimization_problem::SecondOrderConeConstraint c) {
-    // TODO
+    secondOrderConeConstraints.push_back(c);
 }
 
 void EcosWrapper::add_constraint(optimization_problem::PostiveConstraint c) {
-    // TODO
+    postiveConstraints.push_back(c);
 }
 
 void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
-    // TODO
+    equalityConstraints.push_back(c);
 }
 
 void EcosWrapper::set_cost_function(optimization_problem::AffineExpression c) {
-    // TODO
+    costFunction = c;
+}
+
+void EcosWrapper::compile_problem_structure() {
+    ecos_cone_constraint_dimensions.clear();
+    ecos_G_data_CSS.clear();
+    ecos_G_columns_CCS.clear();
+    ecos_G_rows_CCS.clear();
+    ecos_A_data_CCS.clear();
+    ecos_A_columns_CCS.clear();
+    ecos_A_rows_CCS.clear();
+    ecos_cost_function_weights.clear();
+    ecos_h.clear();
+    ecos_b.clear();
+
+
+
+    ecos_n_variables = n_variables;
+    ecos_n_cone_constraints = secondOrderConeConstraints.size();
+    ecos_n_equalities = equalityConstraints.size();
+    ecos_n_positive_constraints = postiveConstraints.size();
+    ecos_n_constraint_rows = postiveConstraints.size();
+    ecos_n_exponential_cones = 0; // Exponential cones are not supported.
+    for(auto const& cone: secondOrderConeConstraints) {
+        ecos_n_constraint_rows += 1 + cone.lhs.arguments.size();
+        ecos_cone_constraint_dimensions.push_back(1 + cone.lhs.arguments.size());
+    }
+
 }
