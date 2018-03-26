@@ -133,6 +133,13 @@ namespace optimization_problem {
         return socc;
     }
 
+    SecondOrderConeConstraint operator<=(const Norm2 &lhs, const double &rhs) {
+        SecondOrderConeConstraint socc;
+        socc.lhs = lhs;
+        socc.rhs = Parameter(rhs);
+        return socc;
+    }
+
     PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero) {
         assert(zero == 0.0);
         PostiveConstraint result;
@@ -147,4 +154,66 @@ namespace optimization_problem {
         return result;
     }
 
+}
+
+
+
+
+
+
+
+
+
+
+inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &dimensions) {
+    assert(indices.size() == dimensions.size());
+    size_t index = 0;
+    for (size_t d = 0; d < indices.size(); ++d) index = index * dimensions[d] + indices[d];
+    return index;
+}
+
+size_t EcosWrapper::allocate_variable_index() {
+    size_t i = n_variables;
+    n_variables++;
+    return i;
+}
+
+void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t> &dimensions) {
+    size_t tensor_size = 1;
+    for(auto d:dimensions) 
+        tensor_size *= d;
+    vector<size_t> new_variable_indices(tensor_size);
+    for(auto &i:new_variable_indices)
+        i = allocate_variable_index();
+
+    tensor_variable_dimensions[name] = dimensions;
+    tensor_variable_indices[name] = new_variable_indices;
+}
+
+size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
+    return tensor_variable_indices[name][tensor_index(indices,tensor_variable_dimensions[name])];
+}
+
+optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {
+    optimization_problem::Variable var;
+    var.name = name;
+    var.tensor_indices = indices;
+    var.problem_index = get_tensor_variable_index(name, indices);
+    return var;
+}
+
+void EcosWrapper::add_constraint(optimization_problem::SecondOrderConeConstraint c) {
+    // TODO
+}
+
+void EcosWrapper::add_constraint(optimization_problem::PostiveConstraint c) {
+    // TODO
+}
+
+void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
+    // TODO
+}
+
+void EcosWrapper::set_cost_function(optimization_problem::AffineExpression c) {
+    // TODO
 }

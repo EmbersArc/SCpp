@@ -6,39 +6,46 @@ using namespace optimization_problem;
 
 
 int main() {
+
+    /*
+    Toy problem:
+
+    variables [x, y, z]
+    parameters [a, g]
+    minimize (-x)
+    constraints
+        (a*x)^2 + y^2 < 1
+        y + g > 0
+        x + y == z
+
+
+    Expected solution (if -1 > g):
+        infeasible
+
+    Expected solution (if -1 < g < 0):
+        x = (1/a) * sqrt(1-g^2)
+        y = -g
+
+    Expected solution (if g > 0):
+        x = 1/a
+        y = 0
+
+    */
     EcosWrapper wrapper;
-    wrapper.create_tensor_variable("A", {});
-    wrapper.create_tensor_variable("B", {});
-    wrapper.create_tensor_variable("C", {});
-    wrapper.create_tensor_variable("D", {});
+    wrapper.create_tensor_variable("x", {});
+    wrapper.create_tensor_variable("y", {});
+    wrapper.create_tensor_variable("z", {});
 
-    auto var = [&](string name){return wrapper.get_variable(name,{});};
-    auto param = [](double &param_value){
-        return optimization_problem::Parameter(&param_value);
-    };
+    auto var = [&](string name){ return wrapper.get_variable(name,{}); };
+    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
 
-    double p_A = 2.5;
-    double p_B = 0.1;
-    double p_C = 5.4;
-    double p_D = 3.4;
-    double p_k = 1.4;
-    double p_h = -0.4;
+    double a = 0.1;
+    double g = -0.98;
 
+    wrapper.set_cost_function(  (-1.0) * var("x")  );
+    wrapper.add_constraint(  norm2({  param(a) * var("x"), (1.0) * var("y")  }) <= (1.0)  );
+    wrapper.add_constraint(  (1.0) * var("x") + (1.0) * var("y") + (-1.0) * var("z") == 0  );
+    wrapper.add_constraint(  (1.0) * var("y") + param(g) >= 0  );
 
-    auto soc = 
-        norm2({
-            param(p_A) * var("A") + (-24.0) * var("B") + param(p_k),
-            param(p_D) * var("D") + 1234.0
-        })
-        <= 
-        param(p_C) * var("C") + param(p_D) * var("D") + param(p_h);
-
-    auto positive = param(p_A) * var("A") + param(p_B) * var("B") + param(p_k) >= 0;
-    auto equals = param(p_A) * var("A") + param(p_B) * var("B") + param(p_k) == 0;
-
-    cout << soc.print() << endl;
-    cout << positive.print() << endl;
-    p_A = 100;
-    cout << equals.print() << endl;
 
 }
