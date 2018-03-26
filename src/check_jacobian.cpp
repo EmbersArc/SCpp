@@ -13,8 +13,7 @@ bool check_jacobian() {
 
     double epsilon = 1e-6;
 
-    Model::StateMatrix  state_jacobian;
-    state_jacobian = model.state_jacobian(X, U);
+    auto state_jacobian = model.state_jacobian(X, U);
 
     for(int i = 0; i < Model::n_states; i++) {
         for(int j = 0; j < Model::n_states; j++) {
@@ -29,8 +28,7 @@ bool check_jacobian() {
         }
     }
 
-    Model::ControlMatrix  control_jacobian;
-    control_jacobian = model.control_jacobian(X, U);
+    auto control_jacobian = model.control_jacobian(X, U);
 
     for(int i = 0; i < Model::n_states; i++) {
         for(int j = 0; j < Model::n_inputs; j++) {
