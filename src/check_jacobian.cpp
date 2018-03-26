@@ -5,22 +5,23 @@ bool test_model() {
 
     Model::StateVector X, dX;
     Model::ControlVector U, dU;
+    X.setRandom();
+    U.setRandom().normalize();
 
 
     double lin, ode;
 
-    double epsilon = 1e-20;
+    double epsilon = 1e-10;
 
     for(int i = 0; i < Model::n_states; i++) {
         for(int j = 0; j < Model::n_states; j++) {
-            X.setOnes();
             dX.setZero();
             dX(j) = epsilon;
-            lin = epsilon * model.state_jacobian(X, U)(i, j);
-            ode = (model.ode(X + dX, U) - model.ode(X, U))(i);
+            lin = model.state_jacobian(X, U)(i, j);
+            ode = (model.ode(X + dX, U) - model.ode(X, U))(i) / epsilon;
             std::cout << abs(lin - ode) << std::endl;
 
-            if(abs(lin - ode) > 1e-15){
+            if(abs(lin - ode) > 1e-5){
                 return false;
             };
         }
@@ -28,15 +29,14 @@ bool test_model() {
 
     for(int i = 0; i < Model::n_states; i++) {
         for(int j = 0; j < Model::n_inputs; j++) {
-            U.setConstant(1. / sqrt(3));
             dU.setZero();
             dU(j) = epsilon;
 
-            lin = epsilon * model.control_jacobian(X, U)(i, j);
-            ode = (model.ode(X, U + dU) - model.ode(X, U))(i);
+            lin = model.control_jacobian(X, U)(i, j);
+            ode = (model.ode(X, U + dU) - model.ode(X, U))(i) / epsilon;
             std::cout << abs(lin - ode) << std::endl;
 
-            if(abs(lin - ode) > 1e-15){
+            if(abs(lin - ode) > 1e-5){
                 return false;
             };
         }
