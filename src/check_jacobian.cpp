@@ -13,8 +13,8 @@ bool check_jacobian() {
 
     auto state_jacobian = model.state_jacobian(X, U);
 
-    for(int i = 0; i < Model::n_states; i++) {
-        for(int j = 0; j < Model::n_states; j++) {
+    for(size_t i = 0; i < Model::n_states; i++) {
+        for(size_t j = 0; j < Model::n_states; j++) {
             dX.setZero();
             dX(j) = epsilon;
             double analytic_derivative = state_jacobian(i, j);
@@ -28,8 +28,8 @@ bool check_jacobian() {
 
     auto control_jacobian = model.control_jacobian(X, U);
 
-    for(int i = 0; i < Model::n_states; i++) {
-        for(int j = 0; j < Model::n_inputs; j++) {
+    for(size_t i = 0; i < Model::n_states; i++) {
+        for(size_t j = 0; j < Model::n_inputs; j++) {
             dU.setZero();
             dU(j) = epsilon;
 
