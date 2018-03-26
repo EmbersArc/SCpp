@@ -1,5 +1,5 @@
 #include "EcosWrapper.hpp"
-
+#include <stdexcept>
 
 namespace optimization_problem {
 
@@ -19,9 +19,8 @@ namespace optimization_problem {
     }
 
     string Parameter::print() {
-        if(value_ptr == NULL) return "(NULL)";
         std::ostringstream s;
-        s << "(" << *value_ptr << ")";
+        s << "(" << get_value()  << ")";
         return s.str();
     }
 
@@ -66,10 +65,25 @@ namespace optimization_problem {
         return affineTerm;
     }
 
+
+    AffineTerm operator*(const double &const_parameter, const Variable &variable) {
+        AffineTerm affineTerm;
+        affineTerm.parameter = Parameter(const_parameter);
+        affineTerm.variable = variable;
+        return affineTerm;        
+    }
+
     AffineExpression operator+(const AffineExpression &lhs, const AffineExpression &rhs) {
         AffineExpression result;
         result.terms.insert(result.terms.end(), lhs.terms.begin(), lhs.terms.end());
         result.terms.insert(result.terms.end(), rhs.terms.begin(), rhs.terms.end());
+        return result;
+    }
+
+    AffineExpression operator+(const AffineExpression &lhs, const double &rhs) {
+        AffineExpression result;
+        result.terms.insert(result.terms.end(), lhs.terms.begin(), lhs.terms.end());
+        result.terms.push_back(Parameter(rhs));
         return result;
     }
 
@@ -86,6 +100,19 @@ namespace optimization_problem {
         return s.str();
     }
 
+    string PostiveConstraint::print() {
+        std::ostringstream s;
+        s << lhs.print() << " >= 0";
+        return s.str();
+    }
+
+    string EqualityConstraint::print() {
+        std::ostringstream s;
+        s << lhs.print() << " == 0";
+        return s.str();
+    }
+
+
     string SecondOrderConeConstraint::print() {
         std::ostringstream s;
         s << lhs.print() << " <= " << rhs.print();
@@ -98,13 +125,26 @@ namespace optimization_problem {
         n.arguments = affineExpressions;
         return n;
     }
+
     SecondOrderConeConstraint operator<=(const Norm2 &lhs, const AffineExpression &rhs) {
         SecondOrderConeConstraint socc;
         socc.lhs = lhs;
         socc.rhs = rhs;
         return socc;
-    };
+    }
 
+    PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero) {
+        assert(zero == 0.0);
+        PostiveConstraint result;
+        result.lhs = lhs;
+        return result;
+    }
 
+    EqualityConstraint operator==(const AffineExpression &lhs, const double &zero) {
+        assert(zero == 0.0);
+        EqualityConstraint result;
+        result.lhs = lhs;
+        return result;
+    }
 
 }

@@ -14,9 +14,7 @@ int main() {
 
     auto var = [&](string name){return wrapper.get_variable(name,{});};
     auto param = [](double &param_value){
-        optimization_problem::Parameter p;
-        p.value_ptr = &param_value;
-        return p;
+        return optimization_problem::Parameter(&param_value);
     };
 
     double p_A = 2.5;
@@ -27,14 +25,20 @@ int main() {
     double p_h = -0.4;
 
 
-    auto expr = 
+    auto soc = 
         norm2({
-            param(p_A) * var("A") + param(p_B) * var("B") + param(p_k),
-            param(p_D) * var("D")
+            param(p_A) * var("A") + (-24.0) * var("B") + param(p_k),
+            param(p_D) * var("D") + 1234.0
         })
         <= 
         param(p_C) * var("C") + param(p_D) * var("D") + param(p_h);
 
-    cout << expr.print() << endl;
+    auto positive = param(p_A) * var("A") + param(p_B) * var("B") + param(p_k) >= 0;
+    auto equals = param(p_A) * var("A") + param(p_B) * var("B") + param(p_k) == 0;
+
+    cout << soc.print() << endl;
+    cout << positive.print() << endl;
+    p_A = 100;
+    cout << equals.print() << endl;
 
 }
