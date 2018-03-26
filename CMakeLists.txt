@@ -51,3 +51,7 @@ add_executable(test_ecos_wrapper_indices
 add_executable(test_ecos_wrapper_expressions
     test/test_ecos_wrapper_expressions.cpp
 )
+
+add_executable(test_ecos_wrapper_sparse_conversion
+    test/test_ecos_wrapper_sparse_conversion.cpp
+)

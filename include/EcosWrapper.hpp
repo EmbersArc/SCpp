@@ -6,11 +6,14 @@
 #include <cassert>
 #include <sstream> 
 #include <experimental/optional> 
+#include <utility>
+
 #include "ecos.h"
 using std::vector;
 using std::string;
 using std::map;
 using std::experimental::optional;
+using std::pair;
 
 namespace optimization_problem {
     struct Variable { // represents an optimization variable x_i
@@ -96,6 +99,12 @@ namespace optimization_problem {
 
 }
 
+void sparse_DOK_to_CCS(
+    const map< pair<idxint, idxint>, optimization_problem::Parameter > &sparse_DOK, 
+    vector<optimization_problem::Parameter> &data_CCS, 
+    vector<idxint> &columns_CCS, 
+    vector<idxint> &rows_CCS,
+    size_t n_columns);
 
 
 

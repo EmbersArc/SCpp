@@ -1,11 +1,9 @@
 #include "EcosWrapper.hpp"
 #include <stdexcept>
 #include <algorithm>
-#include <map>
 #include <utility>
 #include <tuple>
 
-using std::map;
 using std::pair;
 using std::tuple;
 using std::make_pair;
