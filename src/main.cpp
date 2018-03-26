@@ -1,4 +1,6 @@
 #include "model_landing_6dof.h"
+#include "model_simple_4th_order.hpp"
+#include "ecos.h"
 
 #include <iostream>
 #include <array>
@@ -12,7 +14,8 @@ using std::array;
 using std::cout;
 using std::endl;
 
-using Model = model_landing_6dof;
+//using Model = model_landing_6dof;
+using Model = model_simple_4th_order;
 
 class DiscretizationODE {
 private:
@@ -70,7 +73,7 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr int K = 50;
+    constexpr int K = 5;
     const double dt = 1 / double(K-1);
 
     const size_t n_states = Model::n_states;
@@ -100,7 +103,7 @@ int main() {
     using namespace boost::numeric::odeint;
     runge_kutta_dopri5<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-    const int iterations = 15;
+    const int iterations = 1;
     for(int it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
@@ -123,12 +126,80 @@ int main() {
             Sigma_bar[k]  = A_bar[k] * V.block<Model::n_states,1>(0, cols);                 cols += 1;
             z_bar[k]      = A_bar[k] * V.block<Model::n_states,1>(0, cols);
 
+            cout << "A_bar " << k << endl;
+            cout << A_bar[k] << endl << endl;
+            cout << "B_bar " << k << endl;
+            cout << B_bar[k] << endl << endl;
+            cout << "C_bar " << k << endl;
+            cout << C_bar[k] << endl << endl;
+            cout << "Sigma_bar " << k << endl;
+            cout << Sigma_bar[k] << endl << endl;
+            cout << "z_bar " << k << endl;
+            cout << z_bar[k] << endl << endl;
         }
         cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
         // TODO: Solve problem.
 
+    }
 
+
+    // ECOS test
+    {
+        /*
+            Toy problem:
+
+            variables [x, y]
+            parameters [a, g]
+            minimize (-x)
+            constraints
+                (x/a)^2 + y^2 < 1
+                y > g
+
+
+            Expected solution (if 1 < g):
+                infeasible
+
+            Expected solution (if 1 > g > 0):
+                x = a * sqrt(1-g^2)
+                y = g
+
+            Expected solution (if g < 0):
+                x = a
+                y = 0
+
+        */
+        double a = 10;
+        double g = 0.98;
+
+        idxint n = 2;
+        idxint m = 4;
+        idxint p = 0;
+        idxint l = 1;
+        idxint ncones = 1;
+        idxint q[] = {3};
+        idxint nex = 0;
+        pfloat Gpr[] = {-1./a, -1, -1};
+        idxint Gjc[] = {0,1,3};
+        idxint Gir[] = {2,0,3};
+        pfloat* Apr = NULL;
+        idxint* Ajc = NULL;
+        idxint* Air = NULL;
+        pfloat c[] = {-1, 0};
+        pfloat h[] = {-g,1,0,0};
+        pfloat* b = NULL;
+
+        pwork *mywork = ECOS_setup(n,m,p,l,ncones,q,nex,Gpr,Gjc,Gir,Apr,Ajc,Air,c,h,b);
+        if( mywork ){
+            idxint exitflag = ECOS_solve(mywork); 
+            if(exitflag == ECOS_OPTIMAL) {
+                cout << "x: " << mywork->x[0] << endl;
+                cout << "y: " << mywork->x[1] << endl;
+            } else {
+                cout << "optimal solution not found" << endl;
+            }
+        }
+        ECOS_cleanup(mywork, 0);
     }
 
 }
