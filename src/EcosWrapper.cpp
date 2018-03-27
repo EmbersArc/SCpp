@@ -228,8 +228,8 @@ void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
     equalityConstraints.push_back(c);
 }
 
-void EcosWrapper::set_cost_function(optimization_problem::AffineExpression c) {
-    costFunction = c;
+void EcosWrapper::add_minimization_term(optimization_problem::AffineExpression c) {
+    costFunction = costFunction + c;
 }
 
 

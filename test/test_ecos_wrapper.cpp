@@ -42,22 +42,22 @@ int main() {
     double a = 0.1;
     double g = -0.98;
 
-    wrapper.set_cost_function(  (-1.0) * var("x")  );
+    wrapper.add_minimization_term(  (-1.0) * var("x")  );
     wrapper.add_constraint(  norm2({  param(a) * var("x"), (1.0) * var("y")  }) <= (1.0)  );
     wrapper.add_constraint(  (1.0) * var("x") + (1.0) * var("y") + (-1.0) * var("z") == 0  );
     wrapper.add_constraint(  (1.0) * var("y") + param(g) >= 0  );
     wrapper.compile_problem_structure();
 
     wrapper.solve_problem();
-    cout << "a = " << a << endl;
+    cout << "g = " << g << endl;
     cout << "x: " << wrapper.get_solution_value("x", {}) << endl;
     cout << "y: " << wrapper.get_solution_value("y", {}) << endl;
     cout << "z: " << wrapper.get_solution_value("z", {}) << endl;
 
 
-    a = 0.2; // can change parameter and solve again immediately
+    g = -0.8; // can change parameter and solve again immediately
     wrapper.solve_problem();
-    cout << "a = " << a << endl;
+    cout << "g = " << g << endl;
     cout << "x: " << wrapper.get_solution_value("x", {}) << endl;
     cout << "y: " << wrapper.get_solution_value("y", {}) << endl;
     cout << "z: " << wrapper.get_solution_value("z", {}) << endl;

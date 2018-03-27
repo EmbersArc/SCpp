@@ -119,7 +119,7 @@ class EcosWrapper {
     vector<optimization_problem::SecondOrderConeConstraint> secondOrderConeConstraints;
     vector<optimization_problem::PostiveConstraint> postiveConstraints;
     vector<optimization_problem::EqualityConstraint> equalityConstraints;
-    optimization_problem::AffineExpression costFunction;
+    optimization_problem::AffineExpression costFunction = optimization_problem::Parameter(0.0);
 
     /* ECOS problem parameters */
     idxint         ecos_n_variables;
@@ -153,7 +153,7 @@ public:
     void add_constraint(optimization_problem::SecondOrderConeConstraint c);
     void add_constraint(optimization_problem::PostiveConstraint c);
     void add_constraint(optimization_problem::EqualityConstraint c);
-    void set_cost_function(optimization_problem::AffineExpression c);
+    void add_minimization_term(optimization_problem::AffineExpression c);
     void compile_problem_structure();
     void solve_problem();
 

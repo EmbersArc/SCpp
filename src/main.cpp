@@ -117,20 +117,22 @@ int main() {
     /** Solver setup **/
     EcosWrapper solver;
     {
-        solver.create_tensor_variable("X", {n_states, K});
-        solver.create_tensor_variable("U", {n_inputs, K});
-        solver.create_tensor_variable("nu", {n_states, K-1});
-        solver.create_tensor_variable("sigma", {});
+        solver.create_tensor_variable("X", {n_states, K}); // states
+        solver.create_tensor_variable("U", {n_inputs, K}); // inputs
+        solver.create_tensor_variable("nu", {n_states, K-1}); // virtual control
+        solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
+        solver.create_tensor_variable("sigma", {}); // total time
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
         auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
 
-        // Build linearized model equality constraint
-        //   x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
-        // -I x(k+1) + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
 
         for (size_t k = 0; k < K-1; k++) {
+
+            // Build linearized model equality constraint
+            //    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
+            // -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
             for (size_t row_index = 0; row_index < n_states; ++row_index) {
 
                 // -I * x(k+1)
@@ -155,10 +157,27 @@ int main() {
                 eq = eq + param(z_bar.at(k)(row_index, 0));
 
                 // nu
-                eq = eq + (1.0) * var("nu", {row_index, 0});
+                eq = eq + (1.0) * var("nu", {row_index, k});
 
                 solver.add_constraint( eq == 0.0 );
             }
+        }
+
+
+
+        // Build virtual control norm
+        // norm2( [nu_1, ..., nu_(N)] ) <= norm2_nu
+        {
+            vector<optimization_problem::AffineExpression> virtual_control_vector;
+            for (size_t k = 0; k < K-1; k++) {
+                for (size_t row_index = 0; row_index < n_states; ++row_index) {
+                    virtual_control_vector.push_back( (1.0) * var("nu", {row_index, k}) );
+                }
+            }
+            solver.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
+
+            // Minimize the virtual control
+            solver.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
         }
     }
 
