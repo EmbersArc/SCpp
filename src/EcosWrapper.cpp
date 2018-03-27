@@ -357,6 +357,7 @@ void EcosWrapper::compile_problem_structure() {
 
 
     /* ECOS size parameters */
+    ecos_solution_vector.resize(n_variables);
     ecos_n_variables = n_variables;
     ecos_n_cone_constraints = secondOrderConeConstraints.size();
     ecos_n_equalities = equalityConstraints.size();
@@ -493,16 +494,9 @@ void EcosWrapper::solve_problem() {
         ecos_exitflag = ECOS_solve(mywork); 
 
         // copy solution
-        ecos_solution_vector.resize(ecos_n_variables);
         for (int i = 0; i < ecos_n_variables; ++i) {
             ecos_solution_vector[i] = mywork->x[i];
-        }        
-
-        if(ecos_exitflag == ECOS_OPTIMAL) {
-            std::cout << "optimal solution found" << std::endl;
-        } else {
-            std::cout << "optimal solution not found" << std::endl;
         }
     }
-    ECOS_cleanup(mywork, 0);
+    ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
 }

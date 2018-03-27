@@ -85,7 +85,7 @@ int main() {
 
     const double weight_trust_region_sigma = 1.0;
     const double weight_trust_region_xu = 1e-3;
-    const double weight_virtual_control = 1e5;
+    const double weight_virtual_control = 1e2;
 
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
@@ -217,15 +217,25 @@ int main() {
 
         model.add_application_constraints(solver, K);
         solver.compile_problem_structure();
+    } /** End solver setup **/
+
+
+    // Cache indices for performance
+    const size_t sigma_index = solver.get_tensor_variable_index("sigma", {});
+    size_t X_indices[n_states][K];
+    size_t U_indices[n_inputs][K];
+    for (size_t k = 0; k < K; k++) {
+        for (size_t i = 0; i < n_states; ++i) X_indices[i][k] = solver.get_tensor_variable_index("X",{i,k});
+        for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = solver.get_tensor_variable_index("U",{i,k});
     }
 
 
-    const size_t iterations = 1;
+    const size_t iterations = 10;
     for(size_t it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
 
-        const clock_t begin_time = clock();
+        clock_t begin_time = clock();
 
         for (size_t k = 0; k < K-1; k++) {
             DiscretizationODE::state_type V;
@@ -234,7 +244,7 @@ int main() {
             V.block<Model::n_states,Model::n_states>(0, 1).setIdentity();
 
             DiscretizationODE discretizationODE(U.col(k), U.col(k+1), sigma, dt, model);
-            integrate_adaptive(make_controlled(1E-12 , 1E-12 , stepper), discretizationODE, V, 0., dt, dt/10.);
+            integrate_adaptive(make_controlled(1E-4, 1E-4, stepper), discretizationODE, V, 0., dt, dt/10.);
 
             size_t cols = 1;
             A_bar[k]      =            V.block<Model::n_states,Model::n_states>(0, cols);   cols += Model::n_states;
@@ -243,7 +253,7 @@ int main() {
             Sigma_bar[k]  = A_bar[k] * V.block<Model::n_states,1>(0, cols);                 cols += 1;
             z_bar[k]      = A_bar[k] * V.block<Model::n_states,1>(0, cols);
 
-            cout << "A_bar " << k << endl;
+            /*cout << "A_bar " << k << endl;
             cout << A_bar[k] << endl << endl;
             cout << "B_bar " << k << endl;
             cout << B_bar[k] << endl << endl;
@@ -252,41 +262,41 @@ int main() {
             cout << "Sigma_bar " << k << endl;
             cout << Sigma_bar[k] << endl << endl;
             cout << "z_bar " << k << endl;
-            cout << z_bar[k] << endl << endl;
+            cout << z_bar[k] << endl << endl;*/
         }
         cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
-        // TODO: Solve problem.
+        /************************************************************************************/
+        cout << "Solving problem" << endl;
+        begin_time = clock();
         solver.solve_problem();
+        cout << endl << "Solver time: " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
+
+        // Read solution
+        for (size_t k = 0; k < K; k++) {
+            for (size_t i = 0; i < n_states; ++i) X(i,k) = solver.get_solution_value(X_indices[i][k]);
+            for (size_t i = 0; i < n_inputs; ++i) U(i,k) = solver.get_solution_value(U_indices[i][k]);
+        }
+        sigma = solver.get_solution_value(sigma_index);
+
 
 
         cout << "X" << endl;
         for (size_t i_x = 0; i_x < n_states; ++i_x) {
-            for (size_t k = 0; k < K; k++) {
-                cout << solver.get_solution_value("X", {i_x,k}) << "  ";
-            }
+            for (size_t k = 0; k < K; k++) cout << X(i_x, k) << "  ";
             cout << ";" <<  endl;
         }
         
         cout << "U" << endl;
         for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
-            for (size_t k = 0; k < K; k++) {
-                cout << solver.get_solution_value("U", {i_u,k}) << "  ";
-            }
+            for (size_t k = 0; k < K; k++) cout << U(i_u,k) << "  ";
             cout << ";" <<  endl;
         }
         
-        cout << "nu" << endl;
-        for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
-            for (size_t k = 0; k < K-1; k++) {
-                cout << solver.get_solution_value("nu", {i_u,k}) << "  ";
-            }
-            cout << ";" <<  endl;
-        }
 
 
         cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
-        cout << "sigma   " << solver.get_solution_value("sigma", {}) << endl;
+        cout << "sigma   " << sigma << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
 
         
