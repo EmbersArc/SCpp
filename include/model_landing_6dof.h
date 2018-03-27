@@ -68,6 +68,8 @@ public:
     StateVector                ode(const StateVector &x, const ControlVector &u);
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
-    
+
+    static StateVector get_random_state();
+    static ControlVector get_random_input();
 
 };

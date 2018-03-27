@@ -3,7 +3,7 @@
 
 void check_jacobian(
     // inputs
-    double epsilon, double random_radius, 
+    double epsilon, 
     // outputs
     double &max_absolute_error, double &max_relative_error
 );
