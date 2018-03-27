@@ -199,7 +199,13 @@ void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t
 }
 
 size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
-    return tensor_variable_indices[name][tensor_index(indices,tensor_variable_dimensions[name])];
+    assert(tensor_variable_indices.count(name) > 0);
+    auto dims = tensor_variable_dimensions[name];
+    assert(indices.size() == dims.size());
+    for (size_t i = 0; i < indices.size(); ++i) {
+        assert(indices[i] < dims[i]);
+    }
+    return tensor_variable_indices[name][tensor_index(indices,dims)];
 }
 
 optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {
@@ -222,8 +228,8 @@ void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
     equalityConstraints.push_back(c);
 }
 
-void EcosWrapper::set_cost_function(optimization_problem::AffineExpression c) {
-    costFunction = c;
+void EcosWrapper::add_minimization_term(optimization_problem::AffineExpression c) {
+    costFunction = costFunction + c;
 }
 
 
@@ -351,6 +357,7 @@ void EcosWrapper::compile_problem_structure() {
 
 
     /* ECOS size parameters */
+    ecos_solution_vector.resize(n_variables);
     ecos_n_variables = n_variables;
     ecos_n_cone_constraints = secondOrderConeConstraints.size();
     ecos_n_equalities = equalityConstraints.size();
@@ -487,16 +494,9 @@ void EcosWrapper::solve_problem() {
         ecos_exitflag = ECOS_solve(mywork); 
 
         // copy solution
-        ecos_solution_vector.resize(ecos_n_variables);
         for (int i = 0; i < ecos_n_variables; ++i) {
             ecos_solution_vector[i] = mywork->x[i];
-        }        
-
-        if(ecos_exitflag == ECOS_OPTIMAL) {
-            std::cout << "optimal solution found" << std::endl;
-        } else {
-            std::cout << "optimal solution not found" << std::endl;
         }
     }
-    ECOS_cleanup(mywork, 0);
+    ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
 }

@@ -1,49 +1,6 @@
 #include "model_landing_6dof.h"
 
 
-
-void model_landing_6dof::initialize(int K, MatrixXd &X, MatrixXd &U) {
-
-    //initial state
-    double m_wet = 2;
-    ControlVector r_I_init(4., 4., 0.);
-    ControlVector v_I_init(0., -2., -2.);
-    Vector4d q_B_I_init(1.0, 0.0, 0.0, 0.0);
-    ControlVector w_B_init(0., 0., 0.);
-    VectorXd x_init(14);
-
-    //final state
-    double m_dry = 1;
-    ControlVector r_I_final(0., 0., 0.);
-    ControlVector v_I_final(-1e-1, 0., 0.);
-    Vector4d q_B_I_final(1.0, 0.0, 0.0, 0.0);
-    ControlVector w_B_final(0., 0., 0.);
-    VectorXd x_final(14);
-
-
-    //gravity vector
-    ControlVector g_I(-1, 0, 0);
-
-    x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-    x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
-
-
-
-    double alpha1, alpha2;
-    for(int k=0; k<K; k++) {
-        alpha1 = double(K-k)/K;
-        alpha2 = double(k)/K;
-        X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
-        X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
-        X.col(k).segment(7, 4) << 1., 0., 0., 0.;
-        X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
-
-        U.col(k) = X(0, k) * -g_I;
-    }
-}
-
-
-
 model_landing_6dof::StateMatrix model_landing_6dof::state_jacobian(const StateVector &x, const ControlVector &u) {
     StateMatrix A;
 
@@ -169,6 +126,10 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
         - (r_T_B[0] * u[2] - r_T_B[2] * u[0] + J_B[0] * x[11] * x[13] - J_B[2] * x[11] * x[13]) / J_B[1],
         (r_T_B[0] * u[1] - r_T_B[1] * u[0] + J_B[0] * x[11] * x[12] - J_B[1] * x[11] * x[12]) / J_B[2];
     return f;
+}
+
+void model_landing_6dof::add_application_constraints(EcosWrapper &solver, size_t K) {
+    // TODO
 }
 
 model_landing_6dof::StateVector model_landing_6dof::get_random_state() {

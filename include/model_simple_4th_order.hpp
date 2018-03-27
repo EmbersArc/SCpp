@@ -1,8 +1,7 @@
 #pragma once
 
-
+#include "EcosWrapper.hpp"
 #include <Eigen/Dense>
-using namespace Eigen;
 
 
 class model_simple_4th_order {
@@ -18,11 +17,19 @@ public:
 
     double total_time_guess() { return 3; }
 
-    void initialize(int K, MatrixXd &X, MatrixXd &U);
+    template<int K>
+    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
+        X.setZero();
+        U.setZero();
+    }
 
     StateVector                ode(const StateVector &x, const ControlVector &u);
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
     
+    void add_application_constraints(EcosWrapper &solver, size_t K);
+    
+    StateVector get_random_state();
+    ControlVector get_random_input();
 
 };

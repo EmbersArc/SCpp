@@ -7,6 +7,7 @@
 #include <sstream> 
 #include <experimental/optional> 
 #include <utility>
+#include <functional>
 
 #include "ecos.h"
 using std::vector;
@@ -30,19 +31,30 @@ namespace optimization_problem {
         string print() const;
     };
 
+    enum class ParameterSource { Constant, Pointer, Callback };
+
     class Parameter { // represents a parameter p_i in the opt-problem that can be changed between problem evaluations.
+        std::function<double()> callback;
         const double* dynamic_value_ptr = NULL;
         double const_value = 0;
-        bool is_const;
+        ParameterSource parameterSource;
     public:
-        Parameter(const double* dynamic_value_ptr):dynamic_value_ptr(dynamic_value_ptr),is_const(false) {
-            if(dynamic_value_ptr == NULL) throw std::runtime_error("Null Pointer Error: Parameter(NULL)");
+        explicit Parameter(std::function<double()> callback):callback(callback),parameterSource(ParameterSource::Callback) {
+            if(!callback) throw std::runtime_error("Parameter(callback), Invalid Callback Error");
         }
-        Parameter(double const_value):const_value(const_value),is_const(true){}
-        Parameter():const_value(0),is_const(true){}
+        explicit Parameter(const double* dynamic_value_ptr):dynamic_value_ptr(dynamic_value_ptr),parameterSource(ParameterSource::Pointer) {
+            if(dynamic_value_ptr == NULL) throw std::runtime_error("Parameter(NULL), Null Pointer Error");
+        }
+        explicit Parameter(double const_value):const_value(const_value),parameterSource(ParameterSource::Constant){}
+        Parameter():const_value(0),parameterSource(ParameterSource::Constant){}
         double get_value() const {
-            if(is_const) return const_value;
-            return *dynamic_value_ptr;
+            if(parameterSource == ParameterSource::Callback) {
+                return callback();
+            }
+            if(parameterSource == ParameterSource::Pointer) {
+                return *dynamic_value_ptr;
+            }
+            return const_value;
         }
         string print() const;
         operator AffineTerm();
@@ -119,7 +131,7 @@ class EcosWrapper {
     vector<optimization_problem::SecondOrderConeConstraint> secondOrderConeConstraints;
     vector<optimization_problem::PostiveConstraint> postiveConstraints;
     vector<optimization_problem::EqualityConstraint> equalityConstraints;
-    optimization_problem::AffineExpression costFunction;
+    optimization_problem::AffineExpression costFunction = optimization_problem::Parameter(0.0);
 
     /* ECOS problem parameters */
     idxint         ecos_n_variables;
@@ -153,7 +165,7 @@ public:
     void add_constraint(optimization_problem::SecondOrderConeConstraint c);
     void add_constraint(optimization_problem::PostiveConstraint c);
     void add_constraint(optimization_problem::EqualityConstraint c);
-    void set_cost_function(optimization_problem::AffineExpression c);
+    void add_minimization_term(optimization_problem::AffineExpression c);
     void compile_problem_structure();
     void solve_problem();
 
