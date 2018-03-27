@@ -28,7 +28,7 @@ model_simple_4th_order::StateVector model_simple_4th_order::ode(const StateVecto
 }
 
 
-void model_simple_4th_order::add_application_constraints(EcosWrapper &solver, int K) {
+void model_simple_4th_order::add_application_constraints(EcosWrapper &solver, size_t K) {
 
     auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
@@ -49,4 +49,17 @@ void model_simple_4th_order::add_application_constraints(EcosWrapper &solver, in
         solver.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
     }
 
+}
+
+
+model_simple_4th_order::StateVector model_simple_4th_order::get_random_state() {
+    StateVector X;
+    X.setRandom();
+    return X;
+}
+
+model_simple_4th_order::ControlVector model_simple_4th_order::get_random_input() {
+    ControlVector U;
+    U.setRandom();
+    return U;
 }

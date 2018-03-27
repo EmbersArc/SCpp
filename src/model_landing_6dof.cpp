@@ -128,6 +128,10 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
     return f;
 }
 
+void model_landing_6dof::add_application_constraints(EcosWrapper &solver, size_t K) {
+    // TODO
+}
+
 model_landing_6dof::StateVector model_landing_6dof::get_random_state() {
     StateVector X;
     X.setRandom();

@@ -27,6 +27,9 @@ public:
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
     
-    void add_application_constraints(EcosWrapper &solver, int K);
+    void add_application_constraints(EcosWrapper &solver, size_t K);
+    
+    StateVector get_random_state();
+    ControlVector get_random_input();
 
 };

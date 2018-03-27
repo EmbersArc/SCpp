@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include "EcosWrapper.hpp"
 #include <Eigen/Dense>
 using namespace Eigen;
 
@@ -69,7 +70,9 @@ public:
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
 
-    static StateVector get_random_state();
-    static ControlVector get_random_input();
+    void add_application_constraints(EcosWrapper &solver, size_t K);
+
+    StateVector get_random_state();
+    ControlVector get_random_input();
 
 };
