@@ -80,7 +80,7 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr int K = 20;
+    constexpr size_t K = 50;
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 1.0;
@@ -122,12 +122,15 @@ int main() {
         solver.create_tensor_variable("nu", {n_states, K-1}); // virtual control
         solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
         solver.create_tensor_variable("sigma", {}); // total time
-        solver.create_tensor_variable("Delta_sigma", {});
+        solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
         auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
         auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
+
+        // Main objective: minimize total time
+        solver.add_minimization_term( 1.0 * var("sigma", {}) );
 
 
         for (size_t k = 0; k < K-1; k++) {
@@ -208,20 +211,23 @@ int main() {
             // Minimize Delta_sigma
             solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
+
+        // TODO state and input trust region
+
+
+        model.add_application_constraints(solver, K);
+        solver.compile_problem_structure();
     }
 
 
-    return 0;
-
-
-    const int iterations = 1;
-    for(int it = 1; it < iterations + 1; it++) {
+    const size_t iterations = 1;
+    for(size_t it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
 
         const clock_t begin_time = clock();
 
-        for (int k = 0; k < K-1; k++) {
+        for (size_t k = 0; k < K-1; k++) {
             DiscretizationODE::state_type V;
             V.setZero();
             V.col(0) = X.col(k);
@@ -251,6 +257,39 @@ int main() {
         cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
         // TODO: Solve problem.
+        solver.solve_problem();
+
+
+        cout << "X" << endl;
+        for (size_t i_x = 0; i_x < n_states; ++i_x) {
+            for (size_t k = 0; k < K; k++) {
+                cout << solver.get_solution_value("X", {i_x,k}) << "  ";
+            }
+            cout << ";" <<  endl;
+        }
+        
+        cout << "U" << endl;
+        for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
+            for (size_t k = 0; k < K; k++) {
+                cout << solver.get_solution_value("U", {i_u,k}) << "  ";
+            }
+            cout << ";" <<  endl;
+        }
+        
+        cout << "nu" << endl;
+        for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
+            for (size_t k = 0; k < K-1; k++) {
+                cout << solver.get_solution_value("nu", {i_u,k}) << "  ";
+            }
+            cout << ";" <<  endl;
+        }
+
+
+        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
+        cout << "sigma   " << solver.get_solution_value("sigma", {}) << endl;
+        cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
+
+        
 
     }
 }

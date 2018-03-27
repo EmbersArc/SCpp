@@ -1,8 +1,7 @@
 #pragma once
 
-
+#include "EcosWrapper.hpp"
 #include <Eigen/Dense>
-using namespace Eigen;
 
 
 class model_simple_4th_order {
@@ -28,5 +27,6 @@ public:
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
     
+    void add_application_constraints(EcosWrapper &solver, int K);
 
 };
