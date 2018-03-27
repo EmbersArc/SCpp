@@ -199,7 +199,13 @@ void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t
 }
 
 size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
-    return tensor_variable_indices[name][tensor_index(indices,tensor_variable_dimensions[name])];
+    assert(tensor_variable_indices.count(name) > 0);
+    auto dims = tensor_variable_dimensions[name];
+    assert(indices.size() == dims.size());
+    for (size_t i = 0; i < indices.size(); ++i) {
+        assert(indices[i] < dims[i]);
+    }
+    return tensor_variable_indices[name][tensor_index(indices,dims)];
 }
 
 optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {

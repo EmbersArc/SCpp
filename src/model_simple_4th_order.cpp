@@ -1,14 +1,6 @@
 #include "model_simple_4th_order.hpp"
 
 
-
-void model_simple_4th_order::initialize(int K, MatrixXd &X, MatrixXd &U) {
-    X.setZero();
-    U.setZero();
-}
-
-
-
 model_simple_4th_order::StateMatrix model_simple_4th_order::state_jacobian(const StateVector &x, const ControlVector &u) {
     StateMatrix A;
     A.setZero();
