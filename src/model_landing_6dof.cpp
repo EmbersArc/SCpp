@@ -170,3 +170,23 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
         (r_T_B[0] * u[1] - r_T_B[1] * u[0] + J_B[0] * x[11] * x[12] - J_B[1] * x[11] * x[12]) / J_B[2];
     return f;
 }
+
+model_landing_6dof::StateVector model_landing_6dof::get_random_state() {
+    StateVector X;
+    X.setRandom();
+
+    X(0) = abs(X(0)) + 1.;
+    X(1) = abs(X(1)) + 1.;
+    X.segment(7, 4).normalize();
+
+    return X;
+}
+
+model_landing_6dof::ControlVector model_landing_6dof::get_random_input() {
+    ControlVector U;
+    U.setRandom();
+    U.normalize();
+    U(0) = abs(U(0));
+
+    return U;
+}
