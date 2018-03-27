@@ -7,7 +7,7 @@ execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DI
 
 
 set(CMAKE_CXX_STANDARD 14)
-add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type)
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O1)
 
 find_package(Boost REQUIRED)   
 find_package(OpenMP REQUIRED)

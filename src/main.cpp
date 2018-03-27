@@ -111,8 +111,6 @@ int main() {
     array<Model::StateVector,   (K-1)> z_bar;
 
 
-    using namespace boost::numeric::odeint;
-    runge_kutta_dopri5<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
     /** Solver setup **/
     EcosWrapper solver;
@@ -230,6 +228,9 @@ int main() {
     }
 
 
+    using namespace boost::numeric::odeint;
+    runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
+
     const size_t iterations = 10;
     for(size_t it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
@@ -244,7 +245,7 @@ int main() {
             V.block<Model::n_states,Model::n_states>(0, 1).setIdentity();
 
             DiscretizationODE discretizationODE(U.col(k), U.col(k+1), sigma, dt, model);
-            integrate_adaptive(make_controlled(1E-4, 1E-4, stepper), discretizationODE, V, 0., dt, dt/10.);
+            integrate_n_steps( stepper , discretizationODE , V , 0. , dt/10.0 , 10 );
 
             size_t cols = 1;
             A_bar[k]      =            V.block<Model::n_states,Model::n_states>(0, cols);   cols += Model::n_states;
