@@ -12,15 +12,13 @@ int main() {
     vector<double> max_absolute_errors(epsilons.size(), 0);
     vector<double> max_relative_errors(epsilons.size(), 0);
 
-    const double random_radius = 1;
-
     for (int j = 0; j < 100; ++j) {
         for (size_t i = 0; i < epsilons.size(); ++i) {
 
             double max_absolute_error = 0;
             double max_relative_error = 0;
 
-            check_jacobian( epsilons[i], random_radius, max_absolute_error, max_relative_error );
+            check_jacobian( epsilons[i], max_absolute_error, max_relative_error );
 
             max_absolute_errors[i] = fmax(max_absolute_errors[i], max_absolute_error);
             max_relative_errors[i] = fmax(max_relative_errors[i], max_relative_error);
