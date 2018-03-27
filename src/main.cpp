@@ -122,10 +122,12 @@ int main() {
         solver.create_tensor_variable("nu", {n_states, K-1}); // virtual control
         solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
         solver.create_tensor_variable("sigma", {}); // total time
+        solver.create_tensor_variable("Delta_sigma", {});
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
         auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
+        auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
 
         for (size_t k = 0; k < K-1; k++) {
@@ -178,6 +180,33 @@ int main() {
 
             // Minimize the virtual control
             solver.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
+        }
+
+        // Build sigma trust region
+        // (sigma-sigma0) * (sigma-sigma0) <= Delta_sigma
+        //          is equivalent to
+        //   norm2([
+        //       ((-sigma0)*sigma   +(-0.5)*Delta_sigma  +(0.5+0.5*sigma0*sigma0)  ),
+        //       sigma
+        //   ])
+        //   <= (  +(sigma0)*sigma  +(0.5)*Delta_sigma    +(0.5-0.5*sigma0*sigma0)   )
+        {
+            // Formulas involving sigma, from the above comment
+            auto sigma_fn1 = param_fn([&sigma]()->double{ return -sigma; });
+            auto sigma_fn2 = param_fn([&sigma]()->double{ return (0.5+0.5*sigma*sigma); });
+            auto sigma_fn3 = param_fn([&sigma]()->double{ return sigma; });
+            auto sigma_fn4 = param_fn([&sigma]()->double{ return (0.5-0.5*sigma*sigma); });
+
+            solver.add_constraint( 
+                optimization_problem::norm2({
+                    sigma_fn1*var("sigma", {})  +  (-0.5)*var("Delta_sigma", {})  +  sigma_fn2,
+                    (1.0)*var("sigma", {})
+                }) 
+                <= sigma_fn3*var("sigma", {})  +  (0.5)*var("Delta_sigma", {})  +  sigma_fn4
+            );
+
+            // Minimize Delta_sigma
+            solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
     }
 

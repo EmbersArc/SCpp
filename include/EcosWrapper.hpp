@@ -39,13 +39,13 @@ namespace optimization_problem {
         double const_value = 0;
         ParameterSource parameterSource;
     public:
-        Parameter(std::function<double()> callback):callback(callback),parameterSource(ParameterSource::Callback) {
+        explicit Parameter(std::function<double()> callback):callback(callback),parameterSource(ParameterSource::Callback) {
             if(!callback) throw std::runtime_error("Parameter(callback), Invalid Callback Error");
         }
-        Parameter(const double* dynamic_value_ptr):dynamic_value_ptr(dynamic_value_ptr),parameterSource(ParameterSource::Pointer) {
+        explicit Parameter(const double* dynamic_value_ptr):dynamic_value_ptr(dynamic_value_ptr),parameterSource(ParameterSource::Pointer) {
             if(dynamic_value_ptr == NULL) throw std::runtime_error("Parameter(NULL), Null Pointer Error");
         }
-        Parameter(double const_value):const_value(const_value),parameterSource(ParameterSource::Constant){}
+        explicit Parameter(double const_value):const_value(const_value),parameterSource(ParameterSource::Constant){}
         Parameter():const_value(0),parameterSource(ParameterSource::Constant){}
         double get_value() const {
             if(parameterSource == ParameterSource::Callback) {
