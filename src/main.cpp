@@ -15,6 +15,9 @@
 #include <array>
 #include <cmath>
 #include <ctime>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
@@ -22,6 +25,10 @@
 using std::array;
 using std::cout;
 using std::endl;
+using std::ofstream;
+using std::ostringstream;
+using std::setw;
+using std::setfill;
 
 
 class DiscretizationODE {
@@ -76,7 +83,18 @@ public:
     }
 };
 
+string get_output_path() {
+    return "../output/" + Model::get_name() + "/";
+}
+
+void make_output_path() {
+    string path = "mkdir -p " + get_output_path();
+    system(path.c_str());
+}
+
+
 int main() {
+    make_output_path();
     Model model;
 
     // trajectory points
@@ -281,26 +299,25 @@ int main() {
         sigma = solver.get_solution_value(sigma_index);
 
 
-
-        cout << "X" << endl;
-        for (size_t i_x = 0; i_x < n_states; ++i_x) {
-            for (size_t k = 0; k < K; k++) cout << X(i_x, k) << "  ";
-            cout << ";" <<  endl;
+        // Write solution to files
+        string file_name_prefix;
+        {
+            ostringstream file_name_prefix_ss;
+            file_name_prefix_ss << get_output_path() << "iteration"
+            << setfill('0') << setw(3) << it << "_";
+            file_name_prefix = file_name_prefix_ss.str();
         }
-        
-        cout << "U" << endl;
-        for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
-            for (size_t k = 0; k < K; k++) cout << U(i_u,k) << "  ";
-            cout << ";" <<  endl;
+        {
+            ofstream f(file_name_prefix + "X.txt");
+            f << X;
         }
-        
-
+        {
+            ofstream f(file_name_prefix + "U.txt");
+            f << U;
+        }
 
         cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "sigma   " << sigma << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
-
-        
-
     }
 }
