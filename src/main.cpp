@@ -212,10 +212,10 @@ int main() {
         //   <= (  +(sigma0)*sigma  +(0.5)*Delta_sigma    +(0.5-0.5*sigma0*sigma0)   )
         {
             // Formulas involving sigma, from the above comment
-            auto sigma_fn1 = param_fn([&sigma]()->double{ return -sigma; });
-            auto sigma_fn2 = param_fn([&sigma]()->double{ return (0.5+0.5*sigma*sigma); });
-            auto sigma_fn3 = param_fn([&sigma]()->double{ return sigma; });
-            auto sigma_fn4 = param_fn([&sigma]()->double{ return (0.5-0.5*sigma*sigma); });
+            auto sigma_fn1 = param_fn([&sigma](){ return -sigma; });
+            auto sigma_fn2 = param_fn([&sigma](){ return (0.5+0.5*sigma*sigma); });
+            auto sigma_fn3 = param_fn([&sigma](){ return sigma; });
+            auto sigma_fn4 = param_fn([&sigma](){ return (0.5-0.5*sigma*sigma); });
 
             solver.add_constraint( 
                 optimization_problem::norm2({
@@ -240,14 +240,38 @@ int main() {
              * The constraint is equivalent to the SOCP form:
              * 
              * norm2(
-             *         ( (-x0^T)*x  +(-u0^T)*u  +(-0.5)*d  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)),
+             *         ( (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)),
              *         (I)*x, 
              *         (I)*u
              * )
-             *     <= (  ( x0^T)*x  +( u0^T)*u  +( 0.5)*d  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0));
+             *     <= (  ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0));
              * 
              */
-            
+
+            optimization_problem::AffineExpression norm2_first_arg;
+
+            // (-x0^T)*x
+            for (size_t i = 0; i < n_states; ++i) {
+                norm2_first_arg = norm2_first_arg + 
+                    param_fn([&X,i,k](){ return -X(i,k); }) * var("X", {i,k});
+            }
+
+            // +(-u0^T)*u
+            for (size_t i = 0; i < n_inputs; ++i) {
+                norm2_first_arg = norm2_first_arg + 
+                    param_fn([&U,i,k](){ return -U(i,k); }) * var("U", {i,k});
+            }
+
+            // +(-0.5)*Delta
+            norm2_first_arg = norm2_first_arg + (-0.5) * var("Delta", {k});
+
+            // +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
+            norm2_first_arg = norm2_first_arg + param_fn([&X,&U,k](){ 
+                // TODO
+            });
+
+
+
         }
 
 
