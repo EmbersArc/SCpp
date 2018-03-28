@@ -102,7 +102,7 @@ int main() {
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 5e1;
-    const double weight_trust_region_xu = 1e-3;
+    const double weight_trust_region_xu = 1e-9;
     const double weight_virtual_control = 1e2;
 
     const size_t n_states = Model::n_states;
@@ -140,6 +140,7 @@ int main() {
         solver.create_tensor_variable("sigma", {}); // total time
         solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
         solver.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
+        solver.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
@@ -248,31 +249,84 @@ int main() {
              * 
              */
 
-            optimization_problem::AffineExpression norm2_first_arg;
+            vector<optimization_problem::AffineExpression> norm2_args;
 
-            // (-x0^T)*x
+            { // (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
+                optimization_problem::AffineExpression norm2_first_arg;
+
+                // (-x0^T)*x
+                for (size_t i = 0; i < n_states; ++i) {
+                    norm2_first_arg = norm2_first_arg + 
+                        param_fn([&X,i,k](){ return -X(i,k); }) * var("X", {i,k});
+                }
+
+                // +(-u0^T)*u
+                for (size_t i = 0; i < n_inputs; ++i) {
+                    norm2_first_arg = norm2_first_arg + 
+                        param_fn([&U,i,k](){ return -U(i,k); }) * var("U", {i,k});
+                }
+
+                // +(-0.5)*Delta
+                norm2_first_arg = norm2_first_arg + (-0.5) * var("Delta", {k});
+
+                // +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
+                norm2_first_arg = norm2_first_arg + param_fn([&X,&U,k](){
+                    return 0.5 * (1.0 + X.col(k).dot(X.col(k)) + U.col(k).dot(U.col(k)));
+                });
+
+                norm2_args.push_back(norm2_first_arg);
+            }
+
+            // (I)*x,
             for (size_t i = 0; i < n_states; ++i) {
-                norm2_first_arg = norm2_first_arg + 
-                    param_fn([&X,i,k](){ return -X(i,k); }) * var("X", {i,k});
+                norm2_args.push_back( (1.0) * var("X", {i,k}) );
             }
 
-            // +(-u0^T)*u
+            // (I)*u
             for (size_t i = 0; i < n_inputs; ++i) {
-                norm2_first_arg = norm2_first_arg + 
-                    param_fn([&U,i,k](){ return -U(i,k); }) * var("U", {i,k});
+                norm2_args.push_back( (1.0) * var("U", {i,k}) );
             }
 
-            // +(-0.5)*Delta
-            norm2_first_arg = norm2_first_arg + (-0.5) * var("Delta", {k});
+            // Right hand side
+            // ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
+            optimization_problem::AffineExpression rhs;
 
-            // +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
-            norm2_first_arg = norm2_first_arg + param_fn([&X,&U,k](){ 
-                // TODO
+            // ( x0^T)*x
+            for (size_t i = 0; i < n_states; ++i) {
+                rhs = rhs + param(X(i,k)) * var("X", {i,k});
+            }
+
+            // +( u0^T)*u
+            for (size_t i = 0; i < n_inputs; ++i) {
+                rhs = rhs + param(U(i,k)) * var("U", {i,k});
+            }
+
+            // +( 0.5)*Delta
+            rhs = rhs + (0.5) * var("Delta", {k});
+
+            // +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
+            rhs = rhs + param_fn([&X,&U,k](){
+                return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
             });
 
-
-
+            solver.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
         }
+
+        /*
+         * Build combined state/input trust region over all K:
+         *   norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
+         */
+        {
+            vector<optimization_problem::AffineExpression> norm2_args;
+            for (size_t k = 0; k < K; k++) {
+                norm2_args.push_back( (1.0) * var("Delta", {k}) );
+            }
+            solver.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
+
+            // Minimize norm2_Delta
+            solver.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
+        }
+
 
 
 
@@ -361,8 +415,10 @@ int main() {
             f << U;
         }
 
-        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "sigma   " << sigma << endl;
+        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
+        cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
+        cout << "==========================================================" << endl;
     }
 }
