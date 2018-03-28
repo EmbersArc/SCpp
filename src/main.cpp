@@ -98,7 +98,7 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr size_t K = 80;
+    constexpr size_t K = 40;
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 5e1;
@@ -139,6 +139,7 @@ int main() {
         solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
         solver.create_tensor_variable("sigma", {}); // total time
         solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
+        solver.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
@@ -228,7 +229,27 @@ int main() {
             solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
 
-        // TODO state and input trust region
+
+
+        
+        for (size_t k = 0; k < K; k++) {
+            /* 
+             * Build state and input trust-region:
+             *     (x - x0)^T * (x - x0)  +  (u - u0)^T * (u - u0)  <=  Delta
+             * the index k is omitted, but applies to all terms in the constraint.
+             * The constraint is equivalent to the SOCP form:
+             * 
+             * norm2(
+             *         ( (-x0^T)*x  +(-u0^T)*u  +(-0.5)*d  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)),
+             *         (I)*x, 
+             *         (I)*u
+             * )
+             *     <= (  ( x0^T)*x  +( u0^T)*u  +( 0.5)*d  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0));
+             * 
+             */
+            
+        }
+
 
 
         model.add_application_constraints(solver, K);
