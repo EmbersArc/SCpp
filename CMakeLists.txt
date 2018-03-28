@@ -30,6 +30,8 @@ link_libraries(ecos)
 add_library(successiveConvexification STATIC 
     include/model_landing_6dof.h
         src/model_landing_6dof.cpp
+    include/model_landing_3dof.h
+        src/model_landing_3dof.cpp
     include/model_simple_4th_order.hpp
         src/model_simple_4th_order.cpp
     include/EcosWrapper.hpp

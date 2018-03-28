@@ -15,6 +15,9 @@
 #include <array>
 #include <cmath>
 #include <ctime>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
@@ -22,6 +25,10 @@
 using std::array;
 using std::cout;
 using std::endl;
+using std::ofstream;
+using std::ostringstream;
+using std::setw;
+using std::setfill;
 
 
 class DiscretizationODE {
@@ -76,15 +83,26 @@ public:
     }
 };
 
+string get_output_path() {
+    return "../output/" + Model::get_name() + "/";
+}
+
+void make_output_path() {
+    string path = "mkdir -p " + get_output_path();
+    system(path.c_str());
+}
+
+
 int main() {
+    make_output_path();
     Model model;
 
     // trajectory points
-    constexpr size_t K = 50;
+    constexpr size_t K = 40;
     const double dt = 1 / double(K-1);
 
-    const double weight_trust_region_sigma = 1.0;
-    const double weight_trust_region_xu = 1e-3;
+    const double weight_trust_region_sigma = 5e1;
+    const double weight_trust_region_xu = 1e-9;
     const double weight_virtual_control = 1e2;
 
     const size_t n_states = Model::n_states;
@@ -121,6 +139,8 @@ int main() {
         solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
         solver.create_tensor_variable("sigma", {}); // total time
         solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
+        solver.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
+        solver.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
@@ -193,10 +213,10 @@ int main() {
         //   <= (  +(sigma0)*sigma  +(0.5)*Delta_sigma    +(0.5-0.5*sigma0*sigma0)   )
         {
             // Formulas involving sigma, from the above comment
-            auto sigma_fn1 = param_fn([&sigma]()->double{ return -sigma; });
-            auto sigma_fn2 = param_fn([&sigma]()->double{ return (0.5+0.5*sigma*sigma); });
-            auto sigma_fn3 = param_fn([&sigma]()->double{ return sigma; });
-            auto sigma_fn4 = param_fn([&sigma]()->double{ return (0.5-0.5*sigma*sigma); });
+            auto sigma_fn1 = param_fn([&sigma](){ return -sigma; });
+            auto sigma_fn2 = param_fn([&sigma](){ return (0.5+0.5*sigma*sigma); });
+            auto sigma_fn3 = param_fn([&sigma](){ return sigma; });
+            auto sigma_fn4 = param_fn([&sigma](){ return (0.5-0.5*sigma*sigma); });
 
             solver.add_constraint( 
                 optimization_problem::norm2({
@@ -210,7 +230,104 @@ int main() {
             solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
 
-        // TODO state and input trust region
+
+
+        
+        for (size_t k = 0; k < K; k++) {
+            /* 
+             * Build state and input trust-region:
+             *     (x - x0)^T * (x - x0)  +  (u - u0)^T * (u - u0)  <=  Delta
+             * the index k is omitted, but applies to all terms in the constraint.
+             * The constraint is equivalent to the SOCP form:
+             * 
+             * norm2(
+             *         ( (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)),
+             *         (I)*x, 
+             *         (I)*u
+             * )
+             *     <= (  ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0));
+             * 
+             */
+
+            vector<optimization_problem::AffineExpression> norm2_args;
+
+            { // (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
+                optimization_problem::AffineExpression norm2_first_arg;
+
+                // (-x0^T)*x
+                for (size_t i = 0; i < n_states; ++i) {
+                    norm2_first_arg = norm2_first_arg + 
+                        param_fn([&X,i,k](){ return -X(i,k); }) * var("X", {i,k});
+                }
+
+                // +(-u0^T)*u
+                for (size_t i = 0; i < n_inputs; ++i) {
+                    norm2_first_arg = norm2_first_arg + 
+                        param_fn([&U,i,k](){ return -U(i,k); }) * var("U", {i,k});
+                }
+
+                // +(-0.5)*Delta
+                norm2_first_arg = norm2_first_arg + (-0.5) * var("Delta", {k});
+
+                // +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
+                norm2_first_arg = norm2_first_arg + param_fn([&X,&U,k](){
+                    return 0.5 * (1.0 + X.col(k).dot(X.col(k)) + U.col(k).dot(U.col(k)));
+                });
+
+                norm2_args.push_back(norm2_first_arg);
+            }
+
+            // (I)*x,
+            for (size_t i = 0; i < n_states; ++i) {
+                norm2_args.push_back( (1.0) * var("X", {i,k}) );
+            }
+
+            // (I)*u
+            for (size_t i = 0; i < n_inputs; ++i) {
+                norm2_args.push_back( (1.0) * var("U", {i,k}) );
+            }
+
+            // Right hand side
+            // ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
+            optimization_problem::AffineExpression rhs;
+
+            // ( x0^T)*x
+            for (size_t i = 0; i < n_states; ++i) {
+                rhs = rhs + param(X(i,k)) * var("X", {i,k});
+            }
+
+            // +( u0^T)*u
+            for (size_t i = 0; i < n_inputs; ++i) {
+                rhs = rhs + param(U(i,k)) * var("U", {i,k});
+            }
+
+            // +( 0.5)*Delta
+            rhs = rhs + (0.5) * var("Delta", {k});
+
+            // +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
+            rhs = rhs + param_fn([&X,&U,k](){
+                return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
+            });
+
+            solver.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
+        }
+
+        /*
+         * Build combined state/input trust region over all K:
+         *   norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
+         */
+        {
+            vector<optimization_problem::AffineExpression> norm2_args;
+            for (size_t k = 0; k < K; k++) {
+                norm2_args.push_back( (1.0) * var("Delta", {k}) );
+            }
+            solver.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
+
+            // Minimize norm2_Delta
+            solver.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
+        }
+
+
 
 
         model.add_application_constraints(solver, K);
@@ -231,7 +348,7 @@ int main() {
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-    const size_t iterations = 10;
+    const size_t iterations = 40;
     for(size_t it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
@@ -281,26 +398,27 @@ int main() {
         sigma = solver.get_solution_value(sigma_index);
 
 
-
-        cout << "X" << endl;
-        for (size_t i_x = 0; i_x < n_states; ++i_x) {
-            for (size_t k = 0; k < K; k++) cout << X(i_x, k) << "  ";
-            cout << ";" <<  endl;
+        // Write solution to files
+        string file_name_prefix;
+        {
+            ostringstream file_name_prefix_ss;
+            file_name_prefix_ss << get_output_path() << "iteration"
+            << setfill('0') << setw(3) << it << "_";
+            file_name_prefix = file_name_prefix_ss.str();
         }
-        
-        cout << "U" << endl;
-        for (size_t i_u = 0; i_u < n_inputs; ++i_u) {
-            for (size_t k = 0; k < K; k++) cout << U(i_u,k) << "  ";
-            cout << ";" <<  endl;
+        {
+            ofstream f(file_name_prefix + "X.txt");
+            f << X;
         }
-        
+        {
+            ofstream f(file_name_prefix + "U.txt");
+            f << U;
+        }
 
-
-        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "sigma   " << sigma << endl;
+        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
-
-        
-
+        cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
+        cout << "==========================================================" << endl;
     }
 }
