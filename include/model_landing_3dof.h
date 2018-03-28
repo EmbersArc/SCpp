@@ -14,6 +14,15 @@ class model_landing_3dof {
     const double rG = 12.0; // Radius of gyration
     const double rTB = 20.0; // Lever arm, distance: engines to CG
 
+    const double max_gimbal_angle = 0.2;
+
+    double rx_init = 10;
+    double ry_init = 100;
+    double vx_init = 0;
+    double vy_init = 0;
+    double theta_init = 0;
+    double dtheta_init = 0;
+
 public:
 
     static constexpr size_t n_states = 6;

@@ -231,7 +231,7 @@ int main() {
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-    const size_t iterations = 10;
+    const size_t iterations = 40;
     for(size_t it = 1; it < iterations + 1; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
