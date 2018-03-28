@@ -98,10 +98,10 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr size_t K = 50;
+    constexpr size_t K = 80;
     const double dt = 1 / double(K-1);
 
-    const double weight_trust_region_sigma = 1.0;
+    const double weight_trust_region_sigma = 5e1;
     const double weight_trust_region_xu = 1e-3;
     const double weight_virtual_control = 1e2;
 

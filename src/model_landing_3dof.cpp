@@ -99,16 +99,20 @@ void model_landing_3dof::add_application_constraints(EcosWrapper &solver, size_t
     // TODO
 
 
-    // control constraints
     for (size_t k = 0; k < K; ++k) {
 
-        // throttle limits
+        // throttle control constraints
         solver.add_constraint( ( 1.0) * var("U", {0, k}) + (-0.1) >= (0.0) );
         solver.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
 
-        // gimbal limits
-        solver.add_constraint( ( 1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
-        solver.add_constraint( (-1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
+        // gimbal control constraints
+        if(k < 0.8 * K) {
+            solver.add_constraint( ( 1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
+            solver.add_constraint( (-1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
+        } else {
+            solver.add_constraint( ( 1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
+            solver.add_constraint( (-1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
+        }
     }
 }
 

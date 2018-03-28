@@ -14,11 +14,11 @@ class model_landing_3dof {
     const double rG = 12.0; // Radius of gyration
     const double rTB = 20.0; // Lever arm, distance: engines to CG
 
-    const double max_gimbal_angle = 0.2;
+    const double max_gimbal_angle = 0.5;
 
-    double rx_init = 10;
+    double rx_init = 40;
     double ry_init = 100;
-    double vx_init = 0;
+    double vx_init = -30;
     double vy_init = 0;
     double theta_init = 0;
     double dtheta_init = 0;
@@ -34,16 +34,14 @@ public:
     using StateMatrix   = Eigen::Matrix<double, n_states, n_states>;
     using ControlMatrix = Eigen::Matrix<double, n_states, n_inputs>;
 
-    double total_time_guess() { return 20; }
+    double total_time_guess() { return 8; }
 
     template<int K>
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
-        // TODO
+        X.setZero();
+        U.setZero();
 
-        for(int k=0; k<K; k++) {
-
-        }
     }
 
     StateVector                ode(const StateVector &x, const ControlVector &u);
