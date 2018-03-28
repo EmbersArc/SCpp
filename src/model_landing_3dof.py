@@ -43,10 +43,10 @@ def main():
 
     f[0,0] = vx
     f[1,0] = vy
-    f[2,0] = g * TWR * sympy.sin(theta + gimbalAngle)
-    f[3,0] = g * (TWR * sympy.cos(theta + gimbalAngle) - 1)
+    f[2,0] = g * TWR * throttle * sympy.sin(theta + gimbalAngle)
+    f[3,0] = g * (TWR * throttle * sympy.cos(theta + gimbalAngle) - 1)
     f[4,0] = dtheta
-    f[5,0] = -g * TWR * sympy.sin(gimbalAngle) * rTB / sympy.Mul(rG, rG, evaluate=False)
+    f[5,0] = -g * TWR * throttle * sympy.sin(gimbalAngle) * rTB / rG**2
 
     inputs = {'x':x, 'u':u}
 
