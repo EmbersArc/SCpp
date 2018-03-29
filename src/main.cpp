@@ -98,7 +98,6 @@ int main() {
     Model model;
 
     // trajectory points
-    constexpr size_t K = 40;
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 5e1;
@@ -114,7 +113,7 @@ int main() {
 
     // START INITIALIZATION
     cout << "Starting initialization." << endl;
-    model.initialize<K>(X, U);
+    model.initialize(X, U);
     cout << "Initialization finished." << endl;
 
     // START SUCCESSIVE CONVEXIFICATION
@@ -330,7 +329,7 @@ int main() {
 
 
 
-        model.add_application_constraints(solver, K);
+        model.add_application_constraints(solver);
         solver.compile_problem_structure();
     } /** End solver setup **/
 

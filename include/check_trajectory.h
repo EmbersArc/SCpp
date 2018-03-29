@@ -23,7 +23,6 @@ public:
 
 };
 
-template<int K>
 void check_trajectory(
         Eigen::Matrix<double, Model::n_states, K> &X_in,
         Eigen::Matrix<double, Model::n_inputs, K> &U,

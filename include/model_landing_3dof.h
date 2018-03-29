@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "constants.hpp"
 #include "EcosWrapper.hpp"
 #include <Eigen/Dense>
 using namespace Eigen;
@@ -36,7 +36,6 @@ public:
 
     double total_time_guess() { return 8; }
 
-    template<int K>
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
         X.setZero();
@@ -61,7 +60,7 @@ public:
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
 
-    void add_application_constraints(EcosWrapper &solver, size_t K);
+    void add_application_constraints(EcosWrapper &solver);
 
     StateVector get_random_state();
     ControlVector get_random_input();

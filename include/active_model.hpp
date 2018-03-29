@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.hpp"
 #include "model_landing_6dof.h"
 #include "model_landing_3dof.h"
 #include "model_simple_4th_order.hpp"

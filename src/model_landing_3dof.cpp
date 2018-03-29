@@ -73,7 +73,7 @@ model_landing_3dof::ControlMatrix model_landing_3dof::control_jacobian(const Sta
 
 
 
-void model_landing_3dof::add_application_constraints(EcosWrapper &solver, size_t K) {
+void model_landing_3dof::add_application_constraints(EcosWrapper &solver) {
 
     auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };

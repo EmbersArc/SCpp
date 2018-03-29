@@ -28,7 +28,7 @@ model_simple_4th_order::StateVector model_simple_4th_order::ode(const StateVecto
 }
 
 
-void model_simple_4th_order::add_application_constraints(EcosWrapper &solver, size_t K) {
+void model_simple_4th_order::add_application_constraints(EcosWrapper &solver) {
 
     auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
