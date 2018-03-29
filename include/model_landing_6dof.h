@@ -17,6 +17,7 @@ public:
 
     static constexpr size_t n_states = 14;
     static constexpr size_t n_inputs = 3;
+    static string get_name(){ return "model_landing_6dof"; }
 
     using StateVector   = Eigen::Matrix<double, n_states,        1>;
     using ControlVector = Eigen::Matrix<double, n_inputs,        1>;

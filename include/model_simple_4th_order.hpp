@@ -10,6 +10,7 @@ public:
 
     static constexpr size_t n_states = 4;
     static constexpr size_t n_inputs = 1;
+    static string get_name(){ return "model_simple_4th_order"; }
 
     using StateVector   = Eigen::Matrix<double, n_states,        1>;
     using ControlVector = Eigen::Matrix<double, n_inputs,        1>;
