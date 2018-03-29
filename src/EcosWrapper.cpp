@@ -459,16 +459,12 @@ inline vector<double> get_parameter_values(const vector<optimization_problem::Pa
 
 void EcosWrapper::solve_problem() {
 
-
-
     vector<double> ecos_cost_function_weights_values = get_parameter_values(ecos_cost_function_weights, 1.0);
     vector<double> ecos_h_values                     = get_parameter_values(ecos_h, 1.0);
     vector<double> ecos_b_values                     = get_parameter_values(ecos_b, 1.0);
     vector<double> ecos_G_data_CCS_values            = get_parameter_values(ecos_G_data_CCS, -1.0);
     vector<double> ecos_A_data_CCS_values            = get_parameter_values(ecos_A_data_CCS, -1.0);
     // The signs for A and G must be flipped because they are negative in the ECOS interface
-
-
 
 
     pwork *mywork = ECOS_setup(
@@ -499,4 +495,26 @@ void EcosWrapper::solve_problem() {
         }
     }
     ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
+}
+
+void EcosWrapper::print_problem(std::ostream &out) {
+    using std::endl;
+    out << "Minimize" << endl;
+    out << costFunction.print() << endl;
+
+    out << endl << "Subject to equality constraints" << endl;
+    for(const auto & equalityConstraint:equalityConstraints) {
+        out << equalityConstraint.print() << endl;
+    }
+
+    out << endl << "Subject to linear inequalities" << endl;
+    for(const auto & postiveConstraint:postiveConstraints) {
+        out << postiveConstraint.print() << endl;
+    }
+
+    out << endl << "Subject to cone constraints" << endl;
+    for(const auto & secondOrderConeConstraint:secondOrderConeConstraints) {
+        out << secondOrderConeConstraint.print() << endl;
+    }
+
 }

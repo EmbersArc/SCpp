@@ -383,6 +383,21 @@ int main() {
         }
         cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
 
+        // Write problem to file
+
+        string file_name_prefix;
+        {
+            ostringstream file_name_prefix_ss;
+            file_name_prefix_ss << get_output_path() << "iteration"
+            << setfill('0') << setw(3) << it << "_";
+            file_name_prefix = file_name_prefix_ss.str();
+        }
+        
+        {
+            ofstream f(file_name_prefix + "problem.txt");
+            solver.print_problem(f);
+        }
+
         /************************************************************************************/
         cout << "Solving problem" << endl;
         begin_time = clock();
@@ -398,13 +413,7 @@ int main() {
 
 
         // Write solution to files
-        string file_name_prefix;
-        {
-            ostringstream file_name_prefix_ss;
-            file_name_prefix_ss << get_output_path() << "iteration"
-            << setfill('0') << setw(3) << it << "_";
-            file_name_prefix = file_name_prefix_ss.str();
-        }
+
         {
             ofstream f(file_name_prefix + "X.txt");
             f << X;
