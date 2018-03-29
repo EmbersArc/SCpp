@@ -100,9 +100,9 @@ int main() {
     // trajectory points
     const double dt = 1 / double(K-1);
 
-    const double weight_trust_region_sigma = 5e1;
+    const double weight_trust_region_sigma = 100;
     const double weight_trust_region_xu = 1e-9;
-    const double weight_virtual_control = 1e2;
+    const double weight_virtual_control = 100;
 
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
@@ -348,7 +348,7 @@ int main() {
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
     const size_t iterations = 40;
-    for(size_t it = 1; it < iterations + 1; it++) {
+    for(size_t it = 0; it < iterations; it++) {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
 

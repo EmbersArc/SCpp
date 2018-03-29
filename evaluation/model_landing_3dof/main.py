@@ -3,16 +3,42 @@ import matplotlib.pyplot as plt
 from matplotlib import collections  as mc
 from math import cos, sin
 
-def main():
-    X = np.loadtxt("../../output/model_landing_3dof/iteration040_X.txt")
-    U = np.loadtxt("../../output/model_landing_3dof/iteration040_U.txt")
+
+figures_i = 0
+figures_N = 40
 
 
-    plt.figure(figsize=(10,12))
-    plt.plot(X[0,:], X[1,:])
+def key_press_event(event):
+        
+    global figures_i
+    fig = event.canvas.figure
 
-    plt.xlabel('X')
-    plt.ylabel('Y')
+    if event.key == 'q' or event.key == 'escape':
+        plt.close(event.canvas.figure)
+        return
+
+    if event.key == 'right':
+        figures_i = (figures_i+1)%figures_N
+    elif event.key == 'left':
+        figures_i = (figures_i-1)%figures_N
+
+    fig.clear()
+    my_plot(fig,figures_i)
+    plt.draw()
+
+
+
+
+def my_plot(fig,figures_i):
+    ax = fig.add_subplot(111)
+
+    iteration = str(figures_i).zfill(3)
+
+    X = np.loadtxt("../../output/model_landing_3dof/iteration" + iteration + "_X.txt")
+    U = np.loadtxt("../../output/model_landing_3dof/iteration" + iteration + "_U.txt")
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
 
 
     lines = []
@@ -53,18 +79,16 @@ def main():
 
     lc = mc.LineCollection(lines, colors=line_colors, linewidths=1.5)
 
-    ax = plt.gca()
     ax.add_collection(lc)
-    plt.axis('equal')
+    ax.axis('equal')
+    ax.set_title("iter " + str(figures_i))
 
 
 
-    def quit_figure(event):
-        if event.key == 'q' or event.key == 'escape':
-            plt.close(event.canvas.figure)
-
-    cid = plt.gcf().canvas.mpl_connect('key_press_event', quit_figure)
-
+def main():
+    fig = plt.figure(figsize=(10,12))
+    my_plot(fig,figures_i)
+    cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()
 
 
