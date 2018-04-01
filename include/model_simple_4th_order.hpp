@@ -19,16 +19,13 @@ public:
 
     double total_time_guess() { return 3; }
 
-    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
-        X.setZero();
-        U.setZero();
-    }
+    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 
     StateVector                ode(const StateVector &x, const ControlVector &u);
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
     
-    void add_application_constraints(EcosWrapper &solver);
+    void add_application_constraints(optimization_problem::SecondOrderConeProgram &socp);
     
     StateVector get_random_state();
     ControlVector get_random_input();

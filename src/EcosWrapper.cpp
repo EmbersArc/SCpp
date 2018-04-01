@@ -9,228 +9,6 @@ using std::pair;
 using std::tuple;
 using std::make_pair;
 
-namespace optimization_problem {
-
-    string Variable::print() const {
-        std::ostringstream s;
-        s << name;
-        if(tensor_indices.size()>0) {
-            s << "[";
-            for (size_t i = 0; i < tensor_indices.size(); ++i) {
-                if(i) s << ",";
-                s << tensor_indices[i];
-            }
-            s << "]";
-        }
-        s << "@" << problem_index;
-        return s.str();
-    }
-
-    string Parameter::print() const {
-        std::ostringstream s;
-        s << "(" << get_value()  << ")";
-        return s.str();
-    }
-
-    Parameter::operator AffineTerm() {
-        AffineTerm result;
-        result.parameter = *this;
-        return result;
-    }
-
-
-    Parameter::operator AffineExpression() {
-        return (AffineTerm)(*this);
-    }
-
-
-    AffineTerm::operator AffineExpression() { 
-        AffineExpression result;
-        result.terms.push_back(*this);
-        return result;
-    }
-
-    string AffineTerm::print() const {
-        std::ostringstream s;
-        s << parameter.print();
-        if(variable) s << "*" << variable.value().print();
-        return s.str();
-    }
-
-    string AffineExpression::print() const {
-        std::ostringstream s;
-        for (size_t i = 0; i < terms.size(); ++i) {
-            if(i) s << "  + ";
-            s << terms[i].print();
-        }
-        return s.str();
-    }
-
-    AffineTerm operator*(const Parameter &parameter, const Variable &variable) {
-        AffineTerm affineTerm;
-        affineTerm.parameter = parameter;
-        affineTerm.variable = variable;
-        return affineTerm;
-    }
-
-
-    AffineTerm operator*(const double &const_parameter, const Variable &variable) {
-        AffineTerm affineTerm;
-        affineTerm.parameter = Parameter(const_parameter);
-        affineTerm.variable = variable;
-        return affineTerm;        
-    }
-
-    AffineExpression operator+(const AffineExpression &lhs, const AffineExpression &rhs) {
-        AffineExpression result;
-        result.terms.insert(result.terms.end(), lhs.terms.begin(), lhs.terms.end());
-        result.terms.insert(result.terms.end(), rhs.terms.begin(), rhs.terms.end());
-        return result;
-    }
-
-    AffineExpression operator+(const AffineExpression &lhs, const double &rhs) {
-        AffineExpression result;
-        result.terms.insert(result.terms.end(), lhs.terms.begin(), lhs.terms.end());
-        result.terms.push_back(Parameter(rhs));
-        return result;
-    }
-
-
-    string Norm2::print() const {
-        std::ostringstream s;
-        s << "norm2([ ";
-        for (size_t i = 0; i < arguments.size(); ++i)
-        {
-            if(i) s << ", ";
-            s << arguments[i].print();
-        }
-        s << " ])";
-        return s.str();
-    }
-
-    string PostiveConstraint::print() const {
-        std::ostringstream s;
-        s << lhs.print() << " >= 0";
-        return s.str();
-    }
-
-    string EqualityConstraint::print() const {
-        std::ostringstream s;
-        s << lhs.print() << " == 0";
-        return s.str();
-    }
-
-
-    string SecondOrderConeConstraint::print() const {
-        std::ostringstream s;
-        s << lhs.print() << " <= " << rhs.print();
-        return s.str();
-    }
-
-
-    Norm2 norm2(const vector<AffineExpression> &affineExpressions) {
-        Norm2 n;
-        n.arguments = affineExpressions;
-        return n;
-    }
-
-    SecondOrderConeConstraint operator<=(const Norm2 &lhs, const AffineExpression &rhs) {
-        SecondOrderConeConstraint socc;
-        socc.lhs = lhs;
-        socc.rhs = rhs;
-        return socc;
-    }
-
-    SecondOrderConeConstraint operator<=(const Norm2 &lhs, const double &rhs) {
-        SecondOrderConeConstraint socc;
-        socc.lhs = lhs;
-        socc.rhs = Parameter(rhs);
-        return socc;
-    }
-
-    PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero) {
-        assert(zero == 0.0);
-        PostiveConstraint result;
-        result.lhs = lhs;
-        return result;
-    }
-
-    EqualityConstraint operator==(const AffineExpression &lhs, const double &zero) {
-        assert(zero == 0.0);
-        EqualityConstraint result;
-        result.lhs = lhs;
-        return result;
-    }
-
-} // end namespace optimization_problem
-
-
-
-
-
-
-
-
-
-
-inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &dimensions) {
-    assert(indices.size() == dimensions.size());
-    size_t index = 0;
-    for (size_t d = 0; d < indices.size(); ++d) index = index * dimensions[d] + indices[d];
-    return index;
-}
-
-size_t EcosWrapper::allocate_variable_index() {
-    size_t i = n_variables;
-    n_variables++;
-    return i;
-}
-
-void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t> &dimensions) {
-    size_t tensor_size = 1;
-    for(auto d:dimensions) 
-        tensor_size *= d;
-    vector<size_t> new_variable_indices(tensor_size);
-    for(auto &i:new_variable_indices)
-        i = allocate_variable_index();
-
-    tensor_variable_dimensions[name] = dimensions;
-    tensor_variable_indices[name] = new_variable_indices;
-}
-
-size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
-    assert(tensor_variable_indices.count(name) > 0);
-    auto dims = tensor_variable_dimensions[name];
-    assert(indices.size() == dims.size());
-    for (size_t i = 0; i < indices.size(); ++i) {
-        assert(indices[i] < dims[i]);
-    }
-    return tensor_variable_indices[name][tensor_index(indices,dims)];
-}
-
-optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {
-    optimization_problem::Variable var;
-    var.name = name;
-    var.tensor_indices = indices;
-    var.problem_index = get_tensor_variable_index(name, indices);
-    return var;
-}
-
-void EcosWrapper::add_constraint(optimization_problem::SecondOrderConeConstraint c) {
-    secondOrderConeConstraints.push_back(c);
-}
-
-void EcosWrapper::add_constraint(optimization_problem::PostiveConstraint c) {
-    postiveConstraints.push_back(c);
-}
-
-void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
-    equalityConstraints.push_back(c);
-}
-
-void EcosWrapper::add_minimization_term(optimization_problem::AffineExpression c) {
-    costFunction = costFunction + c;
-}
 
 
 template<typename T>
@@ -343,7 +121,9 @@ void copy_affine_expression_linear_parts_to_sparse_DOK(
     }
 }
 
-void EcosWrapper::compile_problem_structure() {
+
+EcosWrapper::EcosWrapper(optimization_problem::SecondOrderConeProgram &_socp):socp(_socp) {
+
     ecos_cone_constraint_dimensions.clear();
     ecos_G_data_CCS.clear();
     ecos_G_columns_CCS.clear();
@@ -357,43 +137,43 @@ void EcosWrapper::compile_problem_structure() {
 
 
     /* ECOS size parameters */
-    ecos_solution_vector.resize(n_variables);
-    ecos_n_variables = n_variables;
-    ecos_n_cone_constraints = secondOrderConeConstraints.size();
-    ecos_n_equalities = equalityConstraints.size();
-    ecos_n_positive_constraints = postiveConstraints.size();
-    ecos_n_constraint_rows = postiveConstraints.size();
+    ecos_solution_vector.resize(socp.get_n_variables());
+    ecos_n_variables = socp.get_n_variables();
+    ecos_n_cone_constraints = socp.secondOrderConeConstraints.size();
+    ecos_n_equalities = socp.equalityConstraints.size();
+    ecos_n_positive_constraints = socp.postiveConstraints.size();
+    ecos_n_constraint_rows = socp.postiveConstraints.size();
     ecos_n_exponential_cones = 0; // Exponential cones are not supported.
-    for(auto const& cone: secondOrderConeConstraints) {
+    for(auto const& cone: socp.secondOrderConeConstraints) {
         ecos_n_constraint_rows += 1 + cone.lhs.arguments.size();
         ecos_cone_constraint_dimensions.push_back(1 + cone.lhs.arguments.size());
     }
 
 
     /* Error checking for the problem description */
-    for(auto const& cone: secondOrderConeConstraints) {
+    for(auto const& cone: socp.secondOrderConeConstraints) {
         error_check_affine_expression(cone.rhs);
         for(auto const& affine_expression:cone.lhs.arguments) {
             error_check_affine_expression(affine_expression);
         }
     }
-    for(auto const& postiveConstraint:postiveConstraints) {
+    for(auto const& postiveConstraint:socp.postiveConstraints) {
         error_check_affine_expression(postiveConstraint.lhs);
     }
-    for(auto const& equalityConstraint:equalityConstraints) {
+    for(auto const& equalityConstraint:socp.equalityConstraints) {
         error_check_affine_expression(equalityConstraint.lhs);
     }
-    error_check_affine_expression(costFunction);
+    error_check_affine_expression(socp.costFunction);
 
 
     /* Build equality constraint parameters (b - A*x == 0) */
     {
         // Construct the sparse A matrix in the "Dictionary of keys" format
         map< pair<idxint, idxint>, optimization_problem::Parameter > A_sparse_DOK;
-        vector< optimization_problem::Parameter > b(equalityConstraints.size());
+        vector< optimization_problem::Parameter > b(socp.equalityConstraints.size());
 
-        for (size_t i = 0; i < equalityConstraints.size(); ++i) {
-            auto const& affine_expression = equalityConstraints[i].lhs;
+        for (size_t i = 0; i < socp.equalityConstraints.size(); ++i) {
+            auto const& affine_expression = socp.equalityConstraints[i].lhs;
             b[i] = get_constant_or_zero(affine_expression);
             copy_affine_expression_linear_parts_to_sparse_DOK(A_sparse_DOK, affine_expression, i);
         }
@@ -412,13 +192,13 @@ void EcosWrapper::compile_problem_structure() {
 
         size_t row_index = 0;
 
-        for(const auto& postiveConstraint:postiveConstraints) {
+        for(const auto& postiveConstraint:socp.postiveConstraints) {
             h[row_index] = get_constant_or_zero(postiveConstraint.lhs);
             copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, postiveConstraint.lhs, row_index);
             row_index++;
         }
 
-        for(const auto& secondOrderConeConstraint:secondOrderConeConstraints) {
+        for(const auto& secondOrderConeConstraint:socp.secondOrderConeConstraints) {
             h[row_index] = get_constant_or_zero(secondOrderConeConstraint.rhs);
             copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, secondOrderConeConstraint.rhs, row_index);
             row_index++;
@@ -440,7 +220,7 @@ void EcosWrapper::compile_problem_structure() {
     /* Build cost function parameters */
     {
         vector< optimization_problem::Parameter > c(ecos_n_variables);
-        for(const auto& term:costFunction.terms) {
+        for(const auto& term:socp.costFunction.terms) {
             if(term.variable) {
                 c[term.variable.value().problem_index] = term.parameter;
             }
@@ -495,26 +275,4 @@ void EcosWrapper::solve_problem() {
         }
     }
     ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
-}
-
-void EcosWrapper::print_problem(std::ostream &out) {
-    using std::endl;
-    out << "Minimize" << endl;
-    out << costFunction.print() << endl;
-
-    out << endl << "Subject to equality constraints" << endl;
-    for(const auto & equalityConstraint:equalityConstraints) {
-        out << equalityConstraint.print() << endl;
-    }
-
-    out << endl << "Subject to linear inequalities" << endl;
-    for(const auto & postiveConstraint:postiveConstraints) {
-        out << postiveConstraint.print() << endl;
-    }
-
-    out << endl << "Subject to cone constraints" << endl;
-    for(const auto & secondOrderConeConstraint:secondOrderConeConstraints) {
-        out << secondOrderConeConstraint.print() << endl;
-    }
-
 }

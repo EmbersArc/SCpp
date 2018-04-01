@@ -1,5 +1,9 @@
 #include "model_simple_4th_order.hpp"
 
+void model_simple_4th_order::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
+    X.setZero();
+    U.setZero();
+}
 
 model_simple_4th_order::StateMatrix model_simple_4th_order::state_jacobian(const StateVector &x, const ControlVector &u) {
     StateMatrix A;
@@ -28,27 +32,27 @@ model_simple_4th_order::StateVector model_simple_4th_order::ode(const StateVecto
 }
 
 
-void model_simple_4th_order::add_application_constraints(EcosWrapper &solver) {
+void model_simple_4th_order::add_application_constraints(optimization_problem::SecondOrderConeProgram &socp) {
 
-    auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
+    auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
 
 
     // initial state
-    solver.add_constraint( 1.0 * var("X", {0, 0}) + (-1.0) == 0.0 );
+    socp.add_constraint( 1.0 * var("X", {0, 0}) + (-1.0) == 0.0 );
     for (size_t i = 1; i < n_states; ++i) {
-        solver.add_constraint( 1.0 * var("X", {i, 0}) == 0.0 );
+        socp.add_constraint( 1.0 * var("X", {i, 0}) == 0.0 );
     }
 
     // final state
     for (size_t i = 0; i < n_states; ++i) {
-        solver.add_constraint( 1.0 * var("X", {i, K-1}) == 0.0 );
+        socp.add_constraint( 1.0 * var("X", {i, K-1}) == 0.0 );
     }
 
     // control constraints
     for (size_t k = 0; k < K; ++k) {
-        solver.add_constraint( ( 1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
-        solver.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
+        socp.add_constraint( ( 1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
+        socp.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
     }
 
 }

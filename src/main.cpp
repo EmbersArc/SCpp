@@ -129,25 +129,25 @@ int main() {
 
 
 
-    /** Solver setup **/
-    EcosWrapper solver;
+    /** Optimization problem setup **/
+    optimization_problem::SecondOrderConeProgram socp;
     {
-        solver.create_tensor_variable("X", {n_states, K}); // states
-        solver.create_tensor_variable("U", {n_inputs, K}); // inputs
-        solver.create_tensor_variable("nu", {n_states, K-1}); // virtual control
-        solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
-        solver.create_tensor_variable("sigma", {}); // total time
-        solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
-        solver.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
-        solver.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
+        socp.create_tensor_variable("X", {n_states, K}); // states
+        socp.create_tensor_variable("U", {n_inputs, K}); // inputs
+        socp.create_tensor_variable("nu", {n_states, K-1}); // virtual control
+        socp.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
+        socp.create_tensor_variable("sigma", {}); // total time
+        socp.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
+        socp.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
+        socp.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
 
         // shortcuts to access solver variables and create parameters
-        auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
+        auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
         auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
         auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
         // Main objective: minimize total time
-        solver.add_minimization_term( 1.0 * var("sigma", {}) );
+        socp.add_minimization_term( 1.0 * var("sigma", {}) );
 
 
         for (size_t k = 0; k < K-1; k++) {
@@ -181,7 +181,7 @@ int main() {
                 // nu
                 eq = eq + (1.0) * var("nu", {row_index, k});
 
-                solver.add_constraint( eq == 0.0 );
+                socp.add_constraint( eq == 0.0 );
             }
         }
 
@@ -196,10 +196,10 @@ int main() {
                     virtual_control_vector.push_back( (1.0) * var("nu", {row_index, k}) );
                 }
             }
-            solver.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
+            socp.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
 
             // Minimize the virtual control
-            solver.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
+            socp.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
         }
 
         // Build sigma trust region
@@ -217,7 +217,7 @@ int main() {
             auto sigma_fn3 = param_fn([&sigma](){ return sigma; });
             auto sigma_fn4 = param_fn([&sigma](){ return (0.5-0.5*sigma*sigma); });
 
-            solver.add_constraint( 
+            socp.add_constraint( 
                 optimization_problem::norm2({
                     sigma_fn1*var("sigma", {})  +  (-0.5)*var("Delta_sigma", {})  +  sigma_fn2,
                     (1.0)*var("sigma", {})
@@ -226,7 +226,7 @@ int main() {
             );
 
             // Minimize Delta_sigma
-            solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
+            socp.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
 
 
@@ -308,7 +308,7 @@ int main() {
                 return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
             });
 
-            solver.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
+            socp.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
         }
 
         /*
@@ -320,29 +320,27 @@ int main() {
             for (size_t k = 0; k < K; k++) {
                 norm2_args.push_back( (1.0) * var("Delta", {k}) );
             }
-            solver.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
+            socp.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
 
             // Minimize norm2_Delta
-            solver.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
+            socp.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
         }
 
-
-
-
-        model.add_application_constraints(solver);
-        solver.compile_problem_structure();
-    } /** End solver setup **/
+        model.add_application_constraints(socp);
+    } /** End opt problem setup **/
 
 
     // Cache indices for performance
-    const size_t sigma_index = solver.get_tensor_variable_index("sigma", {});
+    const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
     size_t X_indices[n_states][K];
     size_t U_indices[n_inputs][K];
     for (size_t k = 0; k < K; k++) {
-        for (size_t i = 0; i < n_states; ++i) X_indices[i][k] = solver.get_tensor_variable_index("X",{i,k});
-        for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = solver.get_tensor_variable_index("U",{i,k});
+        for (size_t i = 0; i < n_states; ++i) X_indices[i][k] = socp.get_tensor_variable_index("X",{i,k});
+        for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = socp.get_tensor_variable_index("U",{i,k});
     }
 
+
+    EcosWrapper solver(socp);
 
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
@@ -395,7 +393,7 @@ int main() {
         
         {
             ofstream f(file_name_prefix + "problem.txt");
-            solver.print_problem(f);
+            socp.print_problem(f);
         }
 
         /************************************************************************************/

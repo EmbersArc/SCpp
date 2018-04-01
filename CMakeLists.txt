@@ -40,6 +40,8 @@ add_library(successiveConvexification STATIC
         src/check_jacobian.cpp
     include/check_trajectory.h
         src/check_trajectory.cpp
+    include/OptimizationProblem.hpp
+        src/OptimizationProblem.cpp
         )
 
 link_libraries(successiveConvexification)
@@ -48,8 +50,8 @@ add_executable(OptimalLanding
     src/main.cpp
 )
 
-add_executable(test_ecos_wrapper_indices
-    test/test_ecos_wrapper_indices.cpp
+add_executable(test_OptimizationProblem_indices
+    test/test_OptimizationProblem_indices.cpp
 )
 
 add_executable(test_ecos_wrapper
