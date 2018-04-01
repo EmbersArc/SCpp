@@ -11,10 +11,6 @@ using std::make_pair;
 
 
 
-
-
-
-
 template<typename T>
 inline bool contains(const vector<T> &v, const T &x)
 { return std::find(v.begin(), v.end(), x) != v.end(); }
