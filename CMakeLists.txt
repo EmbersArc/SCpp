@@ -27,7 +27,7 @@ link_directories(ecos)
 link_libraries(ecos)
 
 set(SOURCES
-        include/model_landing_6dof.h
+    include/model_landing_6dof.h
         src/model_landing_6dof.cpp
     include/model_landing_3dof.h
         src/model_landing_3dof.cpp
@@ -49,7 +49,7 @@ if(DEFINED ENV{MOSEK_ROOT})
     message("MOSEK_ROOT: " $ENV{MOSEK_ROOT})
     include_directories($ENV{MOSEK_ROOT}/h)
     link_directories($ENV{MOSEK_ROOT}/bin)
-    link_libraries(mosek64)
+    link_libraries(mosek64 fusion64)
 endif()
 
 
@@ -63,5 +63,5 @@ add_executable(test_ecos_wrapper_sparse_conversion    test/test_ecos_wrapper_spa
 add_executable(test_check_jacobian    test/test_check_jacobian.cpp)
 
 if(DEFINED ENV{MOSEK_ROOT})
-    add_executable(test_mosek $ENV{MOSEK_ROOT}/../../examples/c/simple.c)
+    add_executable(test_mosek $ENV{MOSEK_ROOT}/../../examples/fusion/cxx/baker.cc)
 endif()
