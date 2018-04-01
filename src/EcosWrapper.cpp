@@ -12,33 +12,7 @@ using std::make_pair;
 
 
 
-void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t> &dimensions) {
-    socp.create_tensor_variable(name, dimensions);
-}
 
-size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
-    return socp.get_tensor_variable_index(name, indices);
-}
-
-optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {
-    return socp.get_variable(name, indices);
-}
-
-void EcosWrapper::add_constraint(optimization_problem::SecondOrderConeConstraint c) {
-    socp.add_constraint(c);
-}
-
-void EcosWrapper::add_constraint(optimization_problem::PostiveConstraint c) {
-    socp.add_constraint(c);
-}
-
-void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
-    socp.add_constraint(c);
-}
-
-void EcosWrapper::add_minimization_term(optimization_problem::AffineExpression c) {
-    socp.add_minimization_term(c);
-}
 
 
 template<typename T>

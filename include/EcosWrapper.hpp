@@ -56,15 +56,8 @@ class EcosWrapper {
 
 public:
     optimization_problem::SecondOrderConeProgram socp;
-    void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
-    size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
-    optimization_problem::Variable get_variable(const string &name, const vector<size_t> &indices);
 
-    void add_constraint(optimization_problem::SecondOrderConeConstraint c);
-    void add_constraint(optimization_problem::PostiveConstraint c);
-    void add_constraint(optimization_problem::EqualityConstraint c);
-    void add_minimization_term(optimization_problem::AffineExpression c);
-
+    
     void compile_problem_structure();
     void solve_problem();
 

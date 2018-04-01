@@ -142,7 +142,7 @@ int main() {
         solver.socp.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
 
         // shortcuts to access solver variables and create parameters
-        auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
+        auto var = [&](const string &name, const vector<size_t> &indices){ return solver.socp.get_variable(name,indices); };
         auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
         auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
@@ -335,12 +335,12 @@ int main() {
 
 
     // Cache indices for performance
-    const size_t sigma_index = solver.get_tensor_variable_index("sigma", {});
+    const size_t sigma_index = solver.socp.get_tensor_variable_index("sigma", {});
     size_t X_indices[n_states][K];
     size_t U_indices[n_inputs][K];
     for (size_t k = 0; k < K; k++) {
-        for (size_t i = 0; i < n_states; ++i) X_indices[i][k] = solver.get_tensor_variable_index("X",{i,k});
-        for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = solver.get_tensor_variable_index("U",{i,k});
+        for (size_t i = 0; i < n_states; ++i) X_indices[i][k] = solver.socp.get_tensor_variable_index("X",{i,k});
+        for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = solver.socp.get_tensor_variable_index("U",{i,k});
     }
 
 
@@ -395,7 +395,7 @@ int main() {
         
         {
             ofstream f(file_name_prefix + "problem.txt");
-            solver.print_problem(f);
+            solver.socp.print_problem(f);
         }
 
         /************************************************************************************/

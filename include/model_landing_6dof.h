@@ -70,7 +70,7 @@ public:
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);
     ControlMatrix control_jacobian(const StateVector &x, const ControlVector &u);
 
-    void add_application_constraints(EcosWrapper &solver);
+    void add_application_constraints(optimization_problem::SecondOrderConeProgram &socp);
 
     StateVector get_random_state();
     ControlVector get_random_input();
