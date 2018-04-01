@@ -281,7 +281,3 @@ void EcosWrapper::solve_problem() {
     }
     ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
 }
-
-void EcosWrapper::print_problem(std::ostream &out) {
-    socp.print_problem(out);
-}

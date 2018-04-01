@@ -69,6 +69,4 @@ public:
     double get_solution_value(const string &name, const vector<size_t> &indices) {
         return ecos_solution_vector[socp.get_variable(name, indices).problem_index];
     }
-
-    void print_problem(std::ostream &out);
 };
