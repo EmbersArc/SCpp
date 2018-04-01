@@ -47,9 +47,13 @@ set(SOURCES
 ## You need to set the environment variable: 'export MOSEK_ROOT=.../mosek/8/tools/platform/linux64x86'
 if(DEFINED ENV{MOSEK_ROOT})
     message("MOSEK_ROOT: " $ENV{MOSEK_ROOT})
-    include_directories($ENV{MOSEK_ROOT}/h)
+    include_directories(SYSTEM $ENV{MOSEK_ROOT}/h)
     link_directories($ENV{MOSEK_ROOT}/bin)
     link_libraries(mosek64 fusion64)
+    set(SOURCES ${SOURCES}
+        include/MosekWrapper.hpp
+            src/MosekWrapper.cpp
+    )
 endif()
 
 
@@ -61,7 +65,3 @@ add_executable(test_OptimizationProblem_indices    test/test_OptimizationProblem
 add_executable(test_ecos_wrapper    test/test_ecos_wrapper.cpp)
 add_executable(test_ecos_wrapper_sparse_conversion    test/test_ecos_wrapper_sparse_conversion.cpp)
 add_executable(test_check_jacobian    test/test_check_jacobian.cpp)
-
-if(DEFINED ENV{MOSEK_ROOT})
-    add_executable(test_mosek $ENV{MOSEK_ROOT}/../../examples/fusion/cxx/baker.cc)
-endif()
