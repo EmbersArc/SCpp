@@ -340,9 +340,7 @@ int main() {
     }
 
 
-    EcosWrapper solver;
-    solver.socp=socp;
-    solver.compile_problem_structure();
+    EcosWrapper solver(socp);
 
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;

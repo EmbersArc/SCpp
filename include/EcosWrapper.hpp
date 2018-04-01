@@ -57,8 +57,9 @@ class EcosWrapper {
 public:
     optimization_problem::SecondOrderConeProgram socp;
 
+    explicit EcosWrapper(optimization_problem::SecondOrderConeProgram _socp);
     
-    void compile_problem_structure();
+    //void compile_problem_structure();
     void solve_problem();
 
     double get_solution_value(size_t problem_index) {
