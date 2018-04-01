@@ -329,7 +329,7 @@ int main() {
 
 
 
-        model.add_application_constraints(solver);
+        model.add_application_constraints(solver.socp);
         solver.compile_problem_structure();
     } /** End solver setup **/
 

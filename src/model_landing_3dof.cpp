@@ -73,27 +73,27 @@ model_landing_3dof::ControlMatrix model_landing_3dof::control_jacobian(const Sta
 
 
 
-void model_landing_3dof::add_application_constraints(EcosWrapper &solver) {
+void model_landing_3dof::add_application_constraints(optimization_problem::SecondOrderConeProgram &socp) {
 
-    auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
+    auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
     
     // initial state
-    solver.add_constraint( (-1.0) * var("X", {0, 0}) + param(rx_init) == 0.0 );
-    solver.add_constraint( (-1.0) * var("X", {1, 0}) + param(ry_init) == 0.0 );
-    solver.add_constraint( (-1.0) * var("X", {2, 0}) + param(vx_init) == 0.0 );
-    solver.add_constraint( (-1.0) * var("X", {3, 0}) + param(vy_init) == 0.0 );
-    solver.add_constraint( (-1.0) * var("X", {4, 0}) + param(theta_init) == 0.0 );
-    solver.add_constraint( (-1.0) * var("X", {5, 0}) + param(dtheta_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {0, 0}) + param(rx_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {1, 0}) + param(ry_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {2, 0}) + param(vx_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {3, 0}) + param(vy_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {4, 0}) + param(theta_init) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {5, 0}) + param(dtheta_init) == 0.0 );
 
 
     // final state
-    solver.add_constraint( (1.0) * var("X", {0, K-1}) == 0.0 );
-    solver.add_constraint( (1.0) * var("X", {1, K-1}) == 0.0 );
-    solver.add_constraint( (1.0) * var("X", {2, K-1}) == 0.0 );
-    solver.add_constraint( (1.0) * var("X", {3, K-1}) == 0.0 );
-    solver.add_constraint( (1.0) * var("X", {4, K-1}) == 0.0 );
-    solver.add_constraint( (1.0) * var("X", {5, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {0, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {1, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {2, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {3, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {4, K-1}) == 0.0 );
+    socp.add_constraint( (1.0) * var("X", {5, K-1}) == 0.0 );
 
     // glide slope cone
     // TODO
@@ -102,16 +102,16 @@ void model_landing_3dof::add_application_constraints(EcosWrapper &solver) {
     for (size_t k = 0; k < K; ++k) {
 
         // throttle control constraints
-        solver.add_constraint( ( 1.0) * var("U", {0, k}) + (-0.1) >= (0.0) );
-        solver.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
+        socp.add_constraint( ( 1.0) * var("U", {0, k}) + (-0.1) >= (0.0) );
+        socp.add_constraint( (-1.0) * var("U", {0, k}) + (1.0) >= (0.0) );
 
         // gimbal control constraints
         if(k < 0.8 * K) {
-            solver.add_constraint( ( 1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
-            solver.add_constraint( (-1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
+            socp.add_constraint( ( 1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
+            socp.add_constraint( (-1.0) * var("U", {1, k}) + (max_gimbal_angle) >= (0.0) );
         } else {
-            solver.add_constraint( ( 1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
-            solver.add_constraint( (-1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
+            socp.add_constraint( ( 1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
+            socp.add_constraint( (-1.0) * var("U", {1, k}) + (0.1 * max_gimbal_angle) >= (0.0) );
         }
     }
 }
