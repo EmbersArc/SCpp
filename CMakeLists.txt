@@ -40,6 +40,8 @@ add_library(successiveConvexification STATIC
         src/check_jacobian.cpp
     include/check_trajectory.h
         src/check_trajectory.cpp
+    include/OptimizationProblem.hpp
+        src/OptimizationProblem.cpp
         )
 
 link_libraries(successiveConvexification)
