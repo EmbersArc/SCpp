@@ -113,8 +113,8 @@ namespace optimization_problem {
 
 
 
-    struct GenericOptimizationProblem {
-        
+    class GenericOptimizationProblem {
+    protected:
         size_t n_variables = 0;
 
         /* Set of named tensor variables in the optimization problem */
@@ -123,11 +123,11 @@ namespace optimization_problem {
 
 
         size_t allocate_variable_index();
-
+    public:
         void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
         size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
         Variable get_variable(const string &name, const vector<size_t> &indices);
-
+        size_t get_n_variables(){ return n_variables; }
     };
 
 

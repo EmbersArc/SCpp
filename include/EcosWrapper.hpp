@@ -29,7 +29,7 @@ void sparse_DOK_to_CCS(
 
 class EcosWrapper {
 
-
+    optimization_problem::SecondOrderConeProgram socp;
 
     /* ECOS problem parameters */
     idxint                                  ecos_n_variables;
@@ -55,11 +55,8 @@ class EcosWrapper {
 
 
 public:
-    optimization_problem::SecondOrderConeProgram socp;
-
     explicit EcosWrapper(optimization_problem::SecondOrderConeProgram _socp);
     
-    //void compile_problem_structure();
     void solve_problem();
 
     double get_solution_value(size_t problem_index) {
