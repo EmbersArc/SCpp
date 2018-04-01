@@ -210,7 +210,7 @@ EcosWrapper::EcosWrapper(optimization_problem::SecondOrderConeProgram &_socp):so
             }            
         }
 
-        assert(row_index == ecos_n_constraint_rows); // all rows used?
+        assert(row_index == size_t(ecos_n_constraint_rows)); // all rows used?
 
         // Convert G to "column compressed storage"
         sparse_DOK_to_CCS(G_sparse_DOK, ecos_G_data_CCS, ecos_G_columns_CCS, ecos_G_rows_CCS, ecos_n_variables);

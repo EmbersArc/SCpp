@@ -1,8 +1,6 @@
 #include "OptimizationProblem.hpp"
-
-
-
-
+#include <cmath>
+#include <iostream>
 
 namespace optimization_problem {
 
@@ -245,7 +243,77 @@ namespace optimization_problem {
         for(const auto & secondOrderConeConstraint:secondOrderConeConstraints) {
             out << secondOrderConeConstraint.print() << endl;
         }
+    }
 
+    template<typename T>
+    bool feasibility_check_message(double tol, double val, const T &constraint) {
+        using std::cout;
+        using std::endl;
+
+        if(val > tol) {
+            cout << endl << "Infeasible solution, constraint value: " << val << endl;
+            cout << constraint.print() << endl;
+            return false;
+        }
+        return true;
+    }
+
+    bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values) {
+
+        const double tol = 0.1;
+        bool feasible = true;
+
+        for(const auto & equalityConstraint:equalityConstraints) {
+            feasible = feasible && feasibility_check_message(tol, fabs(equalityConstraint.evaluate(soln_values)), equalityConstraint);
+        }
+
+        for(const auto & postiveConstraint:postiveConstraints) {
+            feasible = feasible && feasibility_check_message(tol, postiveConstraint.evaluate(soln_values), postiveConstraint);            
+        }
+
+        for(const auto & secondOrderConeConstraint:secondOrderConeConstraints) {
+            feasible = feasible && feasibility_check_message(tol, secondOrderConeConstraint.evaluate(soln_values), secondOrderConeConstraint);            
+        }
+        return feasible;
+    }
+
+
+    double AffineTerm::evaluate(const vector<double> &soln_values) const {
+        double p = parameter.get_value();
+        if(variable) {
+            return p * soln_values.at(variable.value().problem_index);
+        } else {
+            return p;
+        }
+    }
+
+    double AffineExpression::evaluate(const vector<double> &soln_values) const {
+        double sum = 0;
+        for(const auto& term:terms) {
+            sum += term.evaluate(soln_values);
+        }
+        return sum;
+    }
+
+    double Norm2::evaluate(const vector<double> &soln_values) const {
+        double sum_sq = 0;
+        for(const auto& arg:arguments) {
+            double val = arg.evaluate(soln_values);
+            sum_sq += val * val;
+        }
+        return sqrt(sum_sq);
+    }
+
+    double SecondOrderConeConstraint::evaluate(const vector<double> &soln_values) const {
+        return (lhs.evaluate(soln_values) - rhs.evaluate(soln_values));
+    }
+
+    double PostiveConstraint::evaluate(const vector<double> &soln_values) const {
+        return -lhs.evaluate(soln_values);
+    }
+
+    double EqualityConstraint::evaluate(const vector<double> &soln_values) const {
+        return -lhs.evaluate(soln_values);
     }
 
 } // end namespace optimization_problem

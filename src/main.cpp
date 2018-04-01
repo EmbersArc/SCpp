@@ -101,7 +101,7 @@ int main() {
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 100;
-    const double weight_trust_region_xu = 1e-9;
+    const double weight_trust_region_xu = 1e-8;
     const double weight_virtual_control = 100;
 
     const size_t n_states = Model::n_states;
@@ -401,6 +401,10 @@ int main() {
         begin_time = clock();
         solver.solve_problem();
         cout << endl << "Solver time: " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
+        if(!socp.feasibility_check(solver.get_solution_vector())) {
+            cout << "ERROR: Solver produced an invalid solution." << endl;
+            return EXIT_FAILURE;
+        }
 
         // Read solution
         for (size_t k = 0; k < K; k++) {
