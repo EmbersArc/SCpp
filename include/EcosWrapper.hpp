@@ -66,4 +66,12 @@ public:
     double get_solution_value(const string &name, const vector<size_t> &indices) {
         return ecos_solution_vector[socp.get_variable(name, indices).problem_index];
     }
+
+    vector<double> get_solution_vector() {
+        if(ecos_n_variables > 0 && ecos_solution_vector.size() == size_t(ecos_n_variables)) {
+            return ecos_solution_vector;
+        } else {
+            throw std::runtime_error("get_solution_vector(): Solution unavailable.");
+        }
+    }
 };

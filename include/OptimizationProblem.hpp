@@ -29,6 +29,7 @@ namespace optimization_problem {
     struct AffineExpression { // represents a term like (p_1*x_1 + p_2*x_2 + b)
         vector<AffineTerm> terms;
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
     };
 
     enum class ParameterSource { Constant, Pointer, Callback };
@@ -67,12 +68,14 @@ namespace optimization_problem {
         Parameter parameter = Parameter(0.0);
         optional<Variable> variable; // a missing Variable represents a constant 1.0
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
         operator AffineExpression();
     };
 
     struct Norm2 { // represents a term like norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
         vector<AffineExpression> arguments;
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
     };
 
     // represents a constraint like 
@@ -82,6 +85,7 @@ namespace optimization_problem {
         Norm2 lhs;
         AffineExpression rhs;
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
     };
 
 
@@ -91,6 +95,7 @@ namespace optimization_problem {
     {
         AffineExpression lhs;
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
     };
 
     // represents a constraint like 
@@ -99,6 +104,7 @@ namespace optimization_problem {
     {
         AffineExpression lhs;
         string print() const;
+        double evaluate(const vector<double> &soln_values) const;
     };
 
     AffineTerm operator*(const Parameter &parameter, const Variable &variable);
@@ -143,5 +149,7 @@ namespace optimization_problem {
         void add_constraint(EqualityConstraint c);
         void add_minimization_term(AffineExpression c);
         void print_problem(std::ostream &out);
+
+        bool feasibility_check(const vector<double> &soln_values);
     };
 }
