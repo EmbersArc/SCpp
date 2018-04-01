@@ -126,8 +126,7 @@ void copy_affine_expression_linear_parts_to_sparse_DOK(
 }
 
 
-EcosWrapper::EcosWrapper(optimization_problem::SecondOrderConeProgram _socp) {
-    socp = _socp;
+EcosWrapper::EcosWrapper(optimization_problem::SecondOrderConeProgram &_socp):socp(_socp) {
 
     ecos_cone_constraint_dimensions.clear();
     ecos_G_data_CCS.clear();

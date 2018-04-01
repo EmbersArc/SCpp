@@ -19,10 +19,7 @@ public:
 
     double total_time_guess() { return 3; }
 
-    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
-        X.setZero();
-        U.setZero();
-    }
+    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 
     StateVector                ode(const StateVector &x, const ControlVector &u);
     StateMatrix     state_jacobian(const StateVector &x, const ControlVector &u);

@@ -1,6 +1,24 @@
 #include "model_landing_3dof.h"
 
+void model_landing_3dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
+    X.setZero();
+    U.setZero();
+    for (size_t k = 0; k < K; k++) {
+        double alpha2 = double(k)/K;
+        double alpha1 = 1. - alpha2;
+
+        X(0,k) = rx_init * alpha1;
+        X(1,k) = ry_init * alpha1;
+        X(2,k) = vx_init * alpha1;
+        X(3,k) = vy_init * alpha1;
+        X(4,k) = theta_init * alpha1;
+        X(5,k) = dtheta_init * alpha1;
+
+        U(0,k) = 1./TWR;
+    }
+
+}
 
 model_landing_3dof::StateVector model_landing_3dof::ode(const StateVector &x, const ControlVector &u) {
 
