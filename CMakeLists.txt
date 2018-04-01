@@ -50,8 +50,8 @@ add_executable(OptimalLanding
     src/main.cpp
 )
 
-add_executable(test_ecos_wrapper_indices
-    test/test_ecos_wrapper_indices.cpp
+add_executable(test_OptimizationProblem_indices
+    test/test_OptimizationProblem_indices.cpp
 )
 
 add_executable(test_ecos_wrapper
