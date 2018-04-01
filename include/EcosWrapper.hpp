@@ -29,7 +29,6 @@ void sparse_DOK_to_CCS(
 
 class EcosWrapper {
 
-    optimization_problem::SecondOrderConeProgram socp;
 
 
     /* ECOS problem parameters */
@@ -56,6 +55,7 @@ class EcosWrapper {
 
 
 public:
+    optimization_problem::SecondOrderConeProgram socp;
     void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
     size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
     optimization_problem::Variable get_variable(const string &name, const vector<size_t> &indices);

@@ -132,14 +132,14 @@ int main() {
     /** Solver setup **/
     EcosWrapper solver;
     {
-        solver.create_tensor_variable("X", {n_states, K}); // states
-        solver.create_tensor_variable("U", {n_inputs, K}); // inputs
-        solver.create_tensor_variable("nu", {n_states, K-1}); // virtual control
-        solver.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
-        solver.create_tensor_variable("sigma", {}); // total time
-        solver.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
-        solver.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
-        solver.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
+        solver.socp.create_tensor_variable("X", {n_states, K}); // states
+        solver.socp.create_tensor_variable("U", {n_inputs, K}); // inputs
+        solver.socp.create_tensor_variable("nu", {n_states, K-1}); // virtual control
+        solver.socp.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
+        solver.socp.create_tensor_variable("sigma", {}); // total time
+        solver.socp.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
+        solver.socp.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
+        solver.socp.create_tensor_variable("norm2_Delta", {}); // 2-norm of the Delta(k) variables
 
         // shortcuts to access solver variables and create parameters
         auto var = [&](const string &name, const vector<size_t> &indices){ return solver.get_variable(name,indices); };
@@ -147,7 +147,7 @@ int main() {
         auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
         // Main objective: minimize total time
-        solver.add_minimization_term( 1.0 * var("sigma", {}) );
+        solver.socp.add_minimization_term( 1.0 * var("sigma", {}) );
 
 
         for (size_t k = 0; k < K-1; k++) {
@@ -181,7 +181,7 @@ int main() {
                 // nu
                 eq = eq + (1.0) * var("nu", {row_index, k});
 
-                solver.add_constraint( eq == 0.0 );
+                solver.socp.add_constraint( eq == 0.0 );
             }
         }
 
@@ -196,10 +196,10 @@ int main() {
                     virtual_control_vector.push_back( (1.0) * var("nu", {row_index, k}) );
                 }
             }
-            solver.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
+            solver.socp.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
 
             // Minimize the virtual control
-            solver.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
+            solver.socp.add_minimization_term( weight_virtual_control * var("norm2_nu", {}) );
         }
 
         // Build sigma trust region
@@ -217,7 +217,7 @@ int main() {
             auto sigma_fn3 = param_fn([&sigma](){ return sigma; });
             auto sigma_fn4 = param_fn([&sigma](){ return (0.5-0.5*sigma*sigma); });
 
-            solver.add_constraint( 
+            solver.socp.add_constraint( 
                 optimization_problem::norm2({
                     sigma_fn1*var("sigma", {})  +  (-0.5)*var("Delta_sigma", {})  +  sigma_fn2,
                     (1.0)*var("sigma", {})
@@ -226,7 +226,7 @@ int main() {
             );
 
             // Minimize Delta_sigma
-            solver.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
+            solver.socp.add_minimization_term( weight_trust_region_sigma * var("Delta_sigma", {}) );
         }
 
 
@@ -308,7 +308,7 @@ int main() {
                 return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
             });
 
-            solver.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
+            solver.socp.add_constraint( optimization_problem::norm2(norm2_args) <= rhs );
         }
 
         /*
@@ -320,10 +320,10 @@ int main() {
             for (size_t k = 0; k < K; k++) {
                 norm2_args.push_back( (1.0) * var("Delta", {k}) );
             }
-            solver.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
+            solver.socp.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
 
             // Minimize norm2_Delta
-            solver.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
+            solver.socp.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
         }
 
 
