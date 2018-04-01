@@ -65,7 +65,3 @@ add_executable(test_ecos_wrapper_sparse_conversion
 add_executable(test_check_jacobian
     test/test_check_jacobian.cpp
 )
-
-add_executable(test_ecos_wrapper_trust_region
-    test/test_ecos_wrapper_trust_region.cpp
-)
