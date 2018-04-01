@@ -12,67 +12,32 @@ using std::make_pair;
 
 
 
-
-
-
-
-inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &dimensions) {
-    assert(indices.size() == dimensions.size());
-    size_t index = 0;
-    for (size_t d = 0; d < indices.size(); ++d) index = index * dimensions[d] + indices[d];
-    return index;
-}
-
-size_t EcosWrapper::allocate_variable_index() {
-    size_t i = n_variables;
-    n_variables++;
-    return i;
-}
-
 void EcosWrapper::create_tensor_variable(const string &name, const vector<size_t> &dimensions) {
-    size_t tensor_size = 1;
-    for(auto d:dimensions) 
-        tensor_size *= d;
-    vector<size_t> new_variable_indices(tensor_size);
-    for(auto &i:new_variable_indices)
-        i = allocate_variable_index();
-
-    tensor_variable_dimensions[name] = dimensions;
-    tensor_variable_indices[name] = new_variable_indices;
+    socp.create_tensor_variable(name, dimensions);
 }
 
 size_t EcosWrapper::get_tensor_variable_index(const string &name, const vector<size_t> &indices) {
-    assert(tensor_variable_indices.count(name) > 0);
-    auto dims = tensor_variable_dimensions[name];
-    assert(indices.size() == dims.size());
-    for (size_t i = 0; i < indices.size(); ++i) {
-        assert(indices[i] < dims[i]);
-    }
-    return tensor_variable_indices[name][tensor_index(indices,dims)];
+    return socp.get_tensor_variable_index(name, indices);
 }
 
 optimization_problem::Variable EcosWrapper::get_variable(const string &name, const vector<size_t> &indices) {
-    optimization_problem::Variable var;
-    var.name = name;
-    var.tensor_indices = indices;
-    var.problem_index = get_tensor_variable_index(name, indices);
-    return var;
+    return socp.get_variable(name, indices);
 }
 
 void EcosWrapper::add_constraint(optimization_problem::SecondOrderConeConstraint c) {
-    secondOrderConeConstraints.push_back(c);
+    socp.add_constraint(c);
 }
 
 void EcosWrapper::add_constraint(optimization_problem::PostiveConstraint c) {
-    postiveConstraints.push_back(c);
+    socp.add_constraint(c);
 }
 
 void EcosWrapper::add_constraint(optimization_problem::EqualityConstraint c) {
-    equalityConstraints.push_back(c);
+    socp.add_constraint(c);
 }
 
 void EcosWrapper::add_minimization_term(optimization_problem::AffineExpression c) {
-    costFunction = costFunction + c;
+    socp.add_minimization_term(c);
 }
 
 
@@ -200,43 +165,43 @@ void EcosWrapper::compile_problem_structure() {
 
 
     /* ECOS size parameters */
-    ecos_solution_vector.resize(n_variables);
-    ecos_n_variables = n_variables;
-    ecos_n_cone_constraints = secondOrderConeConstraints.size();
-    ecos_n_equalities = equalityConstraints.size();
-    ecos_n_positive_constraints = postiveConstraints.size();
-    ecos_n_constraint_rows = postiveConstraints.size();
+    ecos_solution_vector.resize(socp.n_variables);
+    ecos_n_variables = socp.n_variables;
+    ecos_n_cone_constraints = socp.secondOrderConeConstraints.size();
+    ecos_n_equalities = socp.equalityConstraints.size();
+    ecos_n_positive_constraints = socp.postiveConstraints.size();
+    ecos_n_constraint_rows = socp.postiveConstraints.size();
     ecos_n_exponential_cones = 0; // Exponential cones are not supported.
-    for(auto const& cone: secondOrderConeConstraints) {
+    for(auto const& cone: socp.secondOrderConeConstraints) {
         ecos_n_constraint_rows += 1 + cone.lhs.arguments.size();
         ecos_cone_constraint_dimensions.push_back(1 + cone.lhs.arguments.size());
     }
 
 
     /* Error checking for the problem description */
-    for(auto const& cone: secondOrderConeConstraints) {
+    for(auto const& cone: socp.secondOrderConeConstraints) {
         error_check_affine_expression(cone.rhs);
         for(auto const& affine_expression:cone.lhs.arguments) {
             error_check_affine_expression(affine_expression);
         }
     }
-    for(auto const& postiveConstraint:postiveConstraints) {
+    for(auto const& postiveConstraint:socp.postiveConstraints) {
         error_check_affine_expression(postiveConstraint.lhs);
     }
-    for(auto const& equalityConstraint:equalityConstraints) {
+    for(auto const& equalityConstraint:socp.equalityConstraints) {
         error_check_affine_expression(equalityConstraint.lhs);
     }
-    error_check_affine_expression(costFunction);
+    error_check_affine_expression(socp.costFunction);
 
 
     /* Build equality constraint parameters (b - A*x == 0) */
     {
         // Construct the sparse A matrix in the "Dictionary of keys" format
         map< pair<idxint, idxint>, optimization_problem::Parameter > A_sparse_DOK;
-        vector< optimization_problem::Parameter > b(equalityConstraints.size());
+        vector< optimization_problem::Parameter > b(socp.equalityConstraints.size());
 
-        for (size_t i = 0; i < equalityConstraints.size(); ++i) {
-            auto const& affine_expression = equalityConstraints[i].lhs;
+        for (size_t i = 0; i < socp.equalityConstraints.size(); ++i) {
+            auto const& affine_expression = socp.equalityConstraints[i].lhs;
             b[i] = get_constant_or_zero(affine_expression);
             copy_affine_expression_linear_parts_to_sparse_DOK(A_sparse_DOK, affine_expression, i);
         }
@@ -255,13 +220,13 @@ void EcosWrapper::compile_problem_structure() {
 
         size_t row_index = 0;
 
-        for(const auto& postiveConstraint:postiveConstraints) {
+        for(const auto& postiveConstraint:socp.postiveConstraints) {
             h[row_index] = get_constant_or_zero(postiveConstraint.lhs);
             copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, postiveConstraint.lhs, row_index);
             row_index++;
         }
 
-        for(const auto& secondOrderConeConstraint:secondOrderConeConstraints) {
+        for(const auto& secondOrderConeConstraint:socp.secondOrderConeConstraints) {
             h[row_index] = get_constant_or_zero(secondOrderConeConstraint.rhs);
             copy_affine_expression_linear_parts_to_sparse_DOK(G_sparse_DOK, secondOrderConeConstraint.rhs, row_index);
             row_index++;
@@ -283,7 +248,7 @@ void EcosWrapper::compile_problem_structure() {
     /* Build cost function parameters */
     {
         vector< optimization_problem::Parameter > c(ecos_n_variables);
-        for(const auto& term:costFunction.terms) {
+        for(const auto& term:socp.costFunction.terms) {
             if(term.variable) {
                 c[term.variable.value().problem_index] = term.parameter;
             }
@@ -341,23 +306,5 @@ void EcosWrapper::solve_problem() {
 }
 
 void EcosWrapper::print_problem(std::ostream &out) {
-    using std::endl;
-    out << "Minimize" << endl;
-    out << costFunction.print() << endl;
-
-    out << endl << "Subject to equality constraints" << endl;
-    for(const auto & equalityConstraint:equalityConstraints) {
-        out << equalityConstraint.print() << endl;
-    }
-
-    out << endl << "Subject to linear inequalities" << endl;
-    for(const auto & postiveConstraint:postiveConstraints) {
-        out << postiveConstraint.print() << endl;
-    }
-
-    out << endl << "Subject to cone constraints" << endl;
-    for(const auto & secondOrderConeConstraint:secondOrderConeConstraints) {
-        out << secondOrderConeConstraint.print() << endl;
-    }
-
+    socp.print_problem(out);
 }

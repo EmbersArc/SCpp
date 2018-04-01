@@ -28,32 +28,24 @@ void sparse_DOK_to_CCS(
 
 
 class EcosWrapper {
-    size_t n_variables = 0;
 
-    /* Set of named tensor variables in the optimization problem */
-    map<string, vector<size_t>> tensor_variable_dimensions;
-    map<string, vector<size_t>> tensor_variable_indices;
+    optimization_problem::SecondOrderConeProgram socp;
 
-    /* High-level optimization problem description */
-    vector<optimization_problem::SecondOrderConeConstraint> secondOrderConeConstraints;
-    vector<optimization_problem::PostiveConstraint> postiveConstraints;
-    vector<optimization_problem::EqualityConstraint> equalityConstraints;
-    optimization_problem::AffineExpression costFunction = optimization_problem::Parameter(0.0);
 
     /* ECOS problem parameters */
-    idxint         ecos_n_variables;
-    idxint         ecos_n_constraint_rows;
-    idxint         ecos_n_equalities;
-    idxint         ecos_n_positive_constraints;
-    idxint         ecos_n_cone_constraints;
-    vector<idxint> ecos_cone_constraint_dimensions;
-    idxint         ecos_n_exponential_cones;
+    idxint                                  ecos_n_variables;
+    idxint                                  ecos_n_constraint_rows;
+    idxint                                  ecos_n_equalities;
+    idxint                                  ecos_n_positive_constraints;
+    idxint                                  ecos_n_cone_constraints;
+    vector<idxint>                          ecos_cone_constraint_dimensions;
+    idxint                                  ecos_n_exponential_cones;
     vector<optimization_problem::Parameter> ecos_G_data_CCS;
-    vector<idxint> ecos_G_columns_CCS;
-    vector<idxint> ecos_G_rows_CCS;
+    vector<idxint>                          ecos_G_columns_CCS;
+    vector<idxint>                          ecos_G_rows_CCS;
     vector<optimization_problem::Parameter> ecos_A_data_CCS;
-    vector<idxint> ecos_A_columns_CCS;
-    vector<idxint> ecos_A_rows_CCS;
+    vector<idxint>                          ecos_A_columns_CCS;
+    vector<idxint>                          ecos_A_rows_CCS;
     vector<optimization_problem::Parameter> ecos_cost_function_weights;
     vector<optimization_problem::Parameter> ecos_h;
     vector<optimization_problem::Parameter> ecos_b;
@@ -62,7 +54,6 @@ class EcosWrapper {
     vector<double> ecos_solution_vector;
     idxint ecos_exitflag;
 
-    size_t allocate_variable_index();
 
 public:
     void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
@@ -73,6 +64,7 @@ public:
     void add_constraint(optimization_problem::PostiveConstraint c);
     void add_constraint(optimization_problem::EqualityConstraint c);
     void add_minimization_term(optimization_problem::AffineExpression c);
+
     void compile_problem_structure();
     void solve_problem();
 
@@ -81,7 +73,7 @@ public:
     }
 
     double get_solution_value(const string &name, const vector<size_t> &indices) {
-        return ecos_solution_vector[get_variable(name, indices).problem_index];
+        return ecos_solution_vector[socp.get_variable(name, indices).problem_index];
     }
 
     void print_problem(std::ostream &out);

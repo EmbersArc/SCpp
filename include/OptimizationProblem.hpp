@@ -10,6 +10,7 @@
 #include <functional>
 
 using std::vector;
+using std::map;
 using std::string;
 using std::experimental::optional;
 using std::pair;
@@ -32,7 +33,9 @@ namespace optimization_problem {
 
     enum class ParameterSource { Constant, Pointer, Callback };
 
-    class Parameter { // represents a parameter p_i in the opt-problem that can be changed between problem evaluations.
+    // Represents a parameter p_i in the opt-problem that can be changed between problem evaluations.
+    // The parameter value can either be constant or dynamically accessed through a pointer or callback.
+    class Parameter { 
         std::function<double()> callback;
         const double* dynamic_value_ptr = NULL;
         double const_value = 0;
@@ -62,7 +65,7 @@ namespace optimization_problem {
 
     struct AffineTerm { // represents a linear term (p_1*x_1) or constant term (p_1)
         Parameter parameter = Parameter(0.0);
-        optional<Variable> variable;
+        optional<Variable> variable; // a missing Variable represents a constant 1.0
         string print() const;
         operator AffineExpression();
     };
@@ -108,4 +111,37 @@ namespace optimization_problem {
     PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero);
     EqualityConstraint operator==(const AffineExpression &lhs, const double &zero);
 
+
+
+    struct GenericOptimizationProblem {
+        
+        size_t n_variables = 0;
+
+        /* Set of named tensor variables in the optimization problem */
+        map<string, vector<size_t>> tensor_variable_dimensions;
+        map<string, vector<size_t>> tensor_variable_indices;
+
+
+        size_t allocate_variable_index();
+
+        void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
+        size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
+        Variable get_variable(const string &name, const vector<size_t> &indices);
+
+    };
+
+
+    struct SecondOrderConeProgram : public GenericOptimizationProblem {
+
+        vector<SecondOrderConeConstraint> secondOrderConeConstraints;
+        vector<PostiveConstraint> postiveConstraints;
+        vector<EqualityConstraint> equalityConstraints;
+        AffineExpression costFunction = Parameter(0.0);
+
+        void add_constraint(SecondOrderConeConstraint c);
+        void add_constraint(PostiveConstraint c);
+        void add_constraint(EqualityConstraint c);
+        void add_minimization_term(AffineExpression c);
+        void print_problem(std::ostream &out);
+    };
 }
