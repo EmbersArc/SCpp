@@ -26,9 +26,8 @@ add_subdirectory(eigen)
 link_directories(ecos)
 link_libraries(ecos)
 
-
-add_library(successiveConvexification STATIC 
-    include/model_landing_6dof.h
+set(SOURCES
+        include/model_landing_6dof.h
         src/model_landing_6dof.cpp
     include/model_landing_3dof.h
         src/model_landing_3dof.cpp
@@ -42,26 +41,27 @@ add_library(successiveConvexification STATIC
         src/check_trajectory.cpp
     include/OptimizationProblem.hpp
         src/OptimizationProblem.cpp
-        )
+)
 
+## Use MOSEK if available
+## You need to set the environment variable: 'export MOSEK_ROOT=.../mosek/8/tools/platform/linux64x86'
+if(DEFINED ENV{MOSEK_ROOT})
+    message("MOSEK_ROOT: " $ENV{MOSEK_ROOT})
+    include_directories($ENV{MOSEK_ROOT}/h)
+    link_directories($ENV{MOSEK_ROOT}/bin)
+    link_libraries(mosek64)
+endif()
+
+
+add_library(successiveConvexification STATIC ${SOURCES})
 link_libraries(successiveConvexification)
 
-add_executable(OptimalLanding
-    src/main.cpp
-)
+add_executable(OptimalLanding    src/main.cpp)
+add_executable(test_OptimizationProblem_indices    test/test_OptimizationProblem_indices.cpp)
+add_executable(test_ecos_wrapper    test/test_ecos_wrapper.cpp)
+add_executable(test_ecos_wrapper_sparse_conversion    test/test_ecos_wrapper_sparse_conversion.cpp)
+add_executable(test_check_jacobian    test/test_check_jacobian.cpp)
 
-add_executable(test_OptimizationProblem_indices
-    test/test_OptimizationProblem_indices.cpp
-)
-
-add_executable(test_ecos_wrapper
-    test/test_ecos_wrapper.cpp
-)
-
-add_executable(test_ecos_wrapper_sparse_conversion
-    test/test_ecos_wrapper_sparse_conversion.cpp
-)
-
-add_executable(test_check_jacobian
-    test/test_check_jacobian.cpp
-)
+if(DEFINED ENV{MOSEK_ROOT})
+    add_executable(test_mosek $ENV{MOSEK_ROOT}/../../examples/c/simple.c)
+endif()
