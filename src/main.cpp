@@ -10,6 +10,7 @@
 
 #include "active_model.hpp"
 #include "EcosWrapper.hpp"
+#include "MosekWrapper.hpp"
 
 #include <iostream>
 #include <array>
@@ -101,7 +102,7 @@ int main() {
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 100;
-    const double weight_trust_region_xu = 1e-8;
+    double weight_trust_region_xu = 1e-4;
     const double weight_virtual_control = 100;
 
     const size_t n_states = Model::n_states;
@@ -323,7 +324,7 @@ int main() {
             socp.add_constraint( optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}) );
 
             // Minimize norm2_Delta
-            socp.add_minimization_term( weight_trust_region_xu * var("norm2_Delta", {}) );
+            socp.add_minimization_term( param(weight_trust_region_xu) * var("norm2_Delta", {}) );
         }
 
         model.add_application_constraints(socp);
@@ -340,13 +341,19 @@ int main() {
     }
 
 
-    EcosWrapper solver(socp);
+    //EcosWrapper solver(socp);
+    MosekWrapper solver(socp);
 
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
+
+             if(it > 30) weight_trust_region_xu = 1e-0;
+        else if(it > 20) weight_trust_region_xu = 1e-1;
+        else if(it > 10) weight_trust_region_xu = 1e-2;
+
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
 
