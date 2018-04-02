@@ -21,8 +21,6 @@ include_directories(ecos/include)
 include_directories(ecos/external/SuiteSparse_config)
 include_directories(SYSTEM eigen)
 
-add_subdirectory(eigen)
-
 link_directories(ecos)
 link_libraries(ecos)
 
