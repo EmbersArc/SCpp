@@ -1,33 +1,14 @@
 #include "model_landing_6dof.h"
 
+
+
 void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
-    //initial state
-    double m_wet = 2;
-    ControlVector r_I_init(4., 4., 0.);
-    ControlVector v_I_init(0., -2., -2.);
-    Vector4d q_B_I_init(1.0, 0.0, 0.0, 0.0);
-    ControlVector w_B_init(0., 0., 0.);
-    VectorXd x_init(14);
-
-    //final state
-    double m_dry = 1;
-    ControlVector r_I_final(0., 0., 0.);
-    ControlVector v_I_final(-1e-1, 0., 0.);
-    Vector4d q_B_I_final(1.0, 0.0, 0.0, 0.0);
-    ControlVector w_B_final(0., 0., 0.);
-    VectorXd x_final(14);
-
-
-    //gravity vector
-    ControlVector g_I(-1, 0, 0);
+    double alpha1, alpha2;
 
     x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
     x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
-
-
-    double alpha1, alpha2;
     for(int k=0; k<K; k++) {
         alpha1 = double(K-k)/K;
         alpha2 = double(k)/K;
@@ -168,7 +149,66 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
     return f;
 }
 
-void model_landing_6dof::add_application_constraints(optimization_problem::SecondOrderConeProgram &socp) {
+void model_landing_6dof::add_application_constraints(
+        optimization_problem::SecondOrderConeProgram &socp,
+        const Eigen::Matrix<double, n_states, K> &X0,
+        const Eigen::Matrix<double, n_inputs, K> &U0
+) {
+    auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
+//    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
+//    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
+
+    x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
+    x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
+
+    // initial state
+    for(size_t n = 0; n<n_states; n++){
+        socp.add_constraint( (-1.0) * var("X", {n, 0}) + (x_init(n)) == 0.0 );
+    }
+
+    // final state
+    for(size_t n = 0; n<n_states; n++){
+        socp.add_constraint( (-1.0) * var("X", {n, K-1}) + (x_final(n)) == 0.0 );
+    }
+    socp.add_constraint( (1.0) * var("U", {1, K-1}) == (0.0) );
+    socp.add_constraint( (1.0) * var("U", {2, K-1}) == (0.0) );
+
+
+    // state constraints:
+    for(size_t k = 0; k<K; k++){
+        // mass
+        //     x(0) >= m_dry
+        //     for all k
+        socp.add_constraint( (1.0) * var("X", {0, k}) + (-m_dry) >= (0.0) );
+        // TODO: glide slope, max tilt angle, max angular velocity
+    }
+
+
+    // control constraints
+    for(size_t k = 0; k<K; k++) {
+
+        // minimum thrust (zero for now)
+        socp.add_constraint( (1.0) * var("U", {0, k}) >= (0.0) );
+        socp.add_constraint( (1.0) * var("U", {1, k}) >= (0.0) );
+        socp.add_constraint( (1.0) * var("U", {2, k}) >= (0.0) );
+
+        // maximum thrust
+        socp.add_constraint(
+                optimization_problem::norm2({ (1.0) * var("U", {0, k}),
+                                              (1.0) * var("U", {1, k}),
+                                              (1.0) * var("U", {2, k}) })
+                <= (T_max)
+        );
+
+        // maximum gimbal angle
+        socp.add_constraint(
+                optimization_problem::norm2({ (1.0) * var("U", {0, k}),
+                                              (1.0) * var("U", {1, k}),
+                                              (1.0) * var("U", {2, k}) })
+                <= (1.0 / cos_delta_max) * var("U", {0, k})
+        );
+    }
+
     // TODO
 }
 
@@ -191,3 +231,4 @@ model_landing_6dof::ControlVector model_landing_6dof::get_random_input() {
 
     return U;
 }
+
