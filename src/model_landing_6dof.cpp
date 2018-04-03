@@ -162,9 +162,21 @@ void model_landing_6dof::add_application_constraints(
     x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
     // initial state
-    for(size_t n = 0; n<n_states; n++){
-        socp.add_constraint( (-1.0) * var("X", {n, 0}) + (x_init(n)) == 0.0 );
-    }
+    socp.add_constraint( (-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {1, 0}) + (x_init(1)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {2, 0}) + (x_init(2)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {3, 0}) + (x_init(3)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {4, 0}) + (x_init(4)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {5, 0}) + (x_init(5)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {6, 0}) + (x_init(6)) == 0.0 );
+//    socp.add_constraint( (-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0 );
+//    socp.add_constraint( (-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0 );
+//    socp.add_constraint( (-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0 );
+//    socp.add_constraint( (-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {11, 0}) + (x_init(11)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {12, 0}) + (x_init(12)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0 );
+
 
     // final state
     for(size_t n = 0; n<n_states; n++){
