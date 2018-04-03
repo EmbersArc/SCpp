@@ -101,8 +101,8 @@ int main() {
     // trajectory points
     const double dt = 1 / double(K-1);
 
-    const double weight_trust_region_sigma = 1e-2;
-    double weight_trust_region_xu = 1e-2;
+    const double weight_trust_region_sigma = 1e-1;
+    double weight_trust_region_xu = 1e-3;
     const double weight_virtual_control = 1e5;
 
     const size_t n_states = Model::n_states;
