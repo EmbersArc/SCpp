@@ -101,9 +101,9 @@ int main() {
     // trajectory points
     const double dt = 1 / double(K-1);
 
-    const double weight_trust_region_sigma = 100;
-    double weight_trust_region_xu = 1e-4;
-    const double weight_virtual_control = 100;
+    const double weight_trust_region_sigma = 1e-2;
+    double weight_trust_region_xu = 1e-2;
+    const double weight_virtual_control = 1e5;
 
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
@@ -327,7 +327,8 @@ int main() {
             socp.add_minimization_term( param(weight_trust_region_xu) * var("norm2_Delta", {}) );
         }
 
-        model.add_application_constraints(socp);
+//        model.add_application_constraints(socp);
+        model.add_application_constraints(socp, X, U);
     } /** End opt problem setup **/
 
 
