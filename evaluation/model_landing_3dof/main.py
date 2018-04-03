@@ -3,13 +3,11 @@ import matplotlib.pyplot as plt
 from matplotlib import collections  as mc
 from math import cos, sin
 
-
 figures_i = 0
 figures_N = 40
 
 
 def key_press_event(event):
-        
     global figures_i
     fig = event.canvas.figure
 
@@ -18,18 +16,16 @@ def key_press_event(event):
         return
 
     if event.key == 'right':
-        figures_i = (figures_i+1)%figures_N
+        figures_i = (figures_i + 1) % figures_N
     elif event.key == 'left':
-        figures_i = (figures_i-1)%figures_N
+        figures_i = (figures_i - 1) % figures_N
 
     fig.clear()
-    my_plot(fig,figures_i)
+    my_plot(fig, figures_i)
     plt.draw()
 
 
-
-
-def my_plot(fig,figures_i):
+def my_plot(fig, figures_i):
     ax = fig.add_subplot(111)
 
     iteration = str(figures_i).zfill(3)
@@ -40,42 +36,38 @@ def my_plot(fig,figures_i):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
 
-
     lines = []
     line_colors = []
 
-
     K = X.shape[1]
-    
+
     for k in range(K):
-        rx = X[0,k]
-        ry = X[1,k]
-        vx = X[2,k]
-        vy = X[3,k]
-        theta = X[4,k]
-        throttle = U[0,k]
-        gimbal = U[1,k]
+        rx = X[0, k]
+        ry = X[1, k]
+        vx = X[2, k]
+        vy = X[3, k]
+        theta = X[4, k]
+        throttle = U[0, k]
+        gimbal = U[1, k]
 
         # speed vector
         speed_scale = 0.8
-        lines.append([(rx,ry),(rx+speed_scale*vx,ry+speed_scale*vy)])
-        line_colors.append((0,1,0,1))
-        
+        lines.append([(rx, ry), (rx + speed_scale * vx, ry + speed_scale * vy)])
+        line_colors.append((0, 1, 0, 1))
+
         # attitude vector
         heading_scale = 6
         c_theta = heading_scale * cos(theta)
         s_theta = heading_scale * sin(theta)
-        lines.append([(rx,ry),(rx+s_theta,ry+c_theta)])
-        line_colors.append((0,0,1,1))
+        lines.append([(rx, ry), (rx + s_theta, ry + c_theta)])
+        line_colors.append((0, 0, 1, 1))
 
         # thrust vector
         throttle_scale = 6
-        Tx = throttle_scale * throttle * sin(theta+gimbal)
-        Ty = throttle_scale * throttle * cos(theta+gimbal)
-        lines.append([(rx,ry),(rx-Tx,ry-Ty)])
-        line_colors.append((1,0,0,1))
-
-
+        Tx = throttle_scale * throttle * sin(theta + gimbal)
+        Ty = throttle_scale * throttle * cos(theta + gimbal)
+        lines.append([(rx, ry), (rx - Tx, ry - Ty)])
+        line_colors.append((1, 0, 0, 1))
 
     lc = mc.LineCollection(lines, colors=line_colors, linewidths=1.5)
 
@@ -84,13 +76,11 @@ def my_plot(fig,figures_i):
     ax.set_title("iter " + str(figures_i))
 
 
-
 def main():
-    fig = plt.figure(figsize=(10,12))
-    my_plot(fig,figures_i)
+    fig = plt.figure(figsize=(10, 12))
+    my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()
 
 
 if __name__ == '__main__': main()
-    
