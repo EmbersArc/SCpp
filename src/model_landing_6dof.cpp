@@ -189,8 +189,6 @@ void model_landing_6dof::add_application_constraints(
 
         // minimum thrust (zero for now)
         socp.add_constraint( (1.0) * var("U", {0, k}) >= (0.0) );
-        socp.add_constraint( (1.0) * var("U", {1, k}) >= (0.0) );
-        socp.add_constraint( (1.0) * var("U", {2, k}) >= (0.0) );
 
         // maximum thrust
         socp.add_constraint(
