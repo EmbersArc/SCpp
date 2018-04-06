@@ -117,7 +117,7 @@ model_landing_6dof::StateMatrix model_landing_6dof::state_jacobian(const StateVe
 model_landing_6dof::ControlMatrix model_landing_6dof::control_jacobian(const StateVector &x, const ControlVector &u) {
     ControlMatrix B;
     B.setZero();
-    B.row(0) << -alpha_m*u[0]/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
+    B.row(0) << -(alpha_m*u[0])/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
     B.row(4) << -(2*pow(x[9],2) + 2*pow(x[10],2) - 1)/x[0], (2*x[7]*x[10] + 2*x[8]*x[9])/x[0], -(2*x[7]*x[9] - 2*x[8]*x[10])/x[0];
     B.row(5) << -(2*x[7]*x[10] - 2*x[8]*x[9])/x[0], -(2*pow(x[8],2) + 2*pow(x[10],2) - 1)/x[0], (2*x[7]*x[8] + 2*x[9]*x[10])/x[0];
     B.row(6) << (2*x[7]*x[9] + 2*x[8]*x[10])/x[0], -(2*x[7]*x[8] - 2*x[9]*x[10])/x[0], -(2*pow(x[8],2) + 2*pow(x[9],2) - 1)/x[0];
@@ -155,7 +155,7 @@ void model_landing_6dof::add_application_constraints(
         const Eigen::Matrix<double, n_inputs, K> &U0
 ) {
     auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
-//    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
+    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
 //    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
     x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
@@ -178,7 +178,7 @@ void model_landing_6dof::add_application_constraints(
     socp.add_constraint( (-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0 );
 
 
-    // final state
+    // Final State
     for(size_t n = 0; n<n_states; n++){
         socp.add_constraint( (-1.0) * var("X", {n, K-1}) + (x_final(n)) == 0.0 );
     }
@@ -186,23 +186,61 @@ void model_landing_6dof::add_application_constraints(
     socp.add_constraint( (1.0) * var("U", {2, K-1}) == (0.0) );
 
 
-    // state constraints:
+    // State Constraints:
     for(size_t k = 0; k<K; k++){
-        // mass
+
+        // Mass
         //     x(0) >= m_dry
         //     for all k
         socp.add_constraint( (1.0) * var("X", {0, k}) + (-m_dry) >= (0.0) );
-        // TODO: glide slope, max tilt angle, max angular velocity
+
+        // Max Tilt Angle TODO: makes problem unfeasible
+        //
+        // x(9) ^ 2 + x(10) ^ 2 <= -(cos_theta_max - 1) / 2
+        // with c := -(cos_theta_max - 1) / 2
+        //
+        // equivalent to
+        // norm2(
+        //          (1 + c) / 2
+        //              x(9)
+        //              x(10)
+        // )
+        // <= (1 - c) / 2
+
+        double c = -(cos_theta_max - 1.) / 2.;
+        double c1 = (1. + c) / 2.;
+        double c2 = (1. - c) / 2.;
+
+        socp.add_constraint( optimization_problem::norm2({
+                param(c1),
+                (1.0) * var("X", {9, k}),
+                (1.0) * var("X", {10, k})
+        }) <= (c2) );
+
+        // Glide Slope
+        socp.add_constraint(
+                optimization_problem::norm2({ (1.0) * var("X", {2, k}),
+                                              (1.0) * var("X", {3, k}) })
+                <= (1.0 / tan_gamma_gs) * var("X", {1, k})
+        );
+
+        //Max Tilt Angle
+        socp.add_constraint(
+                optimization_problem::norm2({ (1.0) * var("X", {11, k}),
+                                              (1.0) * var("X", {12, k}),
+                                              (1.0) * var("X", {13, k}) })
+                <= (w_B_max)
+        );
     }
 
 
-    // control constraints
+    // Control Constraints
     for(size_t k = 0; k<K; k++) {
 
-        // minimum thrust (zero for now)
-        socp.add_constraint( (1.0) * var("U", {0, k}) >= (0.0) );
+        // Minimum Thrust (close to zero for now)  TODO: use linearization
+        socp.add_constraint( (1.0) * var("U", {0, k}) + (-0.1) >= (0.0) );
 
-        // maximum thrust
+        // Maximum Thrust
         socp.add_constraint(
                 optimization_problem::norm2({ (1.0) * var("U", {0, k}),
                                               (1.0) * var("U", {1, k}),
@@ -210,7 +248,7 @@ void model_landing_6dof::add_application_constraints(
                 <= (T_max)
         );
 
-        // maximum gimbal angle
+        // Maximum Gimbal Angle
         socp.add_constraint(
                 optimization_problem::norm2({ (1.0) * var("U", {0, k}),
                                               (1.0) * var("U", {1, k}),

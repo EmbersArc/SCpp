@@ -18,7 +18,7 @@ public:
 
     static string get_name(){ return "model_landing_6dof"; }
 
-    double total_time_guess() { return 3; }
+    double total_time_guess() { return 1; }
 
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 
@@ -44,7 +44,7 @@ private:
     //initial state
     const double m_wet = 2.;
     Vector3d r_I_init = Vector3d(4., 4., 0.);
-    Vector3d v_I_init = Vector3d(0., -2., -2.);
+    Vector3d v_I_init = Vector3d(0., 0., -1.);
     Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_init = Vector3d(0., 0., 0.);
     StateVector x_init;
@@ -52,13 +52,14 @@ private:
     //final state
     const double m_dry = 1.;
     Vector3d r_I_final = Vector3d(0., 0., 0.);
-    Vector3d v_I_final = Vector3d(-1e-1, 0., 0.);
+    Vector3d v_I_final = Vector3d(0., 0., 0.);
     Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_final = Vector3d(0., 0., 0.);
     StateVector x_final;
 
-    const double tan_gamma_gs = tan(20. / 180. * PI);
+    const double cos_delta_max = cos(15. / 180. * PI);
     const double cos_theta_max = cos(90. / 180. * PI);
-    const double cos_delta_max = tan(15. / 180. * PI);
+    const double tan_gamma_gs = tan(20. / 180. * PI);
+    const double w_B_max = 60. / 180. * PI;
 
 };
