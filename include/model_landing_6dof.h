@@ -18,7 +18,7 @@ public:
 
     static string get_name(){ return "model_landing_6dof"; }
 
-    double total_time_guess() { return 1; }
+    double total_time_guess() { return 2; }
 
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 
@@ -43,8 +43,8 @@ private:
 
     //initial state
     const double m_wet = 2.;
-    Vector3d r_I_init = Vector3d(4., 4., 0.);
-    Vector3d v_I_init = Vector3d(0., 0., -1.);
+    Vector3d r_I_init = Vector3d(10., 3., 3.);
+    Vector3d v_I_init = Vector3d(-4., -1., -0.5);
     Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_init = Vector3d(0., 0., 0.);
     StateVector x_init;
