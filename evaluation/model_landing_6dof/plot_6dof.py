@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib import collections as mc
 from mpl_toolkits import mplot3d
 
-
 figures_i = 0
 figures_N = 40
 
@@ -43,19 +42,25 @@ def my_plot(fig, figures_i):
     for k in range(K):
         rz, ry, rx = X[1:4, k]
         vz, vy, vx = X[4:7, k]
+        w, x, y, z = X[7:11, k]
+        uz, uy, ux = U[:, k]
 
         # speed vector
-        ax.quiver(rx, ry, rz, vx, vy, vz, length=0.25)
+        ax.quiver(rx, ry, rz, vx, vy, vz, length=0.25, color='green')
 
         # # attitude vector
-        # TODO
+        dx = 2 * (x * z - w * y)
+        dy = 2 * (y * z + w * x)
+        dz = 1 - 2 * (x * x + y * y)
+        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.25, arrow_length_ratio=0.0, color='blue')
 
         # thrust vector
-        # TODO
+        ax.quiver(rx, ry, rz, -ux, -uy, -uz, length=0.25, arrow_length_ratio=0.0, color='red')
 
     ax.axis('equal')
     ax.set_title("iter " + str(figures_i))
-    ax.plot(X[3, :], X[2, :], X[1, :], color='r')
+    ax.plot(X[3, :], X[2, :], X[1, :], color='black')
+
 
 def main():
     fig = plt.figure(figsize=(10, 12))
