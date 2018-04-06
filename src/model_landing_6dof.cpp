@@ -224,7 +224,7 @@ void model_landing_6dof::add_application_constraints(
                 <= (1.0 / tan_gamma_gs) * var("X", {1, k})
         );
 
-        //Max Tilt Angle
+        // Max Rotation Velocity
         socp.add_constraint(
                 optimization_problem::norm2({ (1.0) * var("X", {11, k}),
                                               (1.0) * var("X", {12, k}),
