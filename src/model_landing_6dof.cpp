@@ -196,7 +196,7 @@ void model_landing_6dof::add_application_constraints(
 
         // Max Tilt Angle TODO: makes problem unfeasible
         //
-        // x(9) ^ 2 + x(10) ^ 2 <= -(cos_theta_max - 1) / 2
+        // x(9) ^ 2 + x(10) ^ 2 <= c
         // with c := -(cos_theta_max - 1) / 2
         //
         // equivalent to
