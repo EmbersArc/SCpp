@@ -157,12 +157,12 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
 
 void model_landing_6dof::add_application_constraints(
         optimization_problem::SecondOrderConeProgram &socp,
-        const Eigen::Matrix<double, n_states, K> &X0,
-        const Eigen::Matrix<double, n_inputs, K> &U0
+        Eigen::Matrix<double, n_states, K> &X0,
+        Eigen::Matrix<double, n_inputs, K> &U0
 ) {
     auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
-//    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
+    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
     x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
     x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
@@ -185,8 +185,8 @@ void model_landing_6dof::add_application_constraints(
 
 
     // Final State
-    for(size_t n = 0; n<n_states; n++){
-        socp.add_constraint( (-1.0) * var("X", {n, K-1}) + (x_final(n)) == 0.0 );
+    for(size_t i = 0; i<n_states; i++){
+        socp.add_constraint( (-1.0) * var("X", {i, K-1}) + (x_final(i)) == 0.0 );
     }
     socp.add_constraint( (1.0) * var("U", {1, K-1}) == (0.0) );
     socp.add_constraint( (1.0) * var("U", {2, K-1}) == (0.0) );
@@ -200,7 +200,7 @@ void model_landing_6dof::add_application_constraints(
         //     for all k
         socp.add_constraint( (1.0) * var("X", {0, k}) + (-m_dry) >= (0.0) );
 
-        // Max Tilt Angle TODO: makes problem unfeasible
+        // Max Tilt Angle
         //
         // x(9) ^ 2 + x(10) ^ 2 <= c
         // with c := -(cos_theta_max - 1) / 2
@@ -243,8 +243,17 @@ void model_landing_6dof::add_application_constraints(
     // Control Constraints
     for(size_t k = 0; k<K; k++) {
 
-        // Minimum Thrust (close to zero for now)  TODO: use linearization
-        socp.add_constraint( (1.0) * var("U", {0, k}) + (-0.1) >= (0.0) );
+        // Minimum Thrust
+        optimization_problem::AffineExpression lhs;
+
+        auto U0_norm = param_fn([&U0,k](){ return U0.norm(); });
+
+        for (size_t i = 0; i < n_inputs; i++) {
+            lhs = lhs + param(U0(i,k)) * var("U", {i, k});
+        }
+
+        socp.add_constraint(lhs + (-T_min) >= (0.0));
+
 
         // Maximum Thrust
         socp.add_constraint(
@@ -262,8 +271,6 @@ void model_landing_6dof::add_application_constraints(
                 <= (1.0 / cos_delta_max) * var("U", {0, k})
         );
     }
-
-    // TODO
 }
 
 model_landing_6dof::StateVector model_landing_6dof::get_random_state() {

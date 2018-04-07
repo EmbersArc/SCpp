@@ -351,9 +351,9 @@ int main() {
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
 
-             if(it > 30) weight_trust_region_xu = 1e-0;
-        else if(it > 20) weight_trust_region_xu = 1e-1;
-        else if(it > 10) weight_trust_region_xu = 1e-2;
+             if(it > 30) weight_trust_region_xu *= 10;
+        else if(it > 20) weight_trust_region_xu *= 10;
+        else if(it > 10) weight_trust_region_xu *= 10;
 
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
@@ -367,7 +367,7 @@ int main() {
             V.block<Model::n_states,Model::n_states>(0, 1).setIdentity();
 
             DiscretizationODE discretizationODE(U.col(k), U.col(k+1), sigma, dt, model);
-            integrate_n_steps( stepper , discretizationODE , V , 0. , dt/10.0 , 10 );
+            integrate_n_steps( stepper , discretizationODE , V , 0. , dt/20.0 , 20 );
 
             size_t cols = 1;
             A_bar[k]      =            V.block<Model::n_states,Model::n_states>(0, cols);   cols += Model::n_states;
