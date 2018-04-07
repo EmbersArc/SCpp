@@ -82,21 +82,21 @@ def my_plot(fig, figures_i):
 
 
             # speed vector
-            ax.quiver(rx, ry, vx, vy, scale=5, color='green', width=0.002)
+            ax.quiver(rx, ry, vx, vy, scale=10, color='green', width=0.002)
 
-            # # attitude vector
-            w, x, y, z = X[7:11, k]
-            dx_ = 2 * (x * z - w * y)
-            dy_ = 2 * (y * z + w * x)
-            dz_ = 1 - 2 * (x * x + y * y)
+            # # attitude vector TODO this is buggy, disabling for now
+            # w, x, y, z = X[7:11, k]
+            # dx_ = 2 * (x * z - w * y)
+            # dy_ = 2 * (y * z + w * x)
+            # dz_ = 1 - 2 * (x * x + y * y)
 
-            dx = axis_map_x(subplot_pos, dx_, dy_, dz_)
-            dy = axis_map_y(subplot_pos, dx_, dy_, dz_)
+            # dx = axis_map_x(subplot_pos, dx_, dy_, dz_)
+            # dy = axis_map_y(subplot_pos, dx_, dy_, dz_)
 
-            ax.quiver(rx, ry, dx, dy, scale=5, color='blue', width=0.002)
+            # ax.quiver(rx, ry, dx, dy, scale=10, color='blue', width=0.002)
 
             # thrust vector
-            ax.quiver(rx, ry, -ux, -uy, scale=5, color='red', width=0.002)
+            ax.quiver(rx, ry, -ux, -uy, scale=10, color='red', width=0.002)
 
     ax.axis('equal')
     fig.suptitle("iter " + str(figures_i), fontsize=14)

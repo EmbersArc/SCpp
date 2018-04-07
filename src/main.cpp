@@ -102,8 +102,8 @@ int main() {
     const double dt = 1 / double(K-1);
 
     const double weight_trust_region_sigma = 1e-1;
-    double weight_trust_region_xu = 1e-3;
-    const double weight_virtual_control = 1e5;
+    double weight_trust_region_xu = 1e-1;
+    const double weight_virtual_control = 10000;
 
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
@@ -351,9 +351,9 @@ int main() {
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
 
-             if(it > 30) weight_trust_region_xu *= 10;
-        else if(it > 20) weight_trust_region_xu *= 10;
-        else if(it > 10) weight_trust_region_xu *= 10;
+             if(it == 30) weight_trust_region_xu *= 5;
+        else if(it == 20) weight_trust_region_xu *= 5;
+        else if(it == 10) weight_trust_region_xu *= 5;
 
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;

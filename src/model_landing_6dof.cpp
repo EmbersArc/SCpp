@@ -213,7 +213,7 @@ void model_landing_6dof::add_application_constraints(
         // )
         // <= (1 - c) / 2
 
-        double c = -(cos_theta_max - 1.) / 2.;
+        /*double c = -(cos_theta_max - 1.) / 2.;
         double c1 = (1. + c) / 2.;
         double c2 = (1. - c) / 2.;
 
@@ -221,10 +221,10 @@ void model_landing_6dof::add_application_constraints(
                 param(c1),
                 (1.0) * var("X", {9, k}),
                 (1.0) * var("X", {10, k})
-        }) <= (c2) );
+        }) <= (c2) );*/
 
         // Glide Slope
-        socp.add_constraint(
+        /*socp.add_constraint(
                 optimization_problem::norm2({ (1.0) * var("X", {2, k}),
                                               (1.0) * var("X", {3, k}) })
                 <= (1.0 / tan_gamma_gs) * var("X", {1, k})
@@ -236,7 +236,7 @@ void model_landing_6dof::add_application_constraints(
                                               (1.0) * var("X", {12, k}),
                                               (1.0) * var("X", {13, k}) })
                 <= (w_B_max)
-        );
+        );*/
     }
 
 
@@ -244,7 +244,7 @@ void model_landing_6dof::add_application_constraints(
     for(size_t k = 0; k<K; k++) {
 
         // Minimum Thrust
-        optimization_problem::AffineExpression lhs;
+        /*optimization_problem::AffineExpression lhs;
 
         auto U0_norm = param_fn([&U0,k](){ return U0.norm(); });
 
@@ -252,7 +252,7 @@ void model_landing_6dof::add_application_constraints(
             lhs = lhs + param(U0(i,k)) * var("U", {i, k});
         }
 
-        socp.add_constraint(lhs + (-T_min) >= (0.0));
+        socp.add_constraint(lhs + (-T_min) >= (0.0));*/
 
 
         // Maximum Thrust
