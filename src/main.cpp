@@ -350,6 +350,7 @@ int main() {
 
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
+        clock_t begin_time = clock();
 
              if(it == 30) weight_trust_region_xu *= 5;
         else if(it == 20) weight_trust_region_xu *= 5;
@@ -358,7 +359,6 @@ int main() {
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
 
-        clock_t begin_time = clock();
 
         for (size_t k = 0; k < K-1; k++) {
             DiscretizationODE::state_type V;
@@ -367,7 +367,7 @@ int main() {
             V.block<Model::n_states,Model::n_states>(0, 1).setIdentity();
 
             DiscretizationODE discretizationODE(U.col(k), U.col(k+1), sigma, dt, model);
-            integrate_n_steps( stepper , discretizationODE , V , 0. , dt/20.0 , 20 );
+            integrate_n_steps( stepper , discretizationODE , V , 0. , dt/10.0 , 10 );
 
             size_t cols = 1;
             A_bar[k]      =            V.block<Model::n_states,Model::n_states>(0, cols);   cols += Model::n_states;
@@ -387,7 +387,7 @@ int main() {
             cout << "z_bar " << k << endl;
             cout << z_bar[k] << endl << endl;*/
         }
-        cout << "Transition matrices calculated in " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
+        
 
         // Write problem to file
 
@@ -437,6 +437,8 @@ int main() {
         cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
         cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
+
+        cout << "Iteration time: " << (double( clock () - begin_time ) /  CLOCKS_PER_SEC*1000.) << " msec" << endl;
         cout << "==========================================================" << endl;
     }
 }

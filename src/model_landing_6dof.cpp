@@ -4,14 +4,13 @@
 
 void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
-    double alpha1, alpha2;
 
-    x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-    x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
+    StateVector x_init; x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
+    StateVector x_final; x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
     for(int k=0; k<K; k++) {
-        alpha1 = double(K - k) / K;
-        alpha2 = double(k) / K;
+        double alpha1 = double(K - k) / K;
+        double alpha2 = double(k) / K;
         X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
         X.col(k).segment(7, 4) << 1., 0., 0., 0.;
@@ -188,8 +187,8 @@ void model_landing_6dof::add_application_constraints(
     auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
-    x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-    x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
+    StateVector x_init; x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
+    StateVector x_final; x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
     // initial state
     socp.add_constraint( (-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0 );
@@ -224,28 +223,19 @@ void model_landing_6dof::add_application_constraints(
         //     for all k
         socp.add_constraint( (1.0) * var("X", {0, k}) + (-m_dry) >= (0.0) );
 
+
+
         // Max Tilt Angle
         //
-        // x(9) ^ 2 + x(10) ^ 2 <= c
-        // with c := -(cos_theta_max - 1) / 2
-        //
-        // equivalent to
-        // norm2(
-        //          (1 + c) / 2
-        //              x(9)
-        //              x(10)
-        // )
-        // <= (1 - c) / 2
+        // norm2([x(9), x(10)]) <= c
+        // with c := sqrt((1 - cos_theta_max) / 2)
+        const double c = sqrt((1.0 - cos_theta_max) / 2.);
+        socp.add_constraint( optimization_problem::norm2({ 
+            (1.0) * var("X", {9, k}),  
+            (1.0) * var("X", {10, k}) 
+        }) <= (c) );
 
-        /*double c = -(cos_theta_max - 1.) / 2.;
-        double c1 = (1. + c) / 2.;
-        double c2 = (1. - c) / 2.;
 
-        socp.add_constraint( optimization_problem::norm2({
-                param(c1),
-                (1.0) * var("X", {9, k}),
-                (1.0) * var("X", {10, k})
-        }) <= (c2) );*/
 
         // Glide Slope
         /*socp.add_constraint(

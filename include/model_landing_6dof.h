@@ -47,7 +47,6 @@ private:
     Vector3d v_I_init = Vector3d(0, 0, -2);
     Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_init = Vector3d(0., 0., 0.);
-    StateVector x_init;
 
     //final state
     const double m_dry = 1.;
@@ -55,7 +54,6 @@ private:
     Vector3d v_I_final = Vector3d(-1e-1, 0., 0.);
     Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_final = Vector3d(0., 0., 0.);
-    StateVector x_final;
 
     const double cos_delta_max = cos(20. / 180. * PI);
     const double cos_theta_max = cos(90. / 180. * PI);
