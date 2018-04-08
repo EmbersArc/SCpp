@@ -2,5 +2,5 @@
 
 
 // Number of discretization steps
-#define K (20)
+#define K (50)
 #define PI (3.14159265358979323846)

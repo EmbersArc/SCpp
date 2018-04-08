@@ -13,6 +13,7 @@
 #include "MosekWrapper.hpp"
 #include "Discretization.hpp"
 #include "SuccessiveConvexificationSOCP.hpp"
+#include "timing.hpp"
 
 #include <iostream>
 #include <array>
@@ -38,8 +39,8 @@ string get_output_path() {
 }
 
 void make_output_path() {
-    string path = "mkdir -p " + get_output_path();
-    assert(system(path.c_str()) == 0);
+    string command = "mkdir -p " + get_output_path();
+    assert(system(command.c_str()) == 0);
 }
 
 int main() {
@@ -85,14 +86,18 @@ int main() {
 
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
-        clock_t begin_time = clock();
 
         weight_trust_region_xu *= 1.2;
 
+        const double timer_total = tic();
+        double timer = tic();
         calculate_discretization ( model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar );
+        cout << "Time, discretization: " << toc(timer) << " ms" << endl;
+
 
 
         // Write problem to file
+        timer = tic();
         string file_name_prefix;
         {
             ostringstream file_name_prefix_ss;
@@ -105,16 +110,24 @@ int main() {
             ofstream f(file_name_prefix + "problem.txt");
             socp.print_problem(f);
         }
+        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
 
-        /************************************************************************************/
-        cout << "Solving problem" << endl;
-        begin_time = clock();
+
+
+        timer = tic();
         solver.solve_problem();
-        cout << endl << "Solver time: " << double( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds." << endl;
+        cout << "Time, solver: " << toc(timer) << " ms" << endl;
+
+
+
+        timer = tic();
         if(!socp.feasibility_check(solver.get_solution_vector())) {
             cout << "ERROR: Solver produced an invalid solution." << endl;
             return EXIT_FAILURE;
         }
+        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
+
+
 
         // Read solution
         for (size_t k = 0; k < K; k++) {
@@ -125,6 +138,7 @@ int main() {
 
 
         // Write solution to files
+        timer = tic();
         {
             ofstream f(file_name_prefix + "X.txt");
             f << X;
@@ -133,13 +147,13 @@ int main() {
             ofstream f(file_name_prefix + "U.txt");
             f << U;
         }
+        cout << "Time, solution files: " << toc(timer) << " ms" << endl;
 
         cout << "sigma   " << sigma << endl;
         cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
         cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
-
-        cout << "Iteration time: " << (double( clock () - begin_time ) /  CLOCKS_PER_SEC*1000.) << " msec" << endl;
+        cout << "Time, total: " << toc(timer_total) << " ms" << endl;
         cout << "==========================================================" << endl;
     }
 }

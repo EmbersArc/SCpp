@@ -43,6 +43,8 @@ set(SOURCES
         src/Discretization.cpp
     include/SuccessiveConvexificationSOCP.hpp
         src/SuccessiveConvexificationSOCP.cpp
+    include/timing.hpp
+        src/timing.cpp
 )
 
 ## Use MOSEK if available
