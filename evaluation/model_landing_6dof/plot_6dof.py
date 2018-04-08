@@ -33,33 +33,38 @@ def my_plot(fig, figures_i):
     X = np.loadtxt("../../output/model_landing_6dof/iteration" + iteration + "_X.txt")
     U = np.loadtxt("../../output/model_landing_6dof/iteration" + iteration + "_U.txt")
 
-    ax.set_xlabel('Z')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('X')
+    ax.set_zlabel('X, up')
+    ax.set_xlabel('Y, east')
+    ax.set_ylabel('Z, north')
 
     K = X.shape[1]
 
     for k in range(K):
-        rz, ry, rx = X[1:4, k]
-        vz, vy, vx = X[4:7, k]
-        w, x, y, z = X[7:11, k]
-        uz, uy, ux = U[:, k]
+        rx, ry, rz = X[1:4, k]
+        vx, vy, vz = X[4:7, k]
+        qw, qx, qy, qz = X[7:11, k]
+
+        CBI = np.array([
+            [1-2*(qy**2+qz**2), 2*(qx*qy+qw*qz), 2*(qx*qz-qw*qy)],
+            [2*(qx*qy-qw*qz), 1-2*(qx**2+qz**2), 2*(qy*qz+qw*qx)],
+            [2*(qx*qz+qw*qy), 2*(qy*qz-qw*qx), 1-2*(qx**2+qy**2)]
+        ])
+
+        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
+        dx, dy, dz = np.dot(np.transpose(CBI), np.array([1.,0.,0.]))
 
         # speed vector
-        ax.quiver(rx, ry, rz, vx, vy, vz, length=0.25, color='green')
+        ax.quiver(ry, rz, rx, vy, vz, vx, length=0.25, color='green')
 
-        # # attitude vector
-        dx = 2 * (x * z - w * y)
-        dy = 2 * (y * z + w * x)
-        dz = 1 - 2 * (x * x + y * y)
-        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.25, arrow_length_ratio=0.0, color='blue')
+        # attitude vector
+        ax.quiver(ry, rz, rx, dy, dz, dx, length=0.25, arrow_length_ratio=0.0, color='blue')
 
         # thrust vector
-        ax.quiver(rx, ry, rz, -ux, -uy, -uz, length=0.25, arrow_length_ratio=0.0, color='red')
+        ax.quiver(ry, rz, rx, -Fy, -Fz, -Fx, length=0.25, arrow_length_ratio=0.0, color='red')
 
     ax.axis('equal')
     ax.set_title("iter " + str(figures_i))
-    ax.plot(X[3, :], X[2, :], X[1, :], color='black')
+    ax.plot(X[2, :], X[3, :], X[1, :], color='black')
 
 
 def main():
