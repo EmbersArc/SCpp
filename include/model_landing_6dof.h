@@ -18,7 +18,7 @@ public:
 
     static string get_name(){ return "model_landing_6dof"; }
 
-    double total_time_guess() { return 2; }
+    double total_time_guess() { return 7; }
 
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 

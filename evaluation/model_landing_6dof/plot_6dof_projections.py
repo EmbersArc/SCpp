@@ -60,10 +60,10 @@ def my_plot(fig, figures_i):
         ax.set_xlabel(axis_map_x(subplot_pos, 'x, up', 'y, east', 'z, north'))
         ax.set_ylabel(axis_map_y(subplot_pos, 'x, up', 'y, east', 'z, north'))
 
-        rx = axis_map_x(subplot_pos, X[1,:], X[2,:], X[3,:])
-        ry = axis_map_y(subplot_pos, X[1,:], X[2,:], X[3,:])
+        Rx = axis_map_x(subplot_pos, X[1,:], X[2,:], X[3,:])
+        Ry = axis_map_y(subplot_pos, X[1,:], X[2,:], X[3,:])
 
-        ax.plot(rx, ry, color='black')
+        ax.plot(Rx, Ry, color='black')
         ax.axis('equal')
 
         ax.set_title(['top view','','front view','side view'][subplot_pos-1])
@@ -71,32 +71,43 @@ def my_plot(fig, figures_i):
 
         for k in range(K):
 
-            rx = axis_map_x(subplot_pos, X[1,k], X[2,k], X[3,k])
-            ry = axis_map_y(subplot_pos, X[1,k], X[2,k], X[3,k])
 
-            vx = axis_map_x(subplot_pos, X[4,k], X[5,k], X[6,k])
-            vy = axis_map_y(subplot_pos, X[4,k], X[5,k], X[6,k])
+            rx, ry, rz = X[1:4, k]
+            vx, vy, vz = X[4:7, k]
+            qw, qx, qy, qz = X[7:11, k]
 
-            ux = axis_map_x(subplot_pos, U[0,k], U[1,k], U[2,k])
-            uy = axis_map_y(subplot_pos, U[0,k], U[1,k], U[2,k])
+            CBI = np.array([
+                [1-2*(qy**2+qz**2), 2*(qx*qy+qw*qz), 2*(qx*qz-qw*qy)],
+                [2*(qx*qy-qw*qz), 1-2*(qx**2+qz**2), 2*(qy*qz+qw*qx)],
+                [2*(qx*qz+qw*qy), 2*(qy*qz-qw*qx), 1-2*(qx**2+qy**2)]
+            ])
 
+            Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
+            dx, dy, dz = np.dot(np.transpose(CBI), np.array([1.,0.,0.]))
+
+
+            rx_ = axis_map_x(subplot_pos, rx, ry, rz)
+            ry_ = axis_map_y(subplot_pos, rx, ry, rz)
+
+            vx_ = axis_map_x(subplot_pos, vx, vy, vz)
+            vy_ = axis_map_y(subplot_pos, vx, vy, vz)
+
+            dx_ = axis_map_x(subplot_pos, dx, dy, dz)
+            dy_ = axis_map_y(subplot_pos, dx, dy, dz)
+
+            Fx_ = axis_map_x(subplot_pos, Fx, Fy, Fz)
+            Fy_ = axis_map_y(subplot_pos, Fx, Fy, Fz)
+
+            scale = 20
 
             # speed vector
-            ax.quiver(rx, ry, vx, vy, scale=5, color='green', width=0.002)
+            ax.quiver(rx_, ry_, vx_, vy_, scale=scale, color='green', width=0.002)
 
-            # # attitude vector
-            w, x, y, z = X[7:11, k]
-            dx_ = 2 * (x * z - w * y)
-            dy_ = 2 * (y * z + w * x)
-            dz_ = 1 - 2 * (x * x + y * y)
-
-            dx = axis_map_x(subplot_pos, dx_, dy_, dz_)
-            dy = axis_map_y(subplot_pos, dx_, dy_, dz_)
-
-            ax.quiver(rx, ry, dx, dy, scale=5, color='blue', width=0.002)
+            # attitude vector
+            ax.quiver(rx_, ry_, dx_, dy_, scale=scale, color='blue', width=0.002)
 
             # thrust vector
-            ax.quiver(rx, ry, -ux, -uy, scale=5, color='red', width=0.002)
+            ax.quiver(rx_, ry_, -Fx_, -Fy_, scale=scale, color='red', width=0.002)
 
     ax.axis('equal')
     fig.suptitle("iter " + str(figures_i), fontsize=14)
