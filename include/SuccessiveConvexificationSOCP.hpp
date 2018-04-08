@@ -6,10 +6,6 @@
 
 using std::array;
 
-
-
-
-
 optimization_problem::SecondOrderConeProgram build_successive_convexification_SOCP (
     Model &model,
     double &weight_trust_region_sigma,

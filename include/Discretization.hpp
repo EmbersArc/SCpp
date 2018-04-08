@@ -4,7 +4,6 @@
 
 using std::array;
 
-
 void calculate_discretization (
     Model &model,
     double &sigma,

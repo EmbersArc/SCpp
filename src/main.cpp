@@ -33,24 +33,18 @@ using std::ostringstream;
 using std::setw;
 using std::setfill;
 
-
-
 string get_output_path() {
     return "../output/" + Model::get_name() + "/";
 }
 
 void make_output_path() {
     string path = "mkdir -p " + get_output_path();
-    system(path.c_str());
+    assert(system(path.c_str()) == 0);
 }
-
 
 int main() {
     make_output_path();
     Model model;
-
-    // trajectory points
-    const double dt = 1 / double(K-1);
 
     double weight_trust_region_sigma = 1e-1;
     double weight_trust_region_xu = 1e-1;
@@ -62,24 +56,15 @@ int main() {
     Eigen::Matrix<double, n_states, K> X;
     Eigen::Matrix<double, n_inputs, K> U;
 
-
-    // START INITIALIZATION
-    cout << "Starting initialization." << endl;
     model.initialize(X, U);
-    cout << "Initialization finished." << endl;
-
-    // START SUCCESSIVE CONVEXIFICATION
     
     double sigma = model.total_time_guess();
-
 
     array<Model::StateMatrix,   (K-1)> A_bar;
     array<Model::ControlMatrix, (K-1)> B_bar;
     array<Model::ControlMatrix, (K-1)> C_bar;
     array<Model::StateVector,   (K-1)> Sigma_bar;
     array<Model::StateVector,   (K-1)> z_bar;
-
-
 
 
     optimization_problem::SecondOrderConeProgram socp = build_successive_convexification_SOCP ( 
@@ -95,7 +80,6 @@ int main() {
         for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = socp.get_tensor_variable_index("U",{i,k});
     }
 
-
     //EcosWrapper solver(socp);
     MosekWrapper solver(socp);
 
@@ -105,16 +89,10 @@ int main() {
 
         weight_trust_region_xu *= 1.2;
 
-        cout << "Iteration " << it << endl;
-        cout << "Calculating new transition matrices." << endl;
-
-
-
         calculate_discretization ( model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar );
 
 
         // Write problem to file
-
         string file_name_prefix;
         {
             ostringstream file_name_prefix_ss;
@@ -147,7 +125,6 @@ int main() {
 
 
         // Write solution to files
-
         {
             ofstream f(file_name_prefix + "X.txt");
             f << X;

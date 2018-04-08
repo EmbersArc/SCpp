@@ -20,13 +20,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
 
-
-
-
-
     optimization_problem::SecondOrderConeProgram socp;
-
-
 
     socp.create_tensor_variable("X", {n_states, K}); // states
     socp.create_tensor_variable("U", {n_inputs, K}); // inputs
@@ -125,8 +119,6 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         socp.add_minimization_term( param(weight_trust_region_sigma) * var("Delta_sigma", {}) );
     }
 
-
-
     
     for (size_t k = 0; k < K; k++) {
         /* 
@@ -223,10 +215,6 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     }
 
     socp.add_constraint( (1.0) * var("sigma", {}) + (-0.01) >= (0.0) ); // Total time must not be negative
-
     model.add_application_constraints(socp, X, U);
-
-
     return socp;
-
 }

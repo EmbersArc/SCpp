@@ -4,7 +4,6 @@
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
 #include <boost/numeric/odeint.hpp>
 
-
 class DiscretizationODE {
 private:
     Model::ControlVector u_t, u_t1;
@@ -41,7 +40,6 @@ public:
         const Model::ControlMatrix B_bar  = sigma * model.control_jacobian(x, u);
         const Model::StateVector   f      =         model.ode(x, u);
 
-
         Model::StateMatrix Phi_A_xi = V.block<Model::n_states, Model::n_states>(0, 1);
         Model::StateMatrix Phi_A_xi_inverse = Phi_A_xi.inverse();
 
@@ -53,11 +51,8 @@ public:
         dVdt.block<Model::n_states, Model::n_inputs>(0, cols) = Phi_A_xi_inverse * B_bar * beta;             cols += Model::n_inputs;
         dVdt.block<Model::n_states,               1>(0, cols) = Phi_A_xi_inverse * f;                        cols += 1;
         dVdt.block<Model::n_states,               1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
-
     }
 };
-
-
 
 void calculate_discretization (
     Model &model,
@@ -91,21 +86,5 @@ void calculate_discretization (
         C_bar[k]      = A_bar[k] * V.block<Model::n_states,Model::n_inputs>(0, cols);   cols += Model::n_inputs;
         Sigma_bar[k]  = A_bar[k] * V.block<Model::n_states,1>(0, cols);                 cols += 1;
         z_bar[k]      = A_bar[k] * V.block<Model::n_states,1>(0, cols);
-
-        /*cout << "A_bar " << k << endl;
-        cout << A_bar[k] << endl << endl;
-        cout << "B_bar " << k << endl;
-        cout << B_bar[k] << endl << endl;
-        cout << "C_bar " << k << endl;
-        cout << C_bar[k] << endl << endl;
-        cout << "Sigma_bar " << k << endl;
-        cout << Sigma_bar[k] << endl << endl;
-        cout << "z_bar " << k << endl;
-        cout << z_bar[k] << endl << endl;*/
     }
-
-
 }
-
-
-
