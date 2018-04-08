@@ -22,158 +22,253 @@ void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen
 
 
 model_landing_6dof::StateMatrix model_landing_6dof::state_jacobian(const StateVector &x, const ControlVector &u) {
+    const double m = x(0, 0);
+    const double q0 = x(7, 0);
+    const double q1 = x(8, 0);
+    const double q2 = x(9, 0);
+    const double q3 = x(10, 0);
+    const double wx = x(11, 0);
+    const double wy = x(12, 0);
+    const double wz = x(13, 0);
+    const double ux = u(0, 0);
+    const double uy = u(1, 0);
+    const double uz = u(2, 0);
+    const double J_B0 = J_B(0, 0);
+    const double J_B1 = J_B(1, 0);
+    const double J_B2 = J_B(2, 0);
+    const double x0 = pow(m, -2);
+    const double x1 = uy*x0;
+    const double x2 = 2*q0;
+    const double x3 = q3*x2;
+    const double x4 = 2*q1;
+    const double x5 = q2*x4;
+    const double x6 = uz*x0;
+    const double x7 = q2*x2;
+    const double x8 = q3*x4;
+    const double x9 = ux*x0;
+    const double x10 = -2*pow(q2, 2);
+    const double x11 = -2*pow(q3, 2);
+    const double x12 = 1.0/m;
+    const double x13 = 2*q2*x12;
+    const double x14 = uz*x13;
+    const double x15 = q3*uy*x12;
+    const double x16 = 2*x15;
+    const double x17 = uy*x13;
+    const double x18 = uz*x12;
+    const double x19 = 2*q3*x18;
+    const double x20 = 2*q0*x12;
+    const double x21 = uz*x20;
+    const double x22 = 2*q1*x12;
+    const double x23 = uy*x22;
+    const double x24 = 4*q2;
+    const double x25 = ux*x12;
+    const double x26 = uy*x20;
+    const double x27 = uz*x22;
+    const double x28 = q3*ux*x12;
+    const double x29 = q1*x2;
+    const double x30 = 2*q2;
+    const double x31 = q3*x30;
+    const double x32 = -2*pow(q1, 2) + 1;
+    const double x33 = 2*x28;
+    const double x34 = 4*q1*x12;
+    const double x35 = x25*x30;
+    const double x36 = ux*x22;
+    const double x37 = ux*x20;
+    const double x38 = 0.5*wx;
+    const double x39 = -x38;
+    const double x40 = 0.5*wy;
+    const double x41 = -x40;
+    const double x42 = 0.5*wz;
+    const double x43 = -x42;
+    const double x44 = 0.5*q1;
+    const double x45 = -x44;
+    const double x46 = 0.5*q2;
+    const double x47 = -x46;
+    const double x48 = 0.5*q3;
+    const double x49 = -x48;
+    const double x50 = 0.5*q0;
+    const double x51 = 1.0/J_B0;
+    const double x52 = J_B2*wz;
+    const double x53 = J_B1*wy;
+    const double x54 = 1.0/J_B1;
+    const double x55 = J_B0*wx;
+    const double x56 = 1.0/J_B2;
+
     StateMatrix A;
-
-    double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24;
-    double t25, t26, t27, t28, t29, t30, t31, t32, t33;
-
     A.setZero();
-    t2 = 1.0/(x[0]*x[0]);
-    t3 = 1.0/x[0];
-    t4 = x[10]*x[10];
-    t5 = t4*2.0;
-    t6 = x[7]*x[10]*2.0;
-    t7 = u[2]*x[7];
-    t8 = u[2]*x[10];
-    t9 = x[8]*x[8];
-    t10 = t9*2.0;
-    t11 = x[9]*x[9];
-    t12 = t11*2.0;
-    t13 = x[7]*x[9]*2.0;
-    t14 = x[8]*x[10]*2.0;
-    t15 = x[7]*x[8]*2.0;
-    t16 = u[1]*x[8];
-    t17 = u[1]*x[7];
-    t18 = u[0]*x[10];
-    t19 = u[0]*x[7];
-    t20 = u[1]*x[10];
-    t21 = u[0]*x[8];
-    t22 = u[1]*x[9];
-    t23 = x[13]*(1.0/2.0);
-    t24 = x[11]*(1.0/2.0);
-    t25 = x[7]*(1.0/2.0);
-    t26 = x[12]*(1.0/2.0);
-    t27 = x[9]*(1.0/2.0);
-    t28 = 1.0/J_B[0];
-    t29 = J_B[1]-J_B[2];
-    t30 = 1.0/J_B[1];
-    t31 = J_B[0]-J_B[2];
-    t32 = 1.0/J_B[2];
-    t33 = J_B[0]-J_B[1];
-    A(1, 4) = 1.0;
-    A(2, 5) = 1.0;
-    A(3, 6) = 1.0;
-    A(4, 0) = t2*u[1]*(t6-x[8]*x[9]*2.0)+t2*u[0]*(t5+t12-1.0)-t2*u[2]*(t13+t14);
-    A(4, 7) = t3*(t20-u[2]*x[9])*-2.0;
-    A(4, 8) = t3*(t8+t22)*2.0;
-    A(4, 9) = t3*(t7+t16-u[0]*x[9]*2.0)*2.0;
-    A(4, 10) = t3*(t17+u[0]*x[10]*2.0-u[2]*x[8])*-2.0;
-    A(5, 0) = -t2*u[0]*(t6+x[8]*x[9]*2.0)+t2*u[2]*(t15-x[9]*x[10]*2.0)+t2*u[1]*(t5+t10-1.0);
-    A(5, 7) = t3*(t18-u[2]*x[8])*2.0;
-    A(5, 8) = t3*(t7-u[0]*x[9]+u[1]*x[8]*2.0)*-2.0;
-    A(5, 9) = t3*(t8+t21)*2.0;
-    A(5, 10) = t3*(t19-u[1]*x[10]*2.0+u[2]*x[9])*2.0;
-    A(6, 0) = -t2*u[1]*(t15+x[9]*x[10]*2.0)+t2*u[2]*(t10+t12-1.0)+t2*u[0]*(t13-t14);
-    A(6, 7) = t3*(t16-u[0]*x[9])*2.0;
-    A(6, 8) = t3*(t17+t18-u[2]*x[8]*2.0)*2.0;
-    A(6, 9) = t3*(t19-t20+u[2]*x[9]*2.0)*-2.0;
-    A(6, 10) = t3*(t21+t22)*2.0;
-    A(7, 8) = x[11]*(-1.0/2.0);
-    A(7, 9) = x[12]*(-1.0/2.0);
-    A(7, 10) = x[13]*(-1.0/2.0);
-    A(7, 11) = x[8]*(-1.0/2.0);
-    A(7, 12) = x[9]*(-1.0/2.0);
-    A(7, 13) = x[10]*(-1.0/2.0);
-    A(8, 7) = t24;
-    A(8, 9) = t23;
-    A(8, 10) = x[12]*(-1.0/2.0);
-    A(8, 11) = t25;
-    A(8, 12) = x[10]*(-1.0/2.0);
-    A(8, 13) = t27;
-    A(9, 7) = t26;
-    A(9, 8) = -t23;
-    A(9, 10) = t24;
-    A(9, 11) = x[10]*(1.0/2.0);
-    A(9, 12) = t25;
-    A(9, 13) = x[8]*(-1.0/2.0);
-    A(10, 7) = t23;
-    A(10, 8) = t26;
-    A(10, 9) = -t24;
-    A(10, 11) = -t27;
-    A(10, 12) = x[8]*(1.0/2.0);
-    A(10, 13) = t25;
-    A(11, 12) = t28*t29*x[13];
-    A(11, 13) = t28*t29*x[12];
-    A(12, 11) = -t30*t31*x[13];
-    A(12, 13) = -t30*t31*x[11];
-    A(13, 11) = t32*t33*x[12];
-    A(13, 12) = t32*t33*x[11];
-
-
+    A(1, 4) = 1;
+    A(2, 5) = 1;
+    A(3, 6) = 1;
+    A(4, 0) = -x1*(-x3 + x5) - x6*(x7 + x8) - x9*(x10 + x11 + 1);
+    A(4, 7) = x14 - x16;
+    A(4, 8) = x17 + x19;
+    A(4, 9) = x21 + x23 - x24*x25;
+    A(4, 10) = -x26 + x27 - 4*x28;
+    A(5, 0) = -x1*(x11 + x32) - x6*(-x29 + x31) - x9*(x3 + x5);
+    A(5, 7) = -x27 + x33;
+    A(5, 8) = -uy*x34 - x21 + x35;
+    A(5, 9) = x19 + x36;
+    A(5, 10) = x14 - 4*x15 + x37;
+    A(6, 0) = -x1*(x29 + x31) - x6*(x10 + x32) - x9*(-x7 + x8);
+    A(6, 7) = x23 - x35;
+    A(6, 8) = -uz*x34 + x26 + x33;
+    A(6, 9) = x16 - x18*x24 - x37;
+    A(6, 10) = x17 + x36;
+    A(7, 8) = x39;
+    A(7, 9) = x41;
+    A(7, 10) = x43;
+    A(7, 11) = x45;
+    A(7, 12) = x47;
+    A(7, 13) = x49;
+    A(8, 7) = x38;
+    A(8, 9) = x42;
+    A(8, 10) = x41;
+    A(8, 11) = x50;
+    A(8, 12) = x49;
+    A(8, 13) = x46;
+    A(9, 7) = x40;
+    A(9, 8) = x43;
+    A(9, 10) = x38;
+    A(9, 11) = x48;
+    A(9, 12) = x50;
+    A(9, 13) = x45;
+    A(10, 7) = x42;
+    A(10, 8) = x40;
+    A(10, 9) = x39;
+    A(10, 11) = x47;
+    A(10, 12) = x44;
+    A(10, 13) = x50;
+    A(11, 12) = x51*(J_B1*wz - x52);
+    A(11, 13) = x51*(-J_B2*wy + x53);
+    A(12, 11) = x54*(-J_B0*wz + x52);
+    A(12, 13) = x54*(J_B2*wx - x55);
+    A(13, 11) = x56*(J_B0*wy - x53);
+    A(13, 12) = x56*(-J_B1*wx + x55);
     return A;
 }
 
 
 
 model_landing_6dof::ControlMatrix model_landing_6dof::control_jacobian(const StateVector &x, const ControlVector &u) {
+    const double m = x(0, 0);
+    const double q0 = x(7, 0);
+    const double q1 = x(8, 0);
+    const double q2 = x(9, 0);
+    const double q3 = x(10, 0);
+    const double ux = u(0, 0);
+    const double uy = u(1, 0);
+    const double uz = u(2, 0);
+    const double r_T_B0 = r_T_B(0, 0);
+    const double r_T_B1 = r_T_B(1, 0);
+    const double r_T_B2 = r_T_B(2, 0);
+    const double J_B0 = J_B(0, 0);
+    const double J_B1 = J_B(1, 0);
+    const double J_B2 = J_B(2, 0);
+    const double x0 = alpha_m/sqrt(pow(ux, 2) + pow(uy, 2) + pow(uz, 2));
+    const double x1 = 1.0/m;
+    const double x2 = -2*pow(q2, 2);
+    const double x3 = -2*pow(q3, 2);
+    const double x4 = 2*q0;
+    const double x5 = q3*x4;
+    const double x6 = 2*q1;
+    const double x7 = q2*x6;
+    const double x8 = q2*x4;
+    const double x9 = q3*x6;
+    const double x10 = -2*pow(q1, 2) + 1;
+    const double x11 = q1*x4;
+    const double x12 = 2*q2*q3;
+    const double x13 = 1.0/J_B0;
+    const double x14 = 1.0/J_B1;
+    const double x15 = 1.0/J_B2;
+
     ControlMatrix B;
-
-    double t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23;
-
     B.setZero();
-    t10 = 1.0/x[0];
-    t11 = x[7]*x[10]*2.0;
-    t12 = x[10]*x[10];
-    t13 = t12*2.0;
-    t14 = x[7]*x[9]*2.0;
-    t15 = x[8]*x[10]*2.0;
-    t16 = x[7]*x[8]*2.0;
-    t17 = x[8]*x[8];
-    t18 = t17*2.0;
-    t19 = x[9]*x[9];
-    t20 = t19*2.0;
-    t21 = 1.0/J_B[0];
-    t22 = 1.0/J_B[1];
-    t23 = 1.0/J_B[2];
-    B.row(0) << -(alpha_m*u[0])/u.norm(), -(alpha_m*u[1])/u.norm(), -(alpha_m*u[2])/u.norm();
-    B(4, 0) = -t10*(t13+t20-1.0);
-    B(4, 1) = -t10*(t11-x[8]*x[9]*2.0);
-    B(4, 2) = t10*(t14+t15);
-    B(5, 0) = t10*(t11+x[8]*x[9]*2.0);
-    B(5, 1) = -t10*(t13+t18-1.0);
-    B(5, 2) = -t10*(t16-x[9]*x[10]*2.0);
-    B(6, 0) = -t10*(t14-t15);
-    B(6, 1) = t10*(t16+x[9]*x[10]*2.0);
-    B(6, 2) = -t10*(t18+t20-1.0);
-    B(11, 1) = -r_T_B[2]*t21;
-    B(11, 2) = r_T_B[1]*t21;
-    B(12, 0) = r_T_B[2]*t22;
-    B(12, 2) = -r_T_B[0]*t22;
-    B(13, 0) = -r_T_B[1]*t23;
-    B(13, 1) = r_T_B[0]*t23;
-
+    B(0, 0) = -ux*x0;
+    B(0, 1) = -uy*x0;
+    B(0, 2) = -uz*x0;
+    B(4, 0) = x1*(x2 + x3 + 1);
+    B(4, 1) = x1*(-x5 + x7);
+    B(4, 2) = x1*(x8 + x9);
+    B(5, 0) = x1*(x5 + x7);
+    B(5, 1) = x1*(x10 + x3);
+    B(5, 2) = x1*(-x11 + x12);
+    B(6, 0) = x1*(-x8 + x9);
+    B(6, 1) = x1*(x11 + x12);
+    B(6, 2) = x1*(x10 + x2);
+    B(11, 1) = -r_T_B2*x13;
+    B(11, 2) = r_T_B1*x13;
+    B(12, 0) = r_T_B2*x14;
+    B(12, 2) = -r_T_B0*x14;
+    B(13, 0) = -r_T_B1*x15;
+    B(13, 1) = r_T_B0*x15;
     return B;
 }
 
 
 
 model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, const ControlVector &u) {
+    const double m = x(0, 0);
+    const double vx = x(4, 0);
+    const double vy = x(5, 0);
+    const double vz = x(6, 0);
+    const double q0 = x(7, 0);
+    const double q1 = x(8, 0);
+    const double q2 = x(9, 0);
+    const double q3 = x(10, 0);
+    const double wx = x(11, 0);
+    const double wy = x(12, 0);
+    const double wz = x(13, 0);
+    const double ux = u(0, 0);
+    const double uy = u(1, 0);
+    const double uz = u(2, 0);
+    const double g_I0 = g_I(0, 0);
+    const double g_I1 = g_I(1, 0);
+    const double g_I2 = g_I(2, 0);
+    const double r_T_B0 = r_T_B(0, 0);
+    const double r_T_B1 = r_T_B(1, 0);
+    const double r_T_B2 = r_T_B(2, 0);
+    const double J_B0 = J_B(0, 0);
+    const double J_B1 = J_B(1, 0);
+    const double J_B2 = J_B(2, 0);
+    const double x0 = 1.0/m;
+    const double x1 = uy*x0;
+    const double x2 = 2*q0;
+    const double x3 = q3*x2;
+    const double x4 = 2*q1;
+    const double x5 = q2*x4;
+    const double x6 = uz*x0;
+    const double x7 = q2*x2;
+    const double x8 = q3*x4;
+    const double x9 = ux*x0;
+    const double x10 = -2*pow(q2, 2);
+    const double x11 = -2*pow(q3, 2);
+    const double x12 = q1*x2;
+    const double x13 = 2*q2*q3;
+    const double x14 = -2*pow(q1, 2) + 1;
+    const double x15 = 0.5*q1;
+    const double x16 = 0.5*q2;
+    const double x17 = 0.5*q3;
+    const double x18 = 0.5*q0;
+    const double x19 = J_B1*wy;
+    const double x20 = J_B2*wz;
+    const double x21 = J_B0*wx;
+
     StateVector f;
-    f <<
-      -alpha_m*u.norm(),
-            x[4],
-            x[5],
-            x[6],
-            g_I[0] - (u[0]*(2*pow(x[9],2) + 2*pow(x[10],2) - 1))/x[0] - (u[1]*(2*x[7]*x[10] - 2*x[8]*x[9]))/x[0] + (u[2]*(2*x[7]*x[9] + 2*x[8]*x[10]))/x[0],
-            g_I[1] - (u[1]*(2*pow(x[8],2) + 2*pow(x[10],2) - 1))/x[0] + (u[0]*(2*x[7]*x[10] + 2*x[8]*x[9]))/x[0] - (u[2]*(2*x[7]*x[8] - 2*x[9]*x[10]))/x[0],
-            g_I[2] - (u[2]*(2*pow(x[8],2) + 2*pow(x[9],2) - 1))/x[0] - (u[0]*(2*x[7]*x[9] - 2*x[8]*x[10]))/x[0] + (u[1]*(2*x[7]*x[8] + 2*x[9]*x[10]))/x[0],
-            - (x[8]*x[11])/2 - (x[9]*x[12])/2 - (x[10]*x[13])/2,
-            (x[7]*x[11])/2 + (x[9]*x[13])/2 - (x[10]*x[12])/2,
-            (x[7]*x[12])/2 - (x[8]*x[13])/2 + (x[10]*x[11])/2,
-            (x[7]*x[13])/2 + (x[8]*x[12])/2 - (x[9]*x[11])/2,
-            (r_T_B[1]*u[2] - r_T_B[2]*u[1] + J_B[1]*x[12]*x[13] - J_B[2]*x[12]*x[13])/J_B[0],
-            -(r_T_B[0]*u[2] - r_T_B[2]*u[0] + J_B[0]*x[11]*x[13] - J_B[2]*x[11]*x[13])/J_B[1],
-            (r_T_B[0]*u[1] - r_T_B[1]*u[0] + J_B[0]*x[11]*x[12] - J_B[1]*x[11]*x[12])/J_B[2];
+    f.setZero();
+    f(0, 0) = -alpha_m*sqrt(pow(ux, 2) + pow(uy, 2) + pow(uz, 2));
+    f(1, 0) = vx;
+    f(2, 0) = vy;
+    f(3, 0) = vz;
+    f(4, 0) = g_I0 + x1*(-x3 + x5) + x6*(x7 + x8) + x9*(x10 + x11 + 1);
+    f(5, 0) = g_I1 + x1*(x11 + x14) + x6*(-x12 + x13) + x9*(x3 + x5);
+    f(6, 0) = g_I2 + x1*(x12 + x13) + x6*(x10 + x14) + x9*(-x7 + x8);
+    f(7, 0) = -wx*x15 - wy*x16 - wz*x17;
+    f(8, 0) = wx*x18 - wy*x17 + wz*x16;
+    f(9, 0) = wx*x17 + wy*x18 - wz*x15;
+    f(10, 0) = -wx*x16 + wy*x15 + wz*x18;
+    f(11, 0) = (r_T_B1*uz - r_T_B2*uy - wy*x20 + wz*x19)/J_B0;
+    f(12, 0) = (-r_T_B0*uz + r_T_B2*ux + wx*x20 - wz*x21)/J_B1;
+    f(13, 0) = (r_T_B0*uy - r_T_B1*ux - wx*x19 + wy*x21)/J_B2;
     return f;
 }
 
