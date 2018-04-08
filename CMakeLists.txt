@@ -41,6 +41,8 @@ set(SOURCES
         src/OptimizationProblem.cpp
     include/Discretization.hpp
         src/Discretization.cpp
+    include/SuccessiveConvexificationSOCP.hpp
+        src/SuccessiveConvexificationSOCP.cpp
 )
 
 ## Use MOSEK if available
