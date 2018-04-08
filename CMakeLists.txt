@@ -39,6 +39,8 @@ set(SOURCES
         src/check_trajectory.cpp
     include/OptimizationProblem.hpp
         src/OptimizationProblem.cpp
+    include/Discretization.hpp
+        src/Discretization.cpp
 )
 
 ## Use MOSEK if available
