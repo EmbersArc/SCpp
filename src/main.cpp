@@ -327,7 +327,8 @@ int main() {
             socp.add_minimization_term( param(weight_trust_region_xu) * var("norm2_Delta", {}) );
         }
 
-//        model.add_application_constraints(socp);
+        socp.add_constraint( (1.0) * var("sigma", {}) + (-0.01) >= (0.0) ); // Total time must not be negative
+
         model.add_application_constraints(socp, X, U);
     } /** End opt problem setup **/
 

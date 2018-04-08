@@ -261,16 +261,16 @@ void model_landing_6dof::add_application_constraints(
     // Control Constraints
     for(size_t k = 0; k<K; k++) {
 
-        // Minimum Thrust
+        // Linearized Minimum Thrust
         /*optimization_problem::AffineExpression lhs;
-
-        auto U0_norm = param_fn([&U0,k](){ return U0.norm(); });
-
         for (size_t i = 0; i < n_inputs; i++) {
-            lhs = lhs + param(U0(i,k)) * var("U", {i, k});
+            lhs = lhs + param_fn([&U0,i,k](){ return (U0(i,k) / sqrt(U0(0,k)*U0(0,k) + U0(1,k)*U0(1,k) + U0(2,k)*U0(2,k))  ); }) * var("U", {i, k});
         }
-
         socp.add_constraint(lhs + (-T_min) >= (0.0));*/
+
+
+        // Simplified Minimum Thrust
+        socp.add_constraint( (1.0) * var("U", {0, k}) + (-T_min) >= (0.0));
 
 
         // Maximum Thrust
