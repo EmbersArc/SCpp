@@ -353,9 +353,7 @@ int main() {
     for(size_t it = 0; it < iterations; it++) {
         clock_t begin_time = clock();
 
-             if(it == 30) weight_trust_region_xu *= 5;
-        else if(it == 20) weight_trust_region_xu *= 5;
-        else if(it == 10) weight_trust_region_xu *= 5;
+        weight_trust_region_xu *= 1.2;
 
         cout << "Iteration " << it << endl;
         cout << "Calculating new transition matrices." << endl;
