@@ -55,7 +55,7 @@ private:
     Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_final = Vector3d(0., 0., 0.);
 
-    const double cos_delta_max = cos(20. / 180. * PI);
+    const double tan_delta_max = tan(20. / 180. * PI);
     const double cos_theta_max = cos(90. / 180. * PI);
     const double tan_gamma_gs = tan(20. / 180. * PI);
     const double w_B_max = 60. / 180. * PI;

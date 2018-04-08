@@ -238,19 +238,23 @@ void model_landing_6dof::add_application_constraints(
 
 
         // Glide Slope
-        /*socp.add_constraint(
-                optimization_problem::norm2({ (1.0) * var("X", {2, k}),
-                                              (1.0) * var("X", {3, k}) })
-                <= (1.0 / tan_gamma_gs) * var("X", {1, k})
+        socp.add_constraint(
+            optimization_problem::norm2({ 
+                (1.0) * var("X", {2, k}),
+                (1.0) * var("X", {3, k}) 
+            })
+            <= (1.0 / tan_gamma_gs) * var("X", {1, k})
         );
 
         // Max Rotation Velocity
         socp.add_constraint(
-                optimization_problem::norm2({ (1.0) * var("X", {11, k}),
-                                              (1.0) * var("X", {12, k}),
-                                              (1.0) * var("X", {13, k}) })
-                <= (w_B_max)
-        );*/
+            optimization_problem::norm2({ 
+                (1.0) * var("X", {11, k}),
+                (1.0) * var("X", {12, k}),
+                (1.0) * var("X", {13, k}) 
+            })
+            <= (w_B_max)
+        );
     }
 
 
@@ -271,18 +275,21 @@ void model_landing_6dof::add_application_constraints(
 
         // Maximum Thrust
         socp.add_constraint(
-                optimization_problem::norm2({ (1.0) * var("U", {0, k}),
-                                              (1.0) * var("U", {1, k}),
-                                              (1.0) * var("U", {2, k}) })
-                <= (T_max)
+            optimization_problem::norm2({ 
+                (1.0) * var("U", {0, k}),
+                (1.0) * var("U", {1, k}),
+                (1.0) * var("U", {2, k}) 
+            })
+            <= (T_max)
         );
 
         // Maximum Gimbal Angle
         socp.add_constraint(
-                optimization_problem::norm2({ (1.0) * var("U", {0, k}),
-                                              (1.0) * var("U", {1, k}),
-                                              (1.0) * var("U", {2, k}) })
-                <= (1.0 / cos_delta_max) * var("U", {0, k})
+            optimization_problem::norm2({
+                (1.0) * var("U", {1, k}),
+                (1.0) * var("U", {2, k}) 
+            })
+            <= (tan_delta_max) * var("U", {0, k})
         );
     }
 }
