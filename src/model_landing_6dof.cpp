@@ -161,7 +161,7 @@ model_landing_6dof::ControlMatrix model_landing_6dof::control_jacobian(const Sta
 model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, const ControlVector &u) {
     StateVector f;
     f <<
-            -alpha_m*u.norm(),
+      -alpha_m*u.norm(),
             x[4],
             x[5],
             x[6],
@@ -177,6 +177,7 @@ model_landing_6dof::StateVector model_landing_6dof::ode(const StateVector &x, co
             (r_T_B[0]*u[1] - r_T_B[1]*u[0] + J_B[0]*x[11]*x[12] - J_B[1]*x[11]*x[12])/J_B[2];
     return f;
 }
+
 
 void model_landing_6dof::add_application_constraints(
         optimization_problem::SecondOrderConeProgram &socp,
