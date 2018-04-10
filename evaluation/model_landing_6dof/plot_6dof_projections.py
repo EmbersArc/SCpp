@@ -54,7 +54,11 @@ def my_plot(fig, figures_i):
     K = X.shape[1]
 
 
+
     for subplot_pos in [1,3,4]:
+
+        lines = []
+        line_colors = []
 
         ax = fig.add_subplot(2,2,subplot_pos)
         ax.set_xlabel(axis_map_x(subplot_pos, 'x, up', 'y, east', 'z, north'))
@@ -98,16 +102,23 @@ def my_plot(fig, figures_i):
             Fx_ = axis_map_x(subplot_pos, Fx, Fy, Fz)
             Fy_ = axis_map_y(subplot_pos, Fx, Fy, Fz)
 
-            scale = 20
+            scale = 0.5
 
             # speed vector
-            ax.quiver(rx_, ry_, vx_, vy_, scale=scale, color='green', width=0.002)
+            lines.append([(rx_, ry_), (rx_ + scale * vx_, ry_ + scale * vy_)])
+            line_colors.append((0, 1, 0, 1))
+
 
             # attitude vector
-            ax.quiver(rx_, ry_, dx_, dy_, scale=scale, color='blue', width=0.002)
+            lines.append([(rx_, ry_), (rx_ + scale * dx_, ry_ + scale * dy_)])
+            line_colors.append((0, 0, 1, 1))
 
             # thrust vector
-            ax.quiver(rx_, ry_, -Fx_, -Fy_, scale=scale, color='red', width=0.002)
+            lines.append([(rx_, ry_), (rx_ - scale * Fx_, ry_ - scale * Fy_)])
+            line_colors.append((1, 0, 0, 1))
+
+        lc = mc.LineCollection(lines, colors=line_colors, linewidths=1.5)
+        ax.add_collection(lc)
 
     ax.axis('equal')
     fig.suptitle("iter " + str(figures_i), fontsize=14)
