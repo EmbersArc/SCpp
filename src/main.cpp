@@ -51,6 +51,9 @@ int main() {
     double weight_trust_region_xu = 1e-3;
     double weight_virtual_control = 10000;
 
+    double nu_tol = 1e-8;
+    double delta_tol = 1e-3;
+
     const size_t n_states = Model::n_states;
     const size_t n_inputs = Model::n_inputs;
 
@@ -155,5 +158,11 @@ int main() {
         cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
         cout << "Time, total: " << toc(timer_total) << " ms" << endl;
         cout << "==========================================================" << endl;
+
+        if (solver.get_solution_value("norm2_Delta", {}) < delta_tol
+           && solver.get_solution_value("norm2_nu", {}) < nu_tol){
+            cout << "Converged after " << it << " iterations.";
+            break;
+        }
     }
 }

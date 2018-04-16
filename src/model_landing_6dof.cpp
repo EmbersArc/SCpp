@@ -279,13 +279,13 @@ void model_landing_6dof::add_application_constraints(
         Eigen::Matrix<double, n_inputs, K> &U0
 ) {
     auto var = [&](const string &name, const vector<size_t> &indices){ return socp.get_variable(name,indices); };
-    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
+//    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
+//    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
 
     StateVector x_init; x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
     StateVector x_final; x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
-    // initial state
+    // Initial state
     socp.add_constraint( (-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {1, 0}) + (x_init(1)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {2, 0}) + (x_init(2)) == 0.0 );
@@ -302,7 +302,7 @@ void model_landing_6dof::add_application_constraints(
     socp.add_constraint( (-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0 );
 
 
-    // Final State
+    // Final State (mass is free)
     for(size_t i = 1; i<n_states; i++){
         socp.add_constraint( (-1.0) * var("X", {i, K-1}) + (x_final(i)) == 0.0 );
     }
