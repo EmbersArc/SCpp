@@ -303,7 +303,7 @@ void model_landing_6dof::add_application_constraints(
 
 
     // Final State
-    for(size_t i = 0; i<n_states; i++){
+    for(size_t i = 1; i<n_states; i++){
         socp.add_constraint( (-1.0) * var("X", {i, K-1}) + (x_final(i)) == 0.0 );
     }
     socp.add_constraint( (1.0) * var("U", {1, K-1}) == (0.0) );

@@ -48,7 +48,7 @@ int main() {
     Model model;
 
     double weight_trust_region_sigma = 1e-1;
-    double weight_trust_region_xu = 1e-1;
+    double weight_trust_region_xu = 1e-3;
     double weight_virtual_control = 10000;
 
     const size_t n_states = Model::n_states;
@@ -81,8 +81,8 @@ int main() {
         for (size_t i = 0; i < n_inputs; ++i) U_indices[i][k] = socp.get_tensor_variable_index("U",{i,k});
     }
 
-    //EcosWrapper solver(socp);
-    MosekWrapper solver(socp);
+    EcosWrapper solver(socp);
+//    MosekWrapper solver(socp);
 
     const size_t iterations = 40;
     for(size_t it = 0; it < iterations; it++) {
@@ -120,12 +120,12 @@ int main() {
 
 
 
-        timer = tic();
-        if(!socp.feasibility_check(solver.get_solution_vector())) {
-            cout << "ERROR: Solver produced an invalid solution." << endl;
-            return EXIT_FAILURE;
-        }
-        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
+//        timer = tic();
+//        if(!socp.feasibility_check(solver.get_solution_vector())) {
+//            cout << "ERROR: Solver produced an invalid solution." << endl;
+//            return EXIT_FAILURE;
+//        }
+//        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
 
 
 
