@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc
@@ -45,13 +46,13 @@ def my_plot(fig, figures_i):
         qw, qx, qy, qz = X[7:11, k]
 
         CBI = np.array([
-            [1-2*(qy**2+qz**2), 2*(qx*qy+qw*qz), 2*(qx*qz-qw*qy)],
-            [2*(qx*qy-qw*qz), 1-2*(qx**2+qz**2), 2*(qy*qz+qw*qx)],
-            [2*(qx*qz+qw*qy), 2*(qy*qz-qw*qx), 1-2*(qx**2+qy**2)]
+            [1 - 2 * (qy ** 2 + qz ** 2), 2 * (qx * qy + qw * qz), 2 * (qx * qz - qw * qy)],
+            [2 * (qx * qy - qw * qz), 1 - 2 * (qx ** 2 + qz ** 2), 2 * (qy * qz + qw * qx)],
+            [2 * (qx * qz + qw * qy), 2 * (qy * qz - qw * qx), 1 - 2 * (qx ** 2 + qy ** 2)]
         ])
 
         Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
-        dx, dy, dz = np.dot(np.transpose(CBI), np.array([1.,0.,0.]))
+        dx, dy, dz = np.dot(np.transpose(CBI), np.array([1., 0., 0.]))
 
         # speed vector
         ax.quiver(ry, rz, rx, vy, vz, vx, length=0.25, color='green')
@@ -68,6 +69,13 @@ def my_plot(fig, figures_i):
 
 
 def main():
+    # find the number of saved iterations
+    global figures_i, figures_N
+    figures_N = max([int(string.lstrip("iteration").rstrip("_X.txt"))
+                     for string in os.listdir("../../output/model_landing_6dof/")
+                     if string.endswith("X.txt")]) + 1
+    figures_i = figures_N - 1
+
     fig = plt.figure(figsize=(10, 12))
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
