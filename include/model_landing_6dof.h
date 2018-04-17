@@ -43,8 +43,8 @@ private:
 
     //initial state
     const double m_wet = 2.;
-    Vector3d r_I_init = Vector3d(10, 5, 2);
-    Vector3d v_I_init = Vector3d(-5, -4, -2);
+    Vector3d r_I_init = Vector3d(4, 4, 0);
+    Vector3d v_I_init = Vector3d(0, 0, -2);
     Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_init = Vector3d(0., 0., 0.);
 

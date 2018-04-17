@@ -38,20 +38,26 @@ string get_output_path() {
     return "../output/" + Model::get_name() + "/";
 }
 
+void clear_output_path() {
+    string command = "rm -r " + get_output_path();
+    assert(system(command.c_str()) == 0);
+}
+
 void make_output_path() {
     string command = "mkdir -p " + get_output_path();
     assert(system(command.c_str()) == 0);
 }
 
 int main() {
+    clear_output_path();
     make_output_path();
     Model model;
 
-    double weight_trust_region_sigma = 1e-1;
+    double weight_trust_region_sigma = 1e-3;
     double weight_trust_region_xu = 1e-3;
-    double weight_virtual_control = 10000;
+    double weight_virtual_control = 1e3;
 
-    double nu_tol = 1e-8;
+    double nu_tol = 1e-3;
     double delta_tol = 1e-3;
 
     const size_t n_states = Model::n_states;
