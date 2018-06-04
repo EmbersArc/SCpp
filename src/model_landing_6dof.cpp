@@ -4,6 +4,7 @@
 
 void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 
+    Nondimensionalize();
 
     StateVector x_init; x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
     StateVector x_final; x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
@@ -293,10 +294,10 @@ void model_landing_6dof::add_application_constraints(
     socp.add_constraint( (-1.0) * var("X", {4, 0}) + (x_init(4)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {5, 0}) + (x_init(5)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {6, 0}) + (x_init(6)) == 0.0 );
-//    socp.add_constraint( (-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0 );
-//    socp.add_constraint( (-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0 );
-//    socp.add_constraint( (-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0 );
-//    socp.add_constraint( (-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0 );
+    socp.add_constraint( (-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {11, 0}) + (x_init(11)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {12, 0}) + (x_init(12)) == 0.0 );
     socp.add_constraint( (-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0 );
@@ -313,11 +314,11 @@ void model_landing_6dof::add_application_constraints(
     // State Constraints:
     for(size_t k = 0; k<K; k++){
 
+
         // Mass
         //     x(0) >= m_dry
         //     for all k
         socp.add_constraint( (1.0) * var("X", {0, k}) + (-m_dry) >= (0.0) );
-
 
 
         // Max Tilt Angle
@@ -331,7 +332,6 @@ void model_landing_6dof::add_application_constraints(
         }) <= (c) );
 
 
-
         // Glide Slope
         socp.add_constraint(
             optimization_problem::norm2({ 
@@ -340,6 +340,7 @@ void model_landing_6dof::add_application_constraints(
             })
             <= (1.0 / tan_gamma_gs) * var("X", {1, k})
         );
+
 
         // Max Rotation Velocity
         socp.add_constraint(
@@ -409,3 +410,25 @@ model_landing_6dof::ControlVector model_landing_6dof::get_random_input() {
     return U;
 }
 
+void model_landing_6dof::Nondimensionalize() {
+
+    double r_scale = r_I_init[0];
+    double m_scale = m_wet;
+
+    alpha_m *= r_scale;
+    r_T_B /= r_scale;
+    g_I /= r_scale;
+    J_B /= (m_scale * r_scale * r_scale);
+
+    m_wet /= m_scale;
+    r_I_init /= r_scale;
+    v_I_init /= r_scale;
+
+    m_dry /= m_scale;
+    r_I_final /= r_scale;
+    v_I_final /= r_scale;
+
+    T_max /= m_scale * r_scale;
+    T_min /= m_scale * r_scale;
+
+}

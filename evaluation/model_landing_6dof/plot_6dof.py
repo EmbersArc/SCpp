@@ -55,13 +55,13 @@ def my_plot(fig, figures_i):
         dx, dy, dz = np.dot(np.transpose(CBI), np.array([1., 0., 0.]))
 
         # speed vector
-        ax.quiver(ry, rz, rx, vy, vz, vx, length=0.25, color='green')
+        ax.quiver(ry, rz, rx, vy, vz, vx, length=0.1, color='green')
 
         # attitude vector
-        ax.quiver(ry, rz, rx, dy, dz, dx, length=0.25, arrow_length_ratio=0.0, color='blue')
+        ax.quiver(ry, rz, rx, dy, dz, dx, length=0.1, arrow_length_ratio=0.0, color='blue')
 
         # thrust vector
-        ax.quiver(ry, rz, rx, -Fy, -Fz, -Fx, length=0.25, arrow_length_ratio=0.0, color='red')
+        ax.quiver(ry, rz, rx, -Fy, -Fz, -Fx, length=0.1, arrow_length_ratio=0.0, color='red')
 
     ax.axis('equal')
     ax.set_title("iter " + str(figures_i))

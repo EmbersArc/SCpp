@@ -53,11 +53,11 @@ int main() {
     make_output_path();
     Model model;
 
-    double weight_trust_region_sigma = 1e-3;
+    double weight_trust_region_sigma = 1e-1;
     double weight_trust_region_xu = 1e-3;
-    double weight_virtual_control = 1e3;
+    double weight_virtual_control = 1e5;
 
-    double nu_tol = 1e-3;
+    double nu_tol = 1e-8;
     double delta_tol = 1e-3;
 
     const size_t n_states = Model::n_states;
@@ -93,7 +93,7 @@ int main() {
     EcosWrapper solver(socp);
 //    MosekWrapper solver(socp);
 
-    const size_t iterations = 40;
+    const size_t iterations = 15;
     for(size_t it = 0; it < iterations; it++) {
 
         weight_trust_region_xu *= 1.2;
@@ -105,8 +105,8 @@ int main() {
 
 
 
-        // Write problem to file
-        timer = tic();
+//        // Write problem to file
+//        timer = tic();
         string file_name_prefix;
         {
             ostringstream file_name_prefix_ss;
@@ -114,12 +114,12 @@ int main() {
             << setfill('0') << setw(3) << it << "_";
             file_name_prefix = file_name_prefix_ss.str();
         }
-        
-        {
-            ofstream f(file_name_prefix + "problem.txt");
-            socp.print_problem(f);
-        }
-        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
+//
+//        {
+//            ofstream f(file_name_prefix + "problem.txt");
+//            socp.print_problem(f);
+//        }
+//        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
 
 
 
@@ -159,14 +159,14 @@ int main() {
         cout << "Time, solution files: " << toc(timer) << " ms" << endl;
 
         cout << "sigma   " << sigma << endl;
-        cout << "norm2_nu   " << solver.get_solution_value("norm2_nu", {}) << endl;
+        cout << "norm1_nu   " << solver.get_solution_value("norm1_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
         cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
         cout << "Time, total: " << toc(timer_total) << " ms" << endl;
         cout << "==========================================================" << endl;
 
         if (solver.get_solution_value("norm2_Delta", {}) < delta_tol
-           && solver.get_solution_value("norm2_nu", {}) < nu_tol){
+           && solver.get_solution_value("norm1_nu", {}) < nu_tol){
             cout << "Converged after " << it << " iterations.";
             break;
         }

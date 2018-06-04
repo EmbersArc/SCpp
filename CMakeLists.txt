@@ -47,18 +47,19 @@ set(SOURCES
         src/timing.cpp
 )
 
-## Use MOSEK if available
-## You need to set the environment variable: 'export MOSEK_ROOT=.../mosek/8/tools/platform/linux64x86'
-if(DEFINED ENV{MOSEK_ROOT})
-    message("MOSEK_ROOT: " $ENV{MOSEK_ROOT})
-    include_directories(SYSTEM $ENV{MOSEK_ROOT}/h)
-    link_directories($ENV{MOSEK_ROOT}/bin)
-    link_libraries(mosek64 fusion64)
-    set(SOURCES ${SOURCES}
-        include/MosekWrapper.hpp
-            src/MosekWrapper.cpp
-    )
-endif()
+
+### Use MOSEK if available
+### You need to set the environment variable: 'export MOSEK_ROOT=.../mosek/8/tools/platform/linux64x86'
+#if(DEFINED ENV{MOSEK_ROOT})
+#    message("MOSEK_ROOT: " $ENV{MOSEK_ROOT})
+#    include_directories(SYSTEM $ENV{MOSEK_ROOT}/h)
+#    link_directories($ENV{MOSEK_ROOT}/bin)
+#    link_libraries(mosek64 fusion64)
+#    set(SOURCES ${SOURCES}
+#        include/MosekWrapper.hpp
+#            src/MosekWrapper.cpp
+#    )
+#endif()
 
 
 add_library(successiveConvexification STATIC ${SOURCES})

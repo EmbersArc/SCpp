@@ -1,3 +1,4 @@
+#include <iostream>
 #include "SuccessiveConvexificationSOCP.hpp"
 
 
@@ -25,7 +26,8 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     socp.create_tensor_variable("X", {n_states, K}); // states
     socp.create_tensor_variable("U", {n_inputs, K}); // inputs
     socp.create_tensor_variable("nu", {n_states, K-1}); // virtual control
-    socp.create_tensor_variable("norm2_nu", {}); // virtual control norm upper bound
+    socp.create_tensor_variable("nu_bound", {n_states, K-1}); // virtual control
+    socp.create_tensor_variable("norm1_nu", {}); // virtual control norm upper bound
     socp.create_tensor_variable("sigma", {}); // total time
     socp.create_tensor_variable("Delta_sigma", {}); // squared change of sigma
     socp.create_tensor_variable("Delta", {K}); // squared change of the stacked [ x(k), u(k) ] vector
@@ -78,18 +80,27 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
 
 
     // Build virtual control norm
-    // norm2( [nu_1, ..., nu_(N)] ) <= norm2_nu
+    // minimize (weight_virtual_control * norm1_nu)
+    // s.t. sum(nu_bound) <= norm1_nu
+    //      -nu_bound <= nu <= nu_bound
     {
-        vector<optimization_problem::AffineExpression> virtual_control_vector;
+        optimization_problem::AffineExpression bound_sum;
         for (size_t k = 0; k < K-1; k++) {
             for (size_t row_index = 0; row_index < n_states; ++row_index) {
-                virtual_control_vector.push_back( (1.0) * var("nu", {row_index, k}) );
+                // -nu_bound <= nu
+                socp.add_constraint( (1.0) * var("nu_bound", {row_index, k}) + (1.0) * var("nu", {row_index, k}) >= (0.0) );
+                // nu <= nu_bound
+                socp.add_constraint( (1.0) * var("nu_bound", {row_index, k}) + (-1.0) * var("nu", {row_index, k}) >= (0.0) );
+
+                // sum(-nu_bound)
+                bound_sum = bound_sum + (-1.0) * var("nu_bound", {row_index, k});
             }
         }
-        socp.add_constraint( optimization_problem::norm2( virtual_control_vector ) <= (1.0) * var("norm2_nu", {}) );
+        // sum(-nu_bound) <= norm1_nu
+        socp.add_constraint( (1.0) * var("norm1_nu", {}) + bound_sum >= (0.0) );
 
         // Minimize the virtual control
-        socp.add_minimization_term( param(weight_virtual_control) * var("norm2_nu", {}) );
+        socp.add_minimization_term( param(weight_virtual_control) * var("norm1_nu", {}) );
     }
 
     // Build sigma trust region
