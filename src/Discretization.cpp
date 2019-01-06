@@ -33,8 +33,8 @@ public:
         const Model::StateVector &x = V.col(0);
         const Model::ControlVector u = u_t + t / dt * (u_t1 - u_t);
 
-        const double alpha = t / dt;
-        const double beta = 1. - alpha;
+        const double alpha = (dt - t) / dt;
+        const double beta = t / dt;
 
         const Model::StateMatrix   A_bar  = sigma * model.state_jacobian(x, u);
         const Model::ControlMatrix B_bar  = sigma * model.control_jacobian(x, u);

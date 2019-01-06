@@ -34,17 +34,18 @@ public:
     ControlVector get_random_input();
 
 private:
+
     Vector3d g_I = Vector3d(-1, 0, 0);
     Vector3d J_B = Vector3d(1e-2, 1e-2, 1e-2);
     Vector3d r_T_B = Vector3d(-1e-2, 0, 0);
-    double alpha_m = 0.1;
+    double alpha_m = 0.01;
     double T_min = 0.3;
     double T_max = 5.;
 
     //initial state
     double m_wet = 2.;
-    Vector3d r_I_init = Vector3d(5, 1, 1);
-    Vector3d v_I_init = Vector3d(-3, -1, 0);
+    Vector3d r_I_init = Vector3d(4, 4, 0);
+    Vector3d v_I_init = Vector3d(0, 0, 2);
     Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_init = Vector3d(0., 0., 0.);
 
@@ -55,6 +56,29 @@ private:
     Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
     Vector3d w_B_final = Vector3d(0., 0., 0.);
 
+// //realistic values
+//
+//    Vector3d g_I = Vector3d(-9.81, 0, 0);
+//    Vector3d J_B = Vector3d(100000, 4000000, 4000000);
+//    Vector3d r_T_B = Vector3d(-20, 0, 0);
+//    double alpha_m = 1 / (282. * 9.81);
+//    double T_min = 0;
+//    double T_max = 845000.;
+//
+//    //initial state
+//    double m_wet = 30000.;
+//    Vector3d r_I_init = Vector3d(200, 100, 100);
+//    Vector3d v_I_init = Vector3d(-10, -50, -10);
+//    Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
+//    Vector3d w_B_init = Vector3d(0., 0., 0.);
+//
+//    //final state
+//    double m_dry = 22000.;
+//    Vector3d r_I_final = Vector3d(0., 0., 0.);
+//    Vector3d v_I_final = Vector3d(0, 0., 0.);
+//    Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
+//    Vector3d w_B_final = Vector3d(0., 0., 0.);
+//
     const double tan_delta_max = tan(20. / 180. * PI);
     const double cos_theta_max = cos(90. / 180. * PI);
     const double tan_gamma_gs = tan(20. / 180. * PI);

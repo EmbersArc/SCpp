@@ -93,20 +93,20 @@ int main() {
     EcosWrapper solver(socp);
 //    MosekWrapper solver(socp);
 
-    const size_t iterations = 15;
+    const size_t iterations = 30;
+
+    const double timer_total = tic();
     for(size_t it = 0; it < iterations; it++) {
 
-        weight_trust_region_xu *= 1.2;
+//        weight_trust_region_xu *= 1.2;
 
-        const double timer_total = tic();
+        const double timer_iteration = tic();
         double timer = tic();
         calculate_discretization ( model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar );
         cout << "Time, discretization: " << toc(timer) << " ms" << endl;
 
-
-
 //        // Write problem to file
-//        timer = tic();
+//        // timer = tic();
         string file_name_prefix;
         {
             ostringstream file_name_prefix_ss;
@@ -114,19 +114,26 @@ int main() {
             << setfill('0') << setw(3) << it << "_";
             file_name_prefix = file_name_prefix_ss.str();
         }
-//
+
 //        {
 //            ofstream f(file_name_prefix + "problem.txt");
 //            socp.print_problem(f);
 //        }
 //        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
 
-
+//        // save matrices for debugging
+//        if (it == 0) {
+//            for (unsigned int k = 0; k < K - 1; k++) {
+//                {
+//                    ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
+//                    f << z_bar.at(k);
+//                }
+//            }
+//        }
 
         timer = tic();
         solver.solve_problem();
         cout << "Time, solver: " << toc(timer) << " ms" << endl;
-
 
 
 //        timer = tic();
@@ -136,8 +143,6 @@ int main() {
 //        }
 //        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
 
-
-
         // Read solution
         for (size_t k = 0; k < K; k++) {
             for (size_t i = 0; i < n_states; ++i) X(i,k) = solver.get_solution_value(X_indices[i][k]);
@@ -146,7 +151,7 @@ int main() {
         sigma = solver.get_solution_value(sigma_index);
 
 
-        // Write solution to files
+//         Write solution to files
         timer = tic();
         {
             ofstream f(file_name_prefix + "X.txt");
@@ -162,13 +167,17 @@ int main() {
         cout << "norm1_nu   " << solver.get_solution_value("norm1_nu", {}) << endl;
         cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
         cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
-        cout << "Time, total: " << toc(timer_total) << " ms" << endl;
+        cout << "Time, iteration: " << toc(timer_iteration) << " ms" << endl;
         cout << "==========================================================" << endl;
 
         if (solver.get_solution_value("norm2_Delta", {}) < delta_tol
-           && solver.get_solution_value("norm1_nu", {}) < nu_tol){
-            cout << "Converged after " << it << " iterations.";
+           && solver.get_solution_value("norm1_nu", {}) < nu_tol) {
+            cout << "Converged after " << it << " iterations." << endl;
             break;
+        } else if (it == iterations - 1) {
+            cout << "No convergence after " << iterations << " iterations." << endl;
         }
     }
+    cout << "Time, total: " << toc(timer_total) << " ms" << endl;
+
 }

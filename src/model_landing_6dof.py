@@ -80,9 +80,6 @@ def main():
     A = f.jacobian(x)
     B = f.jacobian(u)
 
-    print(f)
-
-    print(B)
 
     print("\node:")
     print(c_code_postprocessing(matrix_c_code(f, "StateVector", "f", inputs)))

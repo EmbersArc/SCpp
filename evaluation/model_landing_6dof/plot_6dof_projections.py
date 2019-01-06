@@ -29,19 +29,28 @@ def key_press_event(event):
 def axis_map_x(subplot_pos, val_up, val_east, val_north):
     if subplot_pos == 1:  # top view (east, north)
         return val_east
-    if subplot_pos == 3:  # front view (east, up)
+    if subplot_pos == 2:  # front view (east, up)
         return val_east
-    if subplot_pos == 4:  # side view (north, up)
+    if subplot_pos == 3:  # side view (north, up)
         return val_north
 
 
 def axis_map_y(subplot_pos, val_up, val_east, val_north):
     if subplot_pos == 1:  # top view (east, north)
         return val_north
-    if subplot_pos == 3:  # front view (east, up)
+    if subplot_pos == 2:  # front view (east, up)
         return val_up
-    if subplot_pos == 4:  # side view (north, up)
+    if subplot_pos == 3:  # side view (north, up)
         return val_up
+
+
+def axis_scale(subplot_pos):
+    if subplot_pos == 1:  # top view (east, north)
+        return [-0.5, 0.5], [-0.5, 0.5]
+    if subplot_pos == 2:  # front view (east, up)
+        return [-0.5, 0.5], [0, 1]
+    if subplot_pos == 3:  # side view (north, up)
+        return [-0.5, 0.5], [0, 1]
 
 
 def my_plot(fig, figures_i):
@@ -52,7 +61,7 @@ def my_plot(fig, figures_i):
 
     K = X.shape[1]
 
-    for subplot_pos in [1, 3, 4]:
+    for subplot_pos in [1, 2, 3]:
 
         lines = []
         line_colors = []
@@ -65,9 +74,8 @@ def my_plot(fig, figures_i):
         Ry = axis_map_y(subplot_pos, X[1, :], X[2, :], X[3, :])
 
         ax.plot(Rx, Ry, color='black')
-        ax.axis('equal')
 
-        ax.set_title(['top view', '', 'front view', 'side view'][subplot_pos - 1])
+        ax.set_title(['top view', 'front view', 'side view', ''][subplot_pos - 1])
 
         for k in range(K):
             rx, ry, rz = X[1:4, k]
@@ -95,7 +103,7 @@ def my_plot(fig, figures_i):
             Fx_ = axis_map_x(subplot_pos, Fx, Fy, Fz)
             Fy_ = axis_map_y(subplot_pos, Fx, Fy, Fz)
 
-            scale = 0.5
+            scale = 0.1
 
             # speed vector
             lines.append([(rx_, ry_), (rx_ + scale * vx_, ry_ + scale * vy_)])
@@ -112,7 +120,40 @@ def my_plot(fig, figures_i):
         lc = mc.LineCollection(lines, colors=line_colors, linewidths=1.5)
         ax.add_collection(lc)
 
-    ax.axis('equal')
+    ax = fig.add_subplot(2, 2, 4, projection='3d')
+    ax.set_zlabel('X, up')
+    ax.set_xlabel('Y, east')
+    ax.set_ylabel('Z, north')
+
+    for k in range(K):
+        rx, ry, rz = X[1:4, k]
+        vx, vy, vz = X[4:7, k]
+        qw, qx, qy, qz = X[7:11, k]
+
+        CBI = np.array([
+            [1 - 2 * (qy ** 2 + qz ** 2), 2 * (qx * qy + qw * qz), 2 * (qx * qz - qw * qy)],
+            [2 * (qx * qy - qw * qz), 1 - 2 * (qx ** 2 + qz ** 2), 2 * (qy * qz + qw * qx)],
+            [2 * (qx * qz + qw * qy), 2 * (qy * qz - qw * qx), 1 - 2 * (qx ** 2 + qy ** 2)]
+        ])
+
+        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
+        dx, dy, dz = np.dot(np.transpose(CBI), np.array([1., 0., 0.]))
+
+        # speed vector
+        ax.quiver(ry, rz, rx, vy, vz, vx, length=0.1, color='green')
+
+        # attitude vector
+        ax.quiver(ry, rz, rx, dy, dz, dx, length=0.1, arrow_length_ratio=0.0, color='blue')
+
+        # thrust vector
+        ax.quiver(ry, rz, rx, -Fy, -Fz, -Fx, length=0.1, arrow_length_ratio=0.0, color='red')
+
+    ax.axis('scaled')
+    scale = np.max(X[1:4, 0])
+    ax.axis(xmin=-scale, xmax=scale, ymin=-scale, ymax=scale)
+
+    ax.plot(X[2, :], X[3, :], X[1, :], color='black')
+
     fig.suptitle("iter " + str(figures_i), fontsize=14)
 
 
