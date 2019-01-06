@@ -106,7 +106,7 @@ int main() {
         cout << "Time, discretization: " << toc(timer) << " ms" << endl;
 
 //        // Write problem to file
-//        // timer = tic();
+       // timer = tic();
         string file_name_prefix;
         {
             ostringstream file_name_prefix_ss;
@@ -115,33 +115,33 @@ int main() {
             file_name_prefix = file_name_prefix_ss.str();
         }
 
-//        {
-//            ofstream f(file_name_prefix + "problem.txt");
-//            socp.print_problem(f);
-//        }
-//        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
+       {
+           ofstream f(file_name_prefix + "problem.txt");
+           socp.print_problem(f);
+       }
+       cout << "Time, problem file: " << toc(timer) << " ms" << endl;
 
-//        // save matrices for debugging
-//        if (it == 0) {
-//            for (unsigned int k = 0; k < K - 1; k++) {
-//                {
-//                    ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
-//                    f << z_bar.at(k);
-//                }
-//            }
-//        }
+       // save matrices for debugging
+       if (it == 0) {
+           for (unsigned int k = 0; k < K - 1; k++) {
+               {
+                   ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
+                   f << z_bar.at(k);
+               }
+           }
+       }
 
         timer = tic();
         solver.solve_problem();
         cout << "Time, solver: " << toc(timer) << " ms" << endl;
 
 
-//        timer = tic();
-//        if(!socp.feasibility_check(solver.get_solution_vector())) {
-//            cout << "ERROR: Solver produced an invalid solution." << endl;
-//            return EXIT_FAILURE;
-//        }
-//        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
+       timer = tic();
+       if(!socp.feasibility_check(solver.get_solution_vector())) {
+           cout << "ERROR: Solver produced an invalid solution." << endl;
+           return EXIT_FAILURE;
+       }
+       cout << "Time, solution check: " << toc(timer) << " ms" << endl;
 
         // Read solution
         for (size_t k = 0; k < K; k++) {

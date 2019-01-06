@@ -408,7 +408,7 @@ model_landing_6dof::ControlVector model_landing_6dof::get_random_input() {
 
 void model_landing_6dof::Nondimensionalize() {
 
-    double r_scale = r_I_init[0];
+    double r_scale = r_I_init.norm();
     double m_scale = m_wet;
 
     alpha_m *= r_scale;
