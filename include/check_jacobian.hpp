@@ -3,9 +3,8 @@
 
 void check_jacobian(
     // inputs
-    double epsilon, 
+    double epsilon,
     // outputs
-    double &max_absolute_error, double &max_relative_error
-);
+    double &max_absolute_error, double &max_relative_error);
 
 #endif //OPTIMALLANDING_CHECK_JACOBIAN_H

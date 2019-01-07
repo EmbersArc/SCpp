@@ -1,4 +1,4 @@
-#include "model_landing_3dof.h"
+#include "models/model_landing_3dof.hpp"
 
 void model_landing_3dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U) {
 

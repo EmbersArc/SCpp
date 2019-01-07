@@ -5,17 +5,19 @@
 #include <string>
 #include <cassert>
 #include <sstream>
-#include <experimental/optional>
+#include <optional>
 #include <utility>
 #include <functional>
-#include "OptimizationProblem.hpp"
 
 #include "ecos.h"
+
+#include "optimizationProblem.hpp"
+
 using std::map;
+using std::optional;
 using std::pair;
 using std::string;
 using std::vector;
-using std::experimental::optional;
 
 void sparse_DOK_to_CCS(
     const map<pair<idxint, idxint>, optimization_problem::Parameter> &sparse_DOK,

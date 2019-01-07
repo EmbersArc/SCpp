@@ -1,9 +1,10 @@
-#include "EcosWrapper.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <utility>
 #include <tuple>
 #include <iostream>
+
+#include "ecosWrapper.hpp"
 
 using std::make_pair;
 using std::pair;

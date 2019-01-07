@@ -1,6 +1,4 @@
 #include "timing.hpp"
-#include <time.h>
-
 
 double tic() {
     struct timespec t;

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "constants.hpp"
-#include "EcosWrapper.hpp"
+#include "ecosWrapper.hpp"
 #include <Eigen/Dense>
-
 
 class model_simple_4th_order {
 public:

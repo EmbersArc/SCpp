@@ -1,6 +1,7 @@
-#include "OptimizationProblem.hpp"
 #include <cmath>
 #include <iostream>
+
+#include "optimizationProblem.hpp"
 
 namespace optimization_problem
 {
@@ -299,17 +300,17 @@ bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values
 
     for (const auto &equalityConstraint : equalityConstraints)
     {
-        feasible = feasible && feasibility_check_message(tol, fabs(equalityConstraint.evaluate(soln_values)), equalityConstraint);
+        feasible &= feasibility_check_message(tol, fabs(equalityConstraint.evaluate(soln_values)), equalityConstraint);
     }
 
     for (const auto &postiveConstraint : postiveConstraints)
     {
-        feasible = feasible && feasibility_check_message(tol, postiveConstraint.evaluate(soln_values), postiveConstraint);
+        feasible &= feasibility_check_message(tol, postiveConstraint.evaluate(soln_values), postiveConstraint);
     }
 
     for (const auto &secondOrderConeConstraint : secondOrderConeConstraints)
     {
-        feasible = feasible && feasibility_check_message(tol, secondOrderConeConstraint.evaluate(soln_values), secondOrderConeConstraint);
+        feasible &= feasibility_check_message(tol, secondOrderConeConstraint.evaluate(soln_values), secondOrderConeConstraint);
     }
     return feasible;
 }
