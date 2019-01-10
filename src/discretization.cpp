@@ -71,6 +71,7 @@ void calculate_discretization(
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
+#pragma omp parallel for schedule(dynamic)
     for (size_t k = 0; k < K - 1; k++)
     {
         DiscretizationODE::state_type V;
@@ -79,7 +80,7 @@ void calculate_discretization(
         V.block<Model::n_states, Model::n_states>(0, 1).setIdentity();
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
-        integrate_n_steps(stepper, discretizationODE, V, 0., dt / 10.0, 10);
+        integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
 
         size_t cols = 1;
 

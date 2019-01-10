@@ -4,7 +4,7 @@
 #include "monty.h"
 #include "fusion.h"
 
-#include "MosekWrapper.hpp"
+#include "mosekWrapper.hpp"
 
 using namespace mosek::fusion;
 using namespace monty;
@@ -68,7 +68,7 @@ void MosekWrapper::solve_problem()
 
     M->objective(ObjectiveSense::Minimize, convert_affine_expression(socp.costFunction, mosek_variables));
 
-    M->setLogHandler([](const std::string &msg) { std::cout << msg << std::flush; });
+    M->setLogHandler([](const std::string &msg) { print(msg) });
     M->solve();
 
     solution_vector.resize(socp.get_n_variables());

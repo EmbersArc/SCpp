@@ -1,6 +1,3 @@
-#include <cmath>
-#include <iostream>
-
 #include "optimizationProblem.hpp"
 
 namespace optimization_problem
@@ -32,14 +29,14 @@ string Parameter::print() const
     return s.str();
 }
 
-Parameter::operator AffineTerm()
+Parameter::operator AffineTerm() const
 {
     AffineTerm result;
     result.parameter = *this;
     return result;
 }
 
-Parameter::operator AffineExpression()
+Parameter::operator AffineExpression() const
 {
     return (AffineTerm)(*this);
 }
@@ -196,12 +193,10 @@ size_t GenericOptimizationProblem::allocate_variable_index()
 
 void GenericOptimizationProblem::create_tensor_variable(const string &name, const vector<size_t> &dimensions)
 {
-    size_t tensor_size = 1;
-    for (auto d : dimensions)
-        tensor_size *= d;
+    size_t tensor_size = std::accumulate(dimensions.begin(), dimensions.end(), 1, std::multiplies<size_t>());
+
     vector<size_t> new_variable_indices(tensor_size);
-    for (auto &i : new_variable_indices)
-        i = allocate_variable_index();
+    std::generate(new_variable_indices.begin(), new_variable_indices.end(), [this]() { return allocate_variable_index(); });
 
     tensor_variable_dimensions[name] = dimensions;
     tensor_variable_indices[name] = new_variable_indices;
@@ -248,7 +243,7 @@ void SecondOrderConeProgram::add_minimization_term(AffineExpression c)
     costFunction = costFunction + c;
 }
 
-void SecondOrderConeProgram::print_problem(std::ostream &out)
+void SecondOrderConeProgram::print_problem(std::ostream &out) const
 {
     using std::endl;
     out << "Minimize" << endl;
@@ -279,25 +274,20 @@ void SecondOrderConeProgram::print_problem(std::ostream &out)
 template <typename T>
 bool feasibility_check_message(double tol, double val, const T &constraint)
 {
-    using std::cout;
-    using std::endl;
-
     if (val > tol)
     {
-        cout << endl
-             << "Infeasible solution, constraint value: " << val << endl;
-        cout << constraint.print() << endl;
+        print("Infeasible solution, constraint value: {}", val);
+        print(constraint.print());
+
         return false;
     }
     return true;
 }
 
-bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values)
+bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values) const
 {
-
     const double tol = 0.1;
     bool feasible = true;
-
     for (const auto &equalityConstraint : equalityConstraints)
     {
         feasible &= feasibility_check_message(tol, fabs(equalityConstraint.evaluate(soln_values)), equalityConstraint);

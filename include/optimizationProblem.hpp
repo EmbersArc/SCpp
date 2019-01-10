@@ -8,7 +8,12 @@
 #include <optional>
 #include <utility>
 #include <functional>
+#include <numeric>
 
+#include <fmt/format.h>
+#include "timing.hpp"
+
+using fmt::print;
 using std::map;
 using std::optional;
 using std::pair;
@@ -76,8 +81,8 @@ class Parameter
         return const_value;
     }
     string print() const;
-    operator AffineTerm();
-    operator AffineExpression();
+    operator AffineTerm() const;
+    operator AffineExpression() const;
 };
 
 struct AffineTerm
@@ -150,7 +155,7 @@ class GenericOptimizationProblem
     void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
     size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
     Variable get_variable(const string &name, const vector<size_t> &indices);
-    size_t get_n_variables() { return n_variables; }
+    size_t get_n_variables() const { return n_variables; }
 };
 
 struct SecondOrderConeProgram : public GenericOptimizationProblem
@@ -165,8 +170,8 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
     void add_constraint(PostiveConstraint c);
     void add_constraint(EqualityConstraint c);
     void add_minimization_term(AffineExpression c);
-    void print_problem(std::ostream &out);
+    void print_problem(std::ostream &out) const;
 
-    bool feasibility_check(const vector<double> &soln_values);
+    bool feasibility_check(const vector<double> &soln_values) const;
 };
 } // namespace optimization_problem

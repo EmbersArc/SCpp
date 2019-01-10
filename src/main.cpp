@@ -8,7 +8,6 @@
  * 
  */
 
-#include <iostream>
 #include <array>
 #include <cmath>
 #include <ctime>
@@ -25,9 +24,10 @@
 
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
+#include <fmt/format.h>
 
+using fmt::print;
 using std::array;
-using std::cout;
 using std::endl;
 using std::ofstream;
 using std::ostringstream;
@@ -109,7 +109,7 @@ int main()
         const double timer_iteration = tic();
         double timer = tic();
         calculate_discretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
-        cout << "Time, discretization: " << toc(timer) << " ms" << endl;
+        print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
         //        // Write problem to file
         // timer = tic();
@@ -125,7 +125,7 @@ int main()
             ofstream f(file_name_prefix + "problem.txt");
             socp.print_problem(f);
         }
-        cout << "Time, problem file: " << toc(timer) << " ms" << endl;
+        print("{:<{}}{:.2f}ms\n", "Time, problem file:", 50, toc(timer));
 
         // save matrices for debugging
         if (it == 0)
@@ -141,15 +141,15 @@ int main()
 
         timer = tic();
         solver.solve_problem();
-        cout << "Time, solver: " << toc(timer) << " ms" << endl;
+        print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
 
         timer = tic();
         if (!socp.feasibility_check(solver.get_solution_vector()))
         {
-            cout << "ERROR: Solver produced an invalid solution." << endl;
+            print("ERROR: Solver produced an invalid solution.\n");
             return EXIT_FAILURE;
         }
-        cout << "Time, solution check: " << toc(timer) << " ms" << endl;
+        print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
         // Read solution
         for (size_t k = 0; k < K; k++)
@@ -171,24 +171,26 @@ int main()
             ofstream f(file_name_prefix + "U.txt");
             f << U;
         }
-        cout << "Time, solution files: " << toc(timer) << " ms" << endl;
 
-        cout << "sigma   " << sigma << endl;
-        cout << "norm1_nu   " << solver.get_solution_value("norm1_nu", {}) << endl;
-        cout << "Delta_sigma   " << solver.get_solution_value("Delta_sigma", {}) << endl;
-        cout << "norm2_Delta   " << solver.get_solution_value("norm2_Delta", {}) << endl;
-        cout << "Time, iteration: " << toc(timer_iteration) << " ms" << endl;
-        cout << "==========================================================" << endl;
+        print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
+        print("\n");
+        print("{:<{}}{: .4f}\n", "sigma", 50, sigma);
+        print("{:<{}}{: .4f}\n", "norm1_nu", 50, solver.get_solution_value("norm1_nu", {}));
+        print("{:<{}}{: .4f}\n", "Delta_sigma", 50, solver.get_solution_value("Delta_sigma", {}));
+        print("{:<{}}{: .4f}\n", "norm2_Delta", 50, solver.get_solution_value("norm2_Delta", {}));
+        print("\n");
+        print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
+        print("==========================================================\n");
 
         if (solver.get_solution_value("norm2_Delta", {}) < delta_tol && solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
-            cout << "Converged after " << it << " iterations." << endl;
+            print("Converged after {} iterations.\n", it);
             break;
         }
         else if (it == iterations - 1)
         {
-            cout << "No convergence after " << iterations << " iterations." << endl;
+            print("No convergence after {} iterations.\n", it);
         }
     }
-    cout << "Time, total: " << toc(timer_total) << " ms" << endl;
+    print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }

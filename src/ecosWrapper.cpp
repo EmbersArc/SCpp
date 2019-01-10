@@ -39,15 +39,7 @@ bool check_unique_variables_in_affine_expression(const optimization_problem::Aff
 
 size_t count_constants_in_affine_expression(const optimization_problem::AffineExpression &affineExpression)
 {
-    size_t count = 0;
-    for (auto const &term : affineExpression.terms)
-    {
-        if (!term.variable)
-        { // only consider constant terms, not linear terms
-            count++;
-        }
-    }
-    return count;
+    return std::count_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](auto term) { return !term.variable; });
 }
 
 void error_check_affine_expression(const optimization_problem::AffineExpression &affineExpression)
@@ -64,14 +56,15 @@ void error_check_affine_expression(const optimization_problem::AffineExpression 
 
 optimization_problem::Parameter get_constant_or_zero(const optimization_problem::AffineExpression &affineExpression)
 {
-    for (auto const &term : affineExpression.terms)
+    auto constantIterator = std::find_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](auto term) { return !term.variable; });
+    if (constantIterator != affineExpression.terms.end())
     {
-        if (!term.variable)
-        { // only consider constant terms, not linear terms
-            return term.parameter;
-        }
+        return constantIterator->parameter;
     }
-    return optimization_problem::Parameter(0.0);
+    else
+    {
+        return optimization_problem::Parameter(0.0);
+    }
 }
 
 // convert sparse matrix format "Dictionary of keys" to "column compressed storage"
@@ -89,11 +82,10 @@ void sparse_DOK_to_CCS(
 
     // convert to coordinate list
     vector<tuple<idxint, idxint, optimization_problem::Parameter>> sparse_COO;
-    for (auto const &e : sparse_DOK)
-    {
-        sparse_COO.emplace_back(e.first.first, e.first.second, e.second);
-        //               row index ^    column index ^      value ^
-    }
+    sparse_COO.reserve(sparse_DOK.size());
+    std::transform(sparse_DOK.begin(), sparse_DOK.end(), std::back_inserter(sparse_COO),
+                   [](auto e) { return std::make_tuple(e.first.first, e.first.second, e.second); });
+    //                                            row index ^    column index ^      value ^
 
     // sort coordinate list by column, then by row
     std::sort(sparse_COO.begin(), sparse_COO.end(),
@@ -292,6 +284,8 @@ void EcosWrapper::solve_problem()
 
     if (mywork)
     {
+        mywork->stgs->verbose = false;
+
         ecos_exitflag = ECOS_solve(mywork);
 
         // copy solution

@@ -37,10 +37,7 @@ void check_trajectory(
     }
 
     double total_absolute_error = (X_exact - X_in).cwiseAbs().sum();
-    std::cout << std::endl;
-    std::cout << "Absolute errors: " << std::endl;
-    std::cout << X_exact - X_in << std::endl;
-    std::cout << std::endl
-              << "Total absolute error: " << total_absolute_error << std::endl
-              << std::endl;
+    print("\n");
+    // print("{:<{}}{: .4f}\n", "Absolute error", 50, X_exact - X_in);
+    print("{:<{}}{: .4f}\n", "Total absolute errors", 50, total_absolute_error);
 }

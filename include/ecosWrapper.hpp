@@ -28,7 +28,6 @@ void sparse_DOK_to_CCS(
 
 class EcosWrapper
 {
-
     optimization_problem::SecondOrderConeProgram &socp;
 
     /* ECOS problem parameters */
@@ -58,7 +57,7 @@ class EcosWrapper
 
     void solve_problem();
 
-    double get_solution_value(size_t problem_index)
+    double get_solution_value(size_t problem_index) const
     {
         return ecos_solution_vector[problem_index];
     }

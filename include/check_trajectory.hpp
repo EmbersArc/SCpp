@@ -1,15 +1,15 @@
 #pragma once
 
-#include <iostream>
-#include <Eigen/Dense>
 #include <boost/numeric/odeint.hpp>
-#include "eigenIntegration.hpp"
+#include <fmt/format.h>
 
+#include "eigenIntegration.hpp"
 #include "active_model.hpp"
+
+using fmt::print;
 
 class ODE
 {
-
   private:
     Model model;
     Model::ControlVector U0;

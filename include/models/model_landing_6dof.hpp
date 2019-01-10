@@ -11,6 +11,7 @@ class model_landing_6dof
 {
 
   public:
+    model_landing_6dof(){};
     static constexpr size_t n_states = 14;
     static constexpr size_t n_inputs = 3;
 
@@ -20,8 +21,7 @@ class model_landing_6dof
     using ControlMatrix = Eigen::Matrix<double, n_states, n_inputs>;
 
     static string get_name() { return "model_landing_6dof"; }
-
-    double total_time_guess() { return 7; }
+    static double total_time_guess() { return 7; }
 
     void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
 
@@ -33,8 +33,8 @@ class model_landing_6dof
                                      Eigen::Matrix<double, n_states, K> &X0,
                                      Eigen::Matrix<double, n_inputs, K> &U0);
 
-    StateVector get_random_state();
-    ControlVector get_random_input();
+    static StateVector get_random_state();
+    static ControlVector get_random_input();
 
   private:
     Vector3d g_I = Vector3d(-1, 0, 0);

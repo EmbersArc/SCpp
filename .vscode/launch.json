@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/OptimalLanding",
+            "program": "${workspaceFolder}/build/SCpp",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
