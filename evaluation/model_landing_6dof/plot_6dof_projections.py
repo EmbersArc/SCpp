@@ -56,8 +56,8 @@ def axis_scale(subplot_pos):
 def my_plot(fig, figures_i):
     iteration = str(figures_i).zfill(3)
 
-    X = np.loadtxt("../../output/model_landing_6dof/iteration" + iteration + "_X.txt")
-    U = np.loadtxt("../../output/model_landing_6dof/iteration" + iteration + "_U.txt")
+    X = np.loadtxt("output/model_landing_6dof/iteration" + iteration + "_X.txt")
+    U = np.loadtxt("output/model_landing_6dof/iteration" + iteration + "_U.txt")
 
     K = X.shape[1]
 
@@ -69,6 +69,7 @@ def my_plot(fig, figures_i):
         ax = fig.add_subplot(2, 2, subplot_pos)
         ax.set_xlabel(axis_map_x(subplot_pos, 'x, up', 'y, east', 'z, north'))
         ax.set_ylabel(axis_map_y(subplot_pos, 'x, up', 'y, east', 'z, north'))
+        ax.set_aspect('equal')
 
         Rx = axis_map_x(subplot_pos, X[1, :], X[2, :], X[3, :])
         Ry = axis_map_y(subplot_pos, X[1, :], X[2, :], X[3, :])
@@ -148,9 +149,7 @@ def my_plot(fig, figures_i):
         # thrust vector
         ax.quiver(ry, rz, rx, -Fy, -Fz, -Fx, length=0.1, arrow_length_ratio=0.0, color='red')
 
-    ax.axis('scaled')
-    scale = np.max(X[1:4, 0])
-    ax.axis(xmin=-scale, xmax=scale, ymin=-scale, ymax=scale)
+    ax.axis('equal')
 
     ax.plot(X[2, :], X[3, :], X[1, :], color='black')
 
@@ -161,7 +160,7 @@ def main():
     # find the number of saved iterations
     global figures_i, figures_N
     figures_N = max([int(string.lstrip("iteration").rstrip("_X.txt"))
-                     for string in os.listdir("../../output/model_landing_6dof/")
+                     for string in os.listdir("output/model_landing_6dof/")
                      if string.endswith("X.txt")]) + 1
     figures_i = figures_N - 1
 

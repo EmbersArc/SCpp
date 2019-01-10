@@ -15,16 +15,13 @@
 #include <sstream>
 #include <iomanip>
 
+#include <fmt/format.h>
+
 #include "active_model.hpp"
 #include "ecosWrapper.hpp"
-#include "mosekWrapper.hpp"
 #include "discretization.hpp"
 #include "successiveConvexificationSOCP.hpp"
 #include "timing.hpp"
-
-#include <boost/numeric/odeint.hpp>
-#include <boost/numeric/odeint/external/eigen/eigen_algebra.hpp>
-#include <fmt/format.h>
 
 using fmt::print;
 using std::array;
@@ -96,48 +93,46 @@ int main()
     }
 
     EcosWrapper solver(socp);
-    //    MosekWrapper solver(socp);
 
     const size_t iterations = 30;
 
     const double timer_total = tic();
     for (size_t it = 0; it < iterations; it++)
     {
-
-        //        weight_trust_region_xu *= 1.2;
+        weight_trust_region_xu *= 3.;
 
         const double timer_iteration = tic();
         double timer = tic();
         calculate_discretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
         print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
-        //        // Write problem to file
+        // // Write problem to file
         // timer = tic();
-        string file_name_prefix;
-        {
-            ostringstream file_name_prefix_ss;
-            file_name_prefix_ss << get_output_path() << "iteration"
-                                << setfill('0') << setw(3) << it << "_";
-            file_name_prefix = file_name_prefix_ss.str();
-        }
+        // string file_name_prefix;
+        // {
+        //     ostringstream file_name_prefix_ss;
+        //     file_name_prefix_ss << get_output_path() << "iteration"
+        //                         << setfill('0') << setw(3) << it << "_";
+        //     file_name_prefix = file_name_prefix_ss.str();
+        // }
 
-        {
-            ofstream f(file_name_prefix + "problem.txt");
-            socp.print_problem(f);
-        }
-        print("{:<{}}{:.2f}ms\n", "Time, problem file:", 50, toc(timer));
+        // {
+        //     ofstream f(file_name_prefix + "problem.txt");
+        //     socp.print_problem(f);
+        // }
+        // print("{:<{}}{:.2f}ms\n", "Time, problem file:", 50, toc(timer));
 
-        // save matrices for debugging
-        if (it == 0)
-        {
-            for (unsigned int k = 0; k < K - 1; k++)
-            {
-                {
-                    ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
-                    f << z_bar.at(k);
-                }
-            }
-        }
+        // // save matrices for debugging
+        // if (it == 0)
+        // {
+        //     for (unsigned int k = 0; k < K - 1; k++)
+        //     {
+        //         {
+        //             ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
+        //             f << z_bar.at(k);
+        //         }
+        //     }
+        // }
 
         timer = tic();
         solver.solve_problem();
@@ -161,16 +156,16 @@ int main()
         }
         sigma = solver.get_solution_value(sigma_index);
 
-        //         Write solution to files
-        timer = tic();
-        {
-            ofstream f(file_name_prefix + "X.txt");
-            f << X;
-        }
-        {
-            ofstream f(file_name_prefix + "U.txt");
-            f << U;
-        }
+        // Write solution to files
+        // timer = tic();
+        // {
+        //     ofstream f(file_name_prefix + "X.txt");
+        //     f << X;
+        // }
+        // {
+        //     ofstream f(file_name_prefix + "U.txt");
+        //     f << U;
+        // }
 
         print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
         print("\n");

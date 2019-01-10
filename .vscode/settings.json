@@ -54,5 +54,6 @@
         "utility": "cpp",
         "valarray": "cpp",
         "cstdarg": "cpp"
-    }
+    },
+    "python.pythonPath": "/home/sven/anaconda3/envs/python37/bin/python"
 }

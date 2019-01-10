@@ -11,7 +11,6 @@
 #include <numeric>
 
 #include <fmt/format.h>
-#include "timing.hpp"
 
 using fmt::print;
 using std::map;
