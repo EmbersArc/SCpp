@@ -22,6 +22,7 @@ include_directories(lib/ecos/external/SuiteSparse_config)
 include_directories(SYSTEM lib/eigen)
 link_directories(lib/ecos)
 link_libraries(ecos)
+link_libraries(stdc++fs)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
 set(SOURCES

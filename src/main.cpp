@@ -8,12 +8,8 @@
  * 
  */
 
-#include <array>
-#include <cmath>
-#include <ctime>
 #include <fstream>
-#include <sstream>
-#include <iomanip>
+#include <filesystem>
 
 #include <fmt/format.h>
 
@@ -23,35 +19,23 @@
 #include "successiveConvexificationSOCP.hpp"
 #include "timing.hpp"
 
+using fmt::format;
 using fmt::print;
 using std::array;
-using std::endl;
 using std::ofstream;
-using std::ostringstream;
-using std::setfill;
-using std::setw;
+using std::filesystem::create_directory;
+using std::filesystem::remove_all;
 
 string get_output_path()
 {
-    return "../output/" + Model::get_name() + "/";
-}
-
-void clear_output_path()
-{
-    string command = "rm -r " + get_output_path();
-    assert(system(command.c_str()) == 0);
-}
-
-void make_output_path()
-{
-    string command = "mkdir -p " + get_output_path();
-    assert(system(command.c_str()) == 0);
+    return format("../output/{}/", Model::get_name());
 }
 
 int main()
 {
-    clear_output_path();
-    make_output_path();
+    remove_all(get_output_path());
+    create_directory(get_output_path());
+
     Model model;
 
     double weight_trust_region_sigma = 1e-1;
@@ -77,8 +61,9 @@ int main()
     array<Model::StateVector, (K - 1)> Sigma_bar;
     array<Model::StateVector, (K - 1)> z_bar;
 
-    optimization_problem::SecondOrderConeProgram socp = build_successive_convexification_SOCP(
-        model, weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control, X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
+    optimization_problem::SecondOrderConeProgram socp = build_successive_convexification_SOCP(model,
+                                                                                              weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
+                                                                                              X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
 
     // Cache indices for performance
     const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
@@ -87,48 +72,58 @@ int main()
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < n_states; ++i)
+        {
             X_indices[i][k] = socp.get_tensor_variable_index("X", {i, k});
+        }
         for (size_t i = 0; i < n_inputs; ++i)
+        {
             U_indices[i][k] = socp.get_tensor_variable_index("U", {i, k});
+        }
     }
 
     EcosWrapper solver(socp);
 
-    const size_t iterations = 30;
+    const size_t iterations = 50;
 
     const double timer_total = tic();
     for (size_t it = 0; it < iterations; it++)
     {
-        weight_trust_region_xu *= 3.;
+        weight_trust_region_xu *= 2.;
 
         const double timer_iteration = tic();
         double timer = tic();
         calculate_discretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
         print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
-        // // Write problem to file
-        // timer = tic();
-        // string file_name_prefix;
-        // {
-        //     ostringstream file_name_prefix_ss;
-        //     file_name_prefix_ss << get_output_path() << "iteration"
-        //                         << setfill('0') << setw(3) << it << "_";
-        //     file_name_prefix = file_name_prefix_ss.str();
-        // }
+        timer = tic();
+        string file_name_prefix = format("{}iteration{:03}_", get_output_path(), it);
 
+        // Write solution to files
+        {
+            ofstream f(file_name_prefix + "X.txt");
+            f << X;
+        }
+        {
+            ofstream f(file_name_prefix + "U.txt");
+            f << U;
+        }
+        print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
+
+        // Write problem to file
+        // timer = tic();
         // {
         //     ofstream f(file_name_prefix + "problem.txt");
         //     socp.print_problem(f);
         // }
         // print("{:<{}}{:.2f}ms\n", "Time, problem file:", 50, toc(timer));
 
-        // // save matrices for debugging
+        // save matrices for debugging
         // if (it == 0)
         // {
         //     for (unsigned int k = 0; k < K - 1; k++)
         //     {
         //         {
-        //             ofstream f(get_output_path() + "z_bar" + std::to_string(k) + ".txt");
+        //             ofstream f(format("{}z_bar{}.txt", get_output_path(), k));
         //             f << z_bar.at(k);
         //         }
         //     }
@@ -150,22 +145,15 @@ int main()
         for (size_t k = 0; k < K; k++)
         {
             for (size_t i = 0; i < n_states; ++i)
+            {
                 X(i, k) = solver.get_solution_value(X_indices[i][k]);
+            }
             for (size_t i = 0; i < n_inputs; ++i)
+            {
                 U(i, k) = solver.get_solution_value(U_indices[i][k]);
+            }
         }
         sigma = solver.get_solution_value(sigma_index);
-
-        // Write solution to files
-        // timer = tic();
-        // {
-        //     ofstream f(file_name_prefix + "X.txt");
-        //     f << X;
-        // }
-        // {
-        //     ofstream f(file_name_prefix + "U.txt");
-        //     f << U;
-        // }
 
         print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
         print("\n");
@@ -179,12 +167,12 @@ int main()
 
         if (solver.get_solution_value("norm2_Delta", {}) < delta_tol && solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
-            print("Converged after {} iterations.\n", it);
+            print("Converged after {} iterations.\n", it + 1);
             break;
         }
         else if (it == iterations - 1)
         {
-            print("No convergence after {} iterations.\n", it);
+            print("No convergence after {} iterations.\n", it + 1);
         }
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
