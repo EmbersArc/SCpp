@@ -53,7 +53,8 @@
         "typeinfo": "cpp",
         "utility": "cpp",
         "valarray": "cpp",
-        "cstdarg": "cpp"
+        "cstdarg": "cpp",
+        "core": "cpp"
     },
-    "python.pythonPath": "/home/sven/anaconda3/envs/python37/bin/python"
+    "python.pythonPath": "/home/sven/anaconda3/bin/python"
 }
