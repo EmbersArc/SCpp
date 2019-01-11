@@ -21,9 +21,10 @@ class model_landing_6dof
     using ControlMatrix = Eigen::Matrix<double, n_states, n_inputs>;
 
     static string get_name() { return "model_landing_6dof"; }
-    static double total_time_guess() { return 7; }
+    static double total_time_guess() { return 8; }
 
-    void initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U);
+    void initialize(Eigen::Matrix<double, n_states, K> &X,
+                    Eigen::Matrix<double, n_inputs, K> &U);
 
     StateVector ode(const StateVector &x, const ControlVector &u);
     StateMatrix state_jacobian(const StateVector &x, const ControlVector &u);
@@ -37,26 +38,27 @@ class model_landing_6dof
     static ControlVector get_random_input();
 
   private:
-    Vector3d g_I = Vector3d(-1, 0, 0);
-    Vector3d J_B = Vector3d(1e-2, 1e-2, 1e-2);
-    Vector3d r_T_B = Vector3d(-1e-2, 0, 0);
+    Vector3d g_I = {0, 0, -2};
+    Vector3d J_B = {1e-2, 1e-2, 1e-2};
+    Vector3d r_T_B = {0, 0, -1e-2};
     double alpha_m = 0.01;
     double T_min = 0.3;
     double T_max = 5.;
 
     //initial state
     double m_wet = 2.;
-    Vector3d r_I_init = Vector3d(4, 4, 0);
-    Vector3d v_I_init = Vector3d(0, 0, 2);
-    Vector4d q_B_I_init = Vector4d(1.0, 0.0, 0.0, 0.0);
-    Vector3d w_B_init = Vector3d(0., 0., 0.);
+    Vector3d r_I_init = {0, 4, 4};
+    Vector3d v_I_init = {1, 0, 0};
+    Vector4d q_B_I_init = {1., 0., 0., 0.};
+    bool constrain_initial_orientation = false;
+    Vector3d w_B_init = {0., 0., 0.};
 
     //final state
     double m_dry = 1.;
-    Vector3d r_I_final = Vector3d(0., 0., 0.);
-    Vector3d v_I_final = Vector3d(-1e-1, 0., 0.);
-    Vector4d q_B_I_final = Vector4d(1.0, 0.0, 0.0, 0.0);
-    Vector3d w_B_final = Vector3d(0., 0., 0.);
+    Vector3d r_I_final = {0., 0., 0.};
+    Vector3d v_I_final = {0, 0., -1e-1};
+    Vector4d q_B_I_final = {1., 0., 0., 0.};
+    Vector3d w_B_final = {0., 0., 0.};
 
     const double tan_delta_max = tan(20. / 180. * M_PI);
     const double cos_theta_max = cos(90. / 180. * M_PI);

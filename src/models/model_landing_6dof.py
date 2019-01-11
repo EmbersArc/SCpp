@@ -69,7 +69,7 @@ def main():
     C_B_I = dir_cosine(x[7:11, 0])
     C_I_B = C_B_I.transpose()
 
-    f[0, 0] = - alpha_m * u.norm()
+    f[0, 0] = -alpha_m * u.norm()
     f[1:4, 0] = x[4:7, 0]
     f[4:7, 0] = 1 / x[0, 0] * C_I_B * u + g_I
     f[7:11, 0] = 1 / 2 * omega(x[11:14, 0]) * x[7: 11, 0]
@@ -79,7 +79,6 @@ def main():
 
     A = f.jacobian(x)
     B = f.jacobian(u)
-
 
     print("\node:")
     print(c_code_postprocessing(matrix_c_code(f, "StateVector", "f", inputs)))

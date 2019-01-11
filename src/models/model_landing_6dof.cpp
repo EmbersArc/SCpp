@@ -2,8 +2,12 @@
 
 void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen::Matrix<double, n_inputs, K> &U)
 {
-
     //    Nondimensionalize();
+
+    if (!constrain_initial_orientation)
+    {
+        q_B_I_init = {1., 0., 0., 0.};
+    }
 
     StateVector x_init;
     x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
@@ -12,13 +16,20 @@ void model_landing_6dof::initialize(Eigen::Matrix<double, n_states, K> &X, Eigen
 
     for (int k = 0; k < K; k++)
     {
-        double alpha1 = double(K - k) / K;
-        double alpha2 = double(k) / K;
+        const double alpha1 = double(K - k) / K;
+        const double alpha2 = double(k) / K;
+
         X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
-        X.col(k).segment(7, 4) << 1., 0., 0., 0.;
-        X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
+        Quaterniond q0, q1;
+        q0.w() = q_B_I_init(0);
+        q0.vec() = q_B_I_init.tail<3>();
+        q1.w() = q_B_I_final(0);
+        q1.vec() << q_B_I_final.tail<3>();
+        Quaterniond slerpQuaternion = q0.slerp(alpha2, q1);
+        X.col(k).segment(7, 4) << slerpQuaternion.w(), slerpQuaternion.vec();
+        X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
         U.col(k) = X(0, k) * -g_I;
     }
 }
@@ -295,10 +306,13 @@ void model_landing_6dof::add_application_constraints(
     socp.add_constraint((-1.0) * var("X", {4, 0}) + (x_init(4)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {5, 0}) + (x_init(5)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {6, 0}) + (x_init(6)) == 0.0);
-    //    socp.add_constraint( (-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0 );
-    //    socp.add_constraint( (-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0 );
-    //    socp.add_constraint( (-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0 );
-    //    socp.add_constraint( (-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0 );
+    if (constrain_initial_orientation)
+    {
+        socp.add_constraint((-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0);
+    }
     socp.add_constraint((-1.0) * var("X", {11, 0}) + (x_init(11)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {12, 0}) + (x_init(12)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0);
@@ -308,13 +322,12 @@ void model_landing_6dof::add_application_constraints(
     {
         socp.add_constraint((-1.0) * var("X", {i, K - 1}) + (x_final(i)) == 0.0);
     }
+    socp.add_constraint((1.0) * var("U", {0, K - 1}) == (0.0));
     socp.add_constraint((1.0) * var("U", {1, K - 1}) == (0.0));
-    socp.add_constraint((1.0) * var("U", {2, K - 1}) == (0.0));
 
     // State Constraints:
     for (size_t k = 0; k < K; k++)
     {
-
         // Mass
         //     x(0) >= m_dry
         //     for all k
@@ -322,16 +335,16 @@ void model_landing_6dof::add_application_constraints(
 
         // Max Tilt Angle
         //
-        // norm2([x(9), x(10)]) <= c
+        // norm2([x(8), x(9)]) <= c
         // with c := sqrt((1 - cos_theta_max) / 2)
         const double c = sqrt((1.0 - cos_theta_max) / 2.);
-        socp.add_constraint(optimization_problem::norm2({(1.0) * var("X", {9, k}),
-                                                         (1.0) * var("X", {10, k})}) <= (c));
+        socp.add_constraint(optimization_problem::norm2({(1.0) * var("X", {8, k}),
+                                                         (1.0) * var("X", {9, k})}) <= (c));
 
         // Glide Slope
         socp.add_constraint(
-            optimization_problem::norm2({(1.0) * var("X", {2, k}),
-                                         (1.0) * var("X", {3, k})}) <= (1.0 / tan_gamma_gs) * var("X", {1, k}));
+            optimization_problem::norm2({(1.0) * var("X", {1, k}),
+                                         (1.0) * var("X", {2, k})}) <= (1.0 / tan_gamma_gs) * var("X", {3, k}));
 
         // Max Rotation Velocity
         socp.add_constraint(
@@ -343,16 +356,16 @@ void model_landing_6dof::add_application_constraints(
     // Control Constraints
     for (size_t k = 0; k < K; k++)
     {
-
-        // Linearized Minimum Thrust
-        /*optimization_problem::AffineExpression lhs;
-        for (size_t i = 0; i < n_inputs; i++) {
-            lhs = lhs + param_fn([&U0,i,k](){ return (U0(i,k) / sqrt(U0(0,k)*U0(0,k) + U0(1,k)*U0(1,k) + U0(2,k)*U0(2,k))  ); }) * var("U", {i, k});
-        }
-        socp.add_constraint(lhs + (-T_min) >= (0.0));*/
+        // // Linearized Minimum Thrust
+        // optimization_problem::AffineExpression lhs;
+        // for (size_t i = 0; i < n_inputs; i++)
+        // {
+        //     lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
+        // }
+        // socp.add_constraint(lhs + (-T_min) >= (0.0));
 
         // Simplified Minimum Thrust
-        socp.add_constraint((1.0) * var("U", {0, k}) + (-T_min) >= (0.0));
+        socp.add_constraint((1.0) * var("U", {2, k}) + (-T_min) >= (0.0));
 
         // Maximum Thrust
         socp.add_constraint(
@@ -362,36 +375,13 @@ void model_landing_6dof::add_application_constraints(
 
         // Maximum Gimbal Angle
         socp.add_constraint(
-            optimization_problem::norm2({(1.0) * var("U", {1, k}),
-                                         (1.0) * var("U", {2, k})}) <= (tan_delta_max)*var("U", {0, k}));
+            optimization_problem::norm2({(1.0) * var("U", {0, k}),
+                                         (1.0) * var("U", {1, k})}) <= (tan_delta_max)*var("U", {2, k}));
     }
-}
-
-model_landing_6dof::StateVector model_landing_6dof::get_random_state()
-{
-    StateVector X;
-    X.setRandom();
-
-    X(0) = abs(X(0)) + 1.;
-    X(1) = abs(X(1)) + 1.;
-    X.segment(7, 4).normalize();
-
-    return X;
-}
-
-model_landing_6dof::ControlVector model_landing_6dof::get_random_input()
-{
-    ControlVector U;
-    U.setRandom();
-    U.normalize();
-    U(0) = abs(U(0));
-
-    return U;
 }
 
 void model_landing_6dof::Nondimensionalize()
 {
-
     double r_scale = r_I_init.norm();
     double m_scale = m_wet;
 
