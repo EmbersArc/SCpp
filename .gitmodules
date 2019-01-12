@@ -4,3 +4,6 @@
 [submodule "lib/ecos"]
 	path = lib/ecos
 	url = https://github.com/embotech/ecos.git
+[submodule "lib/CppAD"]
+	path = lib/CppAD
+	url = https://github.com/coin-or/CppAD.git
