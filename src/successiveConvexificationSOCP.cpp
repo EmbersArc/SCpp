@@ -2,35 +2,35 @@
 
 #include "successiveConvexificationSOCP.hpp"
 
+namespace sc
+{
+
 optimization_problem::SecondOrderConeProgram build_successive_convexification_SOCP(
     Model &model,
     double &weight_trust_region_sigma,
     double &weight_trust_region_xu,
     double &weight_virtual_control,
-    Eigen::Matrix<double, Model::n_states, K> &X,
-    Eigen::Matrix<double, Model::n_inputs, K> &U,
+    Eigen::Matrix<double, Model::state_dim_, K> &X,
+    Eigen::Matrix<double, Model::input_dim_, K> &U,
     double &sigma,
-    array<Model::StateMatrix, (K - 1)> &A_bar,
-    array<Model::ControlMatrix, (K - 1)> &B_bar,
-    array<Model::ControlMatrix, (K - 1)> &C_bar,
-    array<Model::StateVector, (K - 1)> &Sigma_bar,
-    array<Model::StateVector, (K - 1)> &z_bar)
+    array<Model::state_matrix_t, (K - 1)> &A_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &B_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &C_bar,
+    array<Model::state_vector_t, (K - 1)> &Sigma_bar,
+    array<Model::state_vector_t, (K - 1)> &z_bar)
 {
-
-    const size_t n_states = Model::n_states;
-    const size_t n_inputs = Model::n_inputs;
 
     optimization_problem::SecondOrderConeProgram socp;
 
-    socp.create_tensor_variable("X", {n_states, K});            // states
-    socp.create_tensor_variable("U", {n_inputs, K});            // inputs
-    socp.create_tensor_variable("nu", {n_states, K - 1});       // virtual control
-    socp.create_tensor_variable("nu_bound", {n_states, K - 1}); // virtual control
-    socp.create_tensor_variable("norm1_nu", {});                // virtual control norm upper bound
-    socp.create_tensor_variable("sigma", {});                   // total time
-    socp.create_tensor_variable("Delta_sigma", {});             // squared change of sigma
-    socp.create_tensor_variable("Delta", {K});                  // squared change of the stacked [ x(k), u(k) ] vector
-    socp.create_tensor_variable("norm2_Delta", {});             // 2-norm of the Delta(k) variables
+    socp.create_tensor_variable("X", {Model::state_dim_, K});            // states
+    socp.create_tensor_variable("U", {Model::input_dim_, K});            // inputs
+    socp.create_tensor_variable("nu", {Model::state_dim_, K - 1});       // virtual control
+    socp.create_tensor_variable("nu_bound", {Model::state_dim_, K - 1}); // virtual control
+    socp.create_tensor_variable("norm1_nu", {});                         // virtual control norm upper bound
+    socp.create_tensor_variable("sigma", {});                            // total time
+    socp.create_tensor_variable("Delta_sigma", {});                      // squared change of sigma
+    socp.create_tensor_variable("Delta", {K});                           // squared change of the stacked [ x(k), u(k) ] vector
+    socp.create_tensor_variable("norm2_Delta", {});                      // 2-norm of the Delta(k) variables
 
     // shortcuts to access solver variables and create parameters
     auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
@@ -46,22 +46,22 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         // Build linearized model equality constraint
         //    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
         // -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
-        for (size_t row_index = 0; row_index < n_states; ++row_index)
+        for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
         {
 
             // -I * x(k+1)
             optimization_problem::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
 
             // A * x(k)
-            for (size_t col_index = 0; col_index < n_states; ++col_index)
+            for (size_t col_index = 0; col_index < Model::state_dim_; ++col_index)
                 eq = eq + param(A_bar.at(k)(row_index, col_index)) * var("X", {col_index, k});
 
             // B * u(k)
-            for (size_t col_index = 0; col_index < n_inputs; ++col_index)
+            for (size_t col_index = 0; col_index < Model::input_dim_; ++col_index)
                 eq = eq + param(B_bar.at(k)(row_index, col_index)) * var("U", {col_index, k});
 
             // C * u(k+1)
-            for (size_t col_index = 0; col_index < n_inputs; ++col_index)
+            for (size_t col_index = 0; col_index < Model::input_dim_; ++col_index)
                 eq = eq + param(C_bar.at(k)(row_index, col_index)) * var("U", {col_index, k + 1});
 
             // Sigma sigma
@@ -85,7 +85,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         optimization_problem::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
         {
-            for (size_t row_index = 0; row_index < n_states; ++row_index)
+            for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
             {
                 // -nu_bound <= nu
                 socp.add_constraint((1.0) * var("nu_bound", {row_index, k}) + (1.0) * var("nu", {row_index, k}) >= (0.0));
@@ -149,14 +149,14 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
             optimization_problem::AffineExpression norm2_first_arg;
 
             // (-x0^T)*x
-            for (size_t i = 0; i < n_states; ++i)
+            for (size_t i = 0; i < Model::state_dim_; ++i)
             {
                 norm2_first_arg = norm2_first_arg +
                                   param_fn([&X, i, k]() { return -X(i, k); }) * var("X", {i, k});
             }
 
             // +(-u0^T)*u
-            for (size_t i = 0; i < n_inputs; ++i)
+            for (size_t i = 0; i < Model::input_dim_; ++i)
             {
                 norm2_first_arg = norm2_first_arg +
                                   param_fn([&U, i, k]() { return -U(i, k); }) * var("U", {i, k});
@@ -174,13 +174,13 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         }
 
         // (I)*x,
-        for (size_t i = 0; i < n_states; ++i)
+        for (size_t i = 0; i < Model::state_dim_; ++i)
         {
             norm2_args.push_back((1.0) * var("X", {i, k}));
         }
 
         // (I)*u
-        for (size_t i = 0; i < n_inputs; ++i)
+        for (size_t i = 0; i < Model::input_dim_; ++i)
         {
             norm2_args.push_back((1.0) * var("U", {i, k}));
         }
@@ -190,13 +190,13 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         optimization_problem::AffineExpression rhs;
 
         // ( x0^T)*x
-        for (size_t i = 0; i < n_states; ++i)
+        for (size_t i = 0; i < Model::state_dim_; ++i)
         {
             rhs = rhs + param(X(i, k)) * var("X", {i, k});
         }
 
         // +( u0^T)*u
-        for (size_t i = 0; i < n_inputs; ++i)
+        for (size_t i = 0; i < Model::input_dim_; ++i)
         {
             rhs = rhs + param(U(i, k)) * var("U", {i, k});
         }
@@ -229,6 +229,8 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     }
 
     socp.add_constraint((1.0) * var("sigma", {}) + (-0.01) >= (0.0)); // Total time must not be negative
-    model.add_application_constraints(socp, X, U);
+    model.addApplicationConstraints(socp, X, U);
     return socp;
 }
+
+} // namespace sc

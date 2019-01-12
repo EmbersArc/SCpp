@@ -276,8 +276,8 @@ bool feasibility_check_message(double tol, double val, const T &constraint)
 {
     if (val > tol)
     {
-        print("Infeasible solution, constraint value: {}", val);
-        print(constraint.print());
+        print("Infeasible solution, constraint value: {}\n", val);
+        print("{}\n", constraint.print());
 
         return false;
     }

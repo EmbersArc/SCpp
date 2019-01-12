@@ -28,8 +28,8 @@ def key_press_event(event):
 def my_plot(fig, figures_i):
     iteration = str(figures_i).zfill(3)
 
-    X = np.loadtxt("output/model_landing_6dof/iteration" + iteration + "_X.txt")
-    U = np.loadtxt("output/model_landing_6dof/iteration" + iteration + "_U.txt")
+    X = np.loadtxt(f"output/model_landing_6dof/iteration{iteration}_X.txt")
+    U = np.loadtxt(f"output/model_landing_6dof/iteration{iteration}_U.txt")
 
     K = X.shape[1]
 
@@ -72,7 +72,7 @@ def main():
     global figures_i, figures_N
     figures_N = sum(f.endswith("X.txt") for f in os.listdir("output/model_landing_6dof/"))
 
-    fig = plt.figure(figsize=(16, 12))
+    fig = plt.figure(figsize=(10, 10))
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()

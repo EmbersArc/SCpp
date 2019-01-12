@@ -4,17 +4,17 @@
 class DiscretizationODE
 {
   private:
-    Model::ControlVector u_t, u_t1;
+    Model::input_vector_t u_t, u_t1;
     double sigma, dt;
     Model &model;
 
   public:
-    static constexpr size_t n_V_states = 3 + Model::n_states + 2 * Model::n_inputs;
-    using state_type = Eigen::Matrix<double, Model::n_states, n_V_states>;
+    static constexpr size_t n_V_states = 3 + Model::state_dim_ + 2 * Model::input_dim_;
+    using state_type = Eigen::Matrix<double, Model::state_dim_, n_V_states>;
 
     DiscretizationODE(
-        const Model::ControlVector &u_t,
-        const Model::ControlVector &u_t1,
+        const Model::input_vector_t &u_t,
+        const Model::input_vector_t &u_t1,
         const double &sigma,
         double dt,
         Model &model)
@@ -22,50 +22,54 @@ class DiscretizationODE
 
     void operator()(const state_type &V, state_type &dVdt, const double t)
     {
-        const Model::StateVector &x = V.col(0);
-        const Model::ControlVector u = u_t + t / dt * (u_t1 - u_t);
+        const Model::state_vector_t x = V.col(0);
+        const Model::input_vector_t u = u_t + t / dt * (u_t1 - u_t);
 
-        const double alpha = (dt - t) / dt;
-        const double beta = t / dt;
+        Model::state_matrix_t A_bar;
+        model.computeA(x, u, A_bar);
+        A_bar *= sigma;
+        Model::state_input_matrix_t B_bar;
+        model.computeB(x, u, B_bar);
+        B_bar *= sigma;
+        Model::state_vector_t f;
+        model.computef(x, u, f);
 
-        const Model::StateMatrix A_bar = sigma * model.state_jacobian(x, u);
-        const Model::ControlMatrix B_bar = sigma * model.control_jacobian(x, u);
-        const Model::StateVector f = model.ode(x, u);
-
-        Model::StateMatrix Phi_A_xi = V.block<Model::n_states, Model::n_states>(0, 1);
-        Model::StateMatrix Phi_A_xi_inverse = Phi_A_xi.inverse();
+        Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
+        Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
 
         size_t cols = 0;
 
-        dVdt.block<Model::n_states, 1>(0, cols) = sigma * f;
+        dVdt.block<Model::state_dim_, 1>(0, cols) = sigma * f;
         cols += 1;
 
-        dVdt.block<Model::n_states, Model::n_states>(0, cols) = A_bar * Phi_A_xi;
-        cols += Model::n_states;
+        dVdt.block<Model::state_dim_, Model::state_dim_>(0, cols) = A_bar * Phi_A_xi;
+        cols += Model::state_dim_;
 
-        dVdt.block<Model::n_states, Model::n_inputs>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
-        cols += Model::n_inputs;
+        const double alpha = (dt - t) / dt;
+        dVdt.block<Model::state_dim_, Model::input_dim_>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
+        cols += Model::input_dim_;
 
-        dVdt.block<Model::n_states, Model::n_inputs>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
-        cols += Model::n_inputs;
+        const double beta = t / dt;
+        dVdt.block<Model::state_dim_, Model::input_dim_>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
+        cols += Model::input_dim_;
 
-        dVdt.block<Model::n_states, 1>(0, cols) = Phi_A_xi_inverse * f;
+        dVdt.block<Model::state_dim_, 1>(0, cols) = Phi_A_xi_inverse * f;
         cols += 1;
 
-        dVdt.block<Model::n_states, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        dVdt.block<Model::state_dim_, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
     }
 };
 
 void calculate_discretization(
     Model &model,
     double &sigma,
-    Eigen::Matrix<double, Model::n_states, K> &X,
-    Eigen::Matrix<double, Model::n_inputs, K> &U,
-    array<Model::StateMatrix, (K - 1)> &A_bar,
-    array<Model::ControlMatrix, (K - 1)> &B_bar,
-    array<Model::ControlMatrix, (K - 1)> &C_bar,
-    array<Model::StateVector, (K - 1)> &Sigma_bar,
-    array<Model::StateVector, (K - 1)> &z_bar)
+    Eigen::Matrix<double, Model::state_dim_, K> &X,
+    Eigen::Matrix<double, Model::input_dim_, K> &U,
+    array<Model::state_matrix_t, (K - 1)> &A_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &B_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &C_bar,
+    array<Model::state_vector_t, (K - 1)> &Sigma_bar,
+    array<Model::state_vector_t, (K - 1)> &z_bar)
 {
     const double dt = 1 / double(K - 1);
     using namespace boost::numeric::odeint;
@@ -77,25 +81,25 @@ void calculate_discretization(
         DiscretizationODE::state_type V;
         V.setZero();
         V.col(0) = X.col(k);
-        V.block<Model::n_states, Model::n_states>(0, 1).setIdentity();
+        V.block<Model::state_dim_, Model::state_dim_>(0, 1).setIdentity();
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
         integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
 
         size_t cols = 1;
 
-        A_bar[k] = V.block<Model::n_states, Model::n_states>(0, cols);
-        cols += Model::n_states;
+        A_bar[k] = V.block<Model::state_dim_, Model::state_dim_>(0, cols);
+        cols += Model::state_dim_;
 
-        B_bar[k] = A_bar[k] * V.block<Model::n_states, Model::n_inputs>(0, cols);
-        cols += Model::n_inputs;
+        B_bar[k] = A_bar[k] * V.block<Model::state_dim_, Model::input_dim_>(0, cols);
+        cols += Model::input_dim_;
 
-        C_bar[k] = A_bar[k] * V.block<Model::n_states, Model::n_inputs>(0, cols);
-        cols += Model::n_inputs;
+        C_bar[k] = A_bar[k] * V.block<Model::state_dim_, Model::input_dim_>(0, cols);
+        cols += Model::input_dim_;
 
-        Sigma_bar[k] = A_bar[k] * V.block<Model::n_states, 1>(0, cols);
+        Sigma_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
         cols += 1;
 
-        z_bar[k] = A_bar[k] * V.block<Model::n_states, 1>(0, cols);
+        z_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
     }
 }

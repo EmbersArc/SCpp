@@ -26,22 +26,15 @@ link_libraries(stdc++fs)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
 set(SOURCES
-    include/eigenIntegration.hpp
-    include/models/model_landing_6dof.hpp
-        src/models/model_landing_6dof.cpp
-    # include/models/model_landing_3dof.hpp
-    #     src/models/model_landing_3dof.cpp
-    # include/models/model_simple_4th_order.hpp
-    #     src/models/model_simple_4th_order.cpp
+    
+    include/models/modelRocketLanding3dDefinitions.hpp
+    include/models/modelRocketLanding3d.hpp
 
     include/ecosWrapper.hpp
         src/ecosWrapper.cpp
-        
-    # include/check_jacobian.hpp
-    #     src/check_jacobian.cpp
-    # include/check_trajectory.hpp
-        # src/check_trajectory.cpp
+    include/eigenIntegration.hpp
 
+    include/systemModel.hpp
     include/optimizationProblem.hpp
         src/optimizationProblem.cpp
     include/discretization.hpp
@@ -57,7 +50,3 @@ set(SOURCES
 add_executable(SCpp ${SOURCES})
 target_link_libraries(SCpp PRIVATE fmt-header-only)
 
-# add_executable(test_OptimizationProblem_indices    test/test_OptimizationProblem_indices.cpp)
-# add_executable(test_ecos_wrapper    test/test_ecos_wrapper.cpp)
-# add_executable(test_ecos_wrapper_sparse_conversion    test/test_ecos_wrapper_sparse_conversion.cpp)
-# add_executable(test_check_jacobian    test/test_check_jacobian.cpp)

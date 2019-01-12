@@ -11,10 +11,10 @@ using std::array;
 void calculate_discretization(
     Model &model,
     double &sigma,
-    Eigen::Matrix<double, Model::n_states, K> &X,
-    Eigen::Matrix<double, Model::n_inputs, K> &U,
-    array<Model::StateMatrix, (K - 1)> &A_bar,
-    array<Model::ControlMatrix, (K - 1)> &B_bar,
-    array<Model::ControlMatrix, (K - 1)> &C_bar,
-    array<Model::StateVector, (K - 1)> &Sigma_bar,
-    array<Model::StateVector, (K - 1)> &z_bar);
+    Eigen::Matrix<double, Model::state_dim_, K> &X,
+    Eigen::Matrix<double, Model::input_dim_, K> &U,
+    array<Model::state_matrix_t, (K - 1)> &A_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &B_bar,
+    array<Model::state_input_matrix_t, (K - 1)> &C_bar,
+    array<Model::state_vector_t, (K - 1)> &Sigma_bar,
+    array<Model::state_vector_t, (K - 1)> &z_bar);

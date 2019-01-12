@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 
+#include "systemModel.hpp"
 #include "constants.hpp"
 #include "ecosWrapper.hpp"
 
@@ -9,7 +10,6 @@ using namespace Eigen;
 
 class model_landing_6dof
 {
-
   public:
     model_landing_6dof(){};
     static constexpr size_t n_states = 14;

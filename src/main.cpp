@@ -28,7 +28,7 @@ using std::filesystem::remove_all;
 
 string get_output_path()
 {
-    return format("../output/{}/", Model::get_name());
+    return format("../output/{}/", Model::getModelName());
 }
 
 int main()
@@ -37,6 +37,7 @@ int main()
     create_directory(get_output_path());
 
     Model model;
+    model.initializeModel();
 
     double weight_trust_region_sigma = 1e-1;
     double weight_trust_region_xu = 1e-3;
@@ -45,37 +46,34 @@ int main()
     double nu_tol = 1e-8;
     double delta_tol = 1e-3;
 
-    const size_t n_states = Model::n_states;
-    const size_t n_inputs = Model::n_inputs;
+    Eigen::Matrix<double, Model::state_dim_, K> X;
+    Eigen::Matrix<double, Model::input_dim_, K> U;
 
-    Eigen::Matrix<double, n_states, K> X;
-    Eigen::Matrix<double, n_inputs, K> U;
+    model.initializeTrajectory(X, U);
 
-    model.initialize(X, U);
+    double sigma = model.getFinalTimeGuess();
 
-    double sigma = model.total_time_guess();
+    array<Model::state_matrix_t, (K - 1)> A_bar;
+    array<Model::state_input_matrix_t, (K - 1)> B_bar;
+    array<Model::state_input_matrix_t, (K - 1)> C_bar;
+    array<Model::state_vector_t, (K - 1)> Sigma_bar;
+    array<Model::state_vector_t, (K - 1)> z_bar;
 
-    array<Model::StateMatrix, (K - 1)> A_bar;
-    array<Model::ControlMatrix, (K - 1)> B_bar;
-    array<Model::ControlMatrix, (K - 1)> C_bar;
-    array<Model::StateVector, (K - 1)> Sigma_bar;
-    array<Model::StateVector, (K - 1)> z_bar;
-
-    optimization_problem::SecondOrderConeProgram socp = build_successive_convexification_SOCP(model,
-                                                                                              weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
-                                                                                              X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
+    optimization_problem::SecondOrderConeProgram socp = sc::build_successive_convexification_SOCP(model,
+                                                                                                  weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
+                                                                                                  X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
 
     // Cache indices for performance
     const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
-    size_t X_indices[n_states][K];
-    size_t U_indices[n_inputs][K];
+    size_t X_indices[Model::state_dim_][K];
+    size_t U_indices[Model::input_dim_][K];
     for (size_t k = 0; k < K; k++)
     {
-        for (size_t i = 0; i < n_states; ++i)
+        for (size_t i = 0; i < Model::state_dim_; ++i)
         {
             X_indices[i][k] = socp.get_tensor_variable_index("X", {i, k});
         }
-        for (size_t i = 0; i < n_inputs; ++i)
+        for (size_t i = 0; i < Model::input_dim_; ++i)
         {
             U_indices[i][k] = socp.get_tensor_variable_index("U", {i, k});
         }
@@ -144,11 +142,11 @@ int main()
         // Read solution
         for (size_t k = 0; k < K; k++)
         {
-            for (size_t i = 0; i < n_states; ++i)
+            for (size_t i = 0; i < Model::state_dim_; ++i)
             {
                 X(i, k) = solver.get_solution_value(X_indices[i][k]);
             }
-            for (size_t i = 0; i < n_inputs; ++i)
+            for (size_t i = 0; i < Model::input_dim_; ++i)
             {
                 U(i, k) = solver.get_solution_value(U_indices[i][k]);
             }
