@@ -14,7 +14,7 @@ class SystemModel
     typedef Eigen::Matrix<default_t, STATE_DIM, STATE_DIM> state_matrix_t;
     typedef Eigen::Matrix<default_t, INPUT_DIM, 1> input_vector_t;
     typedef Eigen::Matrix<default_t, INPUT_DIM, INPUT_DIM> input_matrix_t;
-    typedef Eigen::Matrix<default_t, STATE_DIM, INPUT_DIM> state_input_matrix_t;
+    typedef Eigen::Matrix<default_t, STATE_DIM, INPUT_DIM> control_matrix_t;
     typedef Eigen::Matrix<default_t, Eigen::Dynamic, 1> dynamic_vector_t;
 
     typedef CppAD::AD<default_t> scalar_ad_t;
@@ -22,7 +22,7 @@ class SystemModel
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM> state_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1> input_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, INPUT_DIM> input_matrix_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM> state_input_matrix_ad_t;
+    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM> control_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
 
     enum : size_t
@@ -42,7 +42,7 @@ class SystemModel
     void initializeModel();
     void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
     void computeA(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A);
-    void computeB(const state_vector_t &x, const input_vector_t &u, state_input_matrix_t &B);
+    void computeB(const state_vector_t &x, const input_vector_t &u, control_matrix_t &B);
 
     void initializeTrajectory(Eigen::Matrix<default_t, STATE_DIM, K> &X,
                               Eigen::Matrix<default_t, INPUT_DIM, K> &U);
@@ -83,30 +83,30 @@ void SystemModel<STATE_DIM, INPUT_DIM, K>::initializeModel()
         {
             sparsityA_[i] = true;
             sparsityB_[i] = false;
-            rowsA_.push_back(int(i / STATE_DIM));
-            colsA_.push_back(i % STATE_DIM);
+            rowsA_.emplace_back(int(i / STATE_DIM));
+            colsA_.emplace_back(i % STATE_DIM);
         }
         else
         {
             sparsityA_[i] = false;
             sparsityB_[i] = true;
-            rowsB_.push_back(int(i / STATE_DIM));
-            colsB_.push_back(i % STATE_DIM);
+            rowsB_.emplace_back(int(i / STATE_DIM));
+            colsB_.emplace_back(i % STATE_DIM);
         }
     }
 
     // record the model
     {
         // input vector
-        dynamic_vector_ad_t x((STATE_DIM + INPUT_DIM));
+        dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
         x.setRandom();
 
         // declare x as independent
         CppAD::Independent(x);
 
         // create fixed size types since CT uses fixed size types
-        state_vector_ad_t xFixed = x.head<STATE_DIM>();
-        input_vector_ad_t uFixed = x.tail<INPUT_DIM>();
+        state_vector_ad_t xFixed = x.template head<STATE_DIM>();
+        input_vector_ad_t uFixed = x.template tail<INPUT_DIM>();
 
         state_vector_ad_t dxFixed;
 
@@ -146,7 +146,7 @@ void SystemModel<STATE_DIM, INPUT_DIM, K>::computeA(const state_vector_t &x, con
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<STATE_DIM, INPUT_DIM, K>::computeB(const state_vector_t &x, const input_vector_t &u, state_input_matrix_t &B)
+void SystemModel<STATE_DIM, INPUT_DIM, K>::computeB(const state_vector_t &x, const input_vector_t &u, control_matrix_t &B)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM);
     input << x, u;
@@ -154,7 +154,7 @@ void SystemModel<STATE_DIM, INPUT_DIM, K>::computeB(const state_vector_t &x, con
     dynamic_vector_t jac(STATE_DIM * INPUT_DIM);
     f_.SparseJacobianForward(input, sparsityB_, rowsB_, colsB_, jac, workB_);
 
-    Eigen::Map<state_input_matrix_t> out(jac.data());
+    Eigen::Map<control_matrix_t> out(jac.data());
 
     B = out;
 }

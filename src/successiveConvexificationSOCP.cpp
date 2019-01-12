@@ -14,8 +14,8 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     Eigen::Matrix<double, Model::input_dim_, K> &U,
     double &sigma,
     array<Model::state_matrix_t, (K - 1)> &A_bar,
-    array<Model::state_input_matrix_t, (K - 1)> &B_bar,
-    array<Model::state_input_matrix_t, (K - 1)> &C_bar,
+    array<Model::control_matrix_t, (K - 1)> &B_bar,
+    array<Model::control_matrix_t, (K - 1)> &C_bar,
     array<Model::state_vector_t, (K - 1)> &Sigma_bar,
     array<Model::state_vector_t, (K - 1)> &z_bar)
 {
