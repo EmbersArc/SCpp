@@ -66,11 +66,16 @@ class ModelRocketLanding3D : public SystemModel<rocket3d::STATE_DIM_, rocket3d::
         const input_vector_ad_t &u,
         state_vector_ad_t &f) override
     {
-        f(0) = -scalar_ad_t(alpha_m) * u.norm();
+        auto alpha_m_ = scalar_ad_t(alpha_m);
+        auto g_I_ = g_I.cast<scalar_ad_t>();
+        auto J_B_ = J_B.cast<scalar_ad_t>().asDiagonal();
+        auto r_T_B_ = r_T_B.cast<scalar_ad_t>();
+
+        f(0) = -alpha_m_ * u.norm();
         f.segment(1, 3) << x.segment(4, 3);
-        f.segment(4, 3) << 1. / x(0) * dirCosineMatrix<scalar_ad_t>(x.segment(7, 4)).transpose() * u + g_I.cast<scalar_ad_t>();
+        f.segment(4, 3) << 1. / x(0) * dirCosineMatrix<scalar_ad_t>(x.segment(7, 4)).transpose() * u + g_I_;
         f.segment(7, 4) << 0.5 * omegaMatrix<scalar_ad_t>(x.segment(11, 3)) * x.segment(7, 4);
-        f.segment(11, 3) << J_B.cast<scalar_ad_t>().asDiagonal().inverse() * (skew<scalar_ad_t>(r_T_B.cast<scalar_ad_t>()) * u - skew<scalar_ad_t>(x.segment(11, 3)) * J_B.cast<scalar_ad_t>().asDiagonal() * x.segment(11, 3));
+        f.segment(11, 3) << J_B_.inverse() * (skew<scalar_ad_t>(r_T_B_) * u - skew<scalar_ad_t>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
     }
 
     void initializeTrajectory(Eigen::Matrix<double, rocket3d::STATE_DIM_, K> &X,

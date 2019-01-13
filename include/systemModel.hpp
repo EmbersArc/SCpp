@@ -56,9 +56,10 @@ class SystemModel
     string modelName_;
 
     CppAD::ADFun<default_t> f_;
+    Eigen::Matrix<bool, STATE_DIM + INPUT_DIM, STATE_DIM> sparsityMatrixA_, sparsityMatrixB_;
     vector<bool> sparsityA_, sparsityB_;
-    vector<size_t> rowsA_, rowsB_;
-    vector<size_t> colsA_, colsB_;
+    vector<size_t> rowsA_, colsA_;
+    vector<size_t> rowsB_, colsB_;
     CppAD::sparse_jacobian_work workA_, workB_;
 };
 
@@ -71,27 +72,58 @@ template <size_t STATE_DIM, size_t INPUT_DIM, size_t K>
 void SystemModel<STATE_DIM, INPUT_DIM, K>::initializeModel()
 {
     // set up spasity
+    { // A
+        sparsityMatrixA_.setZero();
+        sparsityMatrixA_.template topRows<STATE_DIM>().setOnes();
+
+        rowsA_.resize(STATE_DIM * STATE_DIM);
+        colsA_.resize(STATE_DIM * STATE_DIM);
+        size_t count = 0;
+        for (size_t i = 0; i < STATE_DIM + INPUT_DIM; i++)
+        {
+            for (size_t j = 0; j < STATE_DIM; j++)
+            {
+                if (sparsityMatrixA_(i, j))
+                {
+                    rowsA_[count] = j;
+                    colsA_[count] = i;
+                    count++;
+                }
+            }
+        }
+    }
+    { // B
+        sparsityMatrixB_.setZero();
+        sparsityMatrixB_.template bottomRows<INPUT_DIM>().setOnes();
+
+        rowsB_.resize(STATE_DIM * INPUT_DIM);
+        colsB_.resize(STATE_DIM * INPUT_DIM);
+        size_t count = 0;
+        for (size_t i = 0; i < STATE_DIM + INPUT_DIM; i++)
+        {
+            for (size_t j = 0; j < STATE_DIM; j++)
+            {
+                if (sparsityMatrixB_(i, j))
+                {
+                    rowsB_[count] = j;
+                    colsB_[count] = i;
+                    count++;
+                }
+            }
+        }
+    }
+
     sparsityA_.resize((STATE_DIM + INPUT_DIM) * STATE_DIM);
     sparsityB_.resize((STATE_DIM + INPUT_DIM) * STATE_DIM);
-    rowsA_.reserve(STATE_DIM * STATE_DIM);
-    colsA_.reserve(STATE_DIM * STATE_DIM);
-    rowsB_.reserve(INPUT_DIM * STATE_DIM);
-    colsB_.reserve(INPUT_DIM * STATE_DIM);
-    for (size_t i = 0; i < (STATE_DIM + INPUT_DIM) * STATE_DIM; i++)
+    for (size_t i = 0; i < sparsityB_.size(); i++)
     {
-        if (i < STATE_DIM * STATE_DIM)
+        if (i % (STATE_DIM + INPUT_DIM) < STATE_DIM)
         {
             sparsityA_[i] = true;
-            sparsityB_[i] = false;
-            rowsA_.emplace_back(int(i / STATE_DIM));
-            colsA_.emplace_back(i % STATE_DIM);
         }
         else
         {
-            sparsityA_[i] = false;
             sparsityB_[i] = true;
-            rowsB_.emplace_back(int(i / STATE_DIM));
-            colsB_.emplace_back(i % STATE_DIM);
         }
     }
 
@@ -107,7 +139,6 @@ void SystemModel<STATE_DIM, INPUT_DIM, K>::initializeModel()
         // create fixed size types since CT uses fixed size types
         state_vector_ad_t xFixed = x.template head<STATE_DIM>();
         input_vector_ad_t uFixed = x.template tail<INPUT_DIM>();
-
         state_vector_ad_t dxFixed;
 
         systemFlowMap(xFixed, uFixed, dxFixed);
@@ -128,7 +159,10 @@ void SystemModel<STATE_DIM, INPUT_DIM, K>::initializeModel()
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t K>
 void SystemModel<STATE_DIM, INPUT_DIM, K>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
-    f.setOnes();
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
+    input << x, u;
+
+    f = f_.Forward(0, input);
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t K>

@@ -25,14 +25,14 @@ class DiscretizationODE
         const Model::state_vector_t x = V.col(0);
         const Model::input_vector_t u = u_t + t / dt * (u_t1 - u_t);
 
+        Model::state_vector_t f;
+        model.computef(x, u, f);
         Model::state_matrix_t A_bar;
         model.computeA(x, u, A_bar);
         A_bar *= sigma;
         Model::control_matrix_t B_bar;
         model.computeB(x, u, B_bar);
         B_bar *= sigma;
-        Model::state_vector_t f;
-        model.computef(x, u, f);
 
         Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
         Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
@@ -75,7 +75,7 @@ void calculate_discretization(
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-#pragma omp parallel for schedule(dynamic)
+// #pragma omp parallel for schedule(dynamic)
     for (size_t k = 0; k < K - 1; k++)
     {
         DiscretizationODE::state_type V;
