@@ -33,16 +33,18 @@ string get_output_path()
 
 int main()
 {
+    print("Initializing path.\n");
     remove_all(get_output_path());
     create_directory(get_output_path());
 
+    print("Initializing model.\n");
     Model model;
     model.initializeModel();
 
+    print("Initializing algorithm.\n");
     double weight_trust_region_sigma = 1e-1;
     double weight_trust_region_xu = 1e-3;
     double weight_virtual_control = 1e5;
-
     double nu_tol = 1e-8;
     double delta_tol = 1e-3;
 
@@ -59,6 +61,7 @@ int main()
     array<Model::state_vector_t, (K - 1)> Sigma_bar;
     array<Model::state_vector_t, (K - 1)> z_bar;
 
+    print("Initializing solver.\n");
     optimization_problem::SecondOrderConeProgram socp = sc::build_successive_convexification_SOCP(model,
                                                                                                   weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
                                                                                                   X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
@@ -81,11 +84,14 @@ int main()
 
     EcosWrapper solver(socp);
 
+    print("Starting Successive Convexification.\n");
     const size_t iterations = 50;
-
     const double timer_total = tic();
     for (size_t it = 0; it < iterations; it++)
     {
+        string itString = format("<Iteration {}>", it);
+        print("{:=^{}}\n", itString, 60);
+
         weight_trust_region_xu *= 2.;
 
         const double timer_iteration = tic();
@@ -161,8 +167,7 @@ int main()
         print("{:<{}}{: .4f}\n", "norm2_Delta", 50, solver.get_solution_value("norm2_Delta", {}));
         print("\n");
         print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
-        print("==========================================================\n");
-
+        print("\n");
         if (solver.get_solution_value("norm2_Delta", {}) < delta_tol && solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
             print("Converged after {} iterations.\n", it + 1);
