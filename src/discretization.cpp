@@ -85,7 +85,7 @@ void calculate_discretization(
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
         integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
-
+ 
         size_t cols = 1;
 
         A_bar[k] = V.block<Model::state_dim_, Model::state_dim_>(0, cols);

@@ -1,13 +1,26 @@
 cmake_minimum_required(VERSION 3.5)
 project(SCpp)
 
-# Build ECOS shared library
-execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
+set(CLANG_LIBS /usr/lib/clang)
+set(CLANG_INCLUDE_DIRS /usr/include/clang)
+set(CPPAD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/lib/CppAD)
+set(EIGEN3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen)
 
+# OPTIONS
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O1 -std=c++17)
 
-find_package(Boost REQUIRED)   
+# ECOS
+execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
+include_directories(lib/ecos/include)
+include_directories(lib/ecos/external/SuiteSparse_config)
+link_directories(lib/ecos)
+link_libraries(ecos)
+
+# BOOST
+find_package(Boost REQUIRED) 
+
+# OMP
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -15,19 +28,23 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-include_directories(include)
-include_directories(SYSTEM lib/CppAD/include)
-include_directories(SYSTEM lib/CppADCodeGen)
-include_directories(lib/ecos/include)
-include_directories(lib/ecos/external/SuiteSparse_config)
+# EIGEN
 include_directories(SYSTEM lib/eigen)
-link_directories(lib/ecos)
-link_libraries(ecos)
+
+# CPPAD
+include_directories(SYSTEM lib/cppad)
+
+# FILESYSTEM
 link_libraries(stdc++fs)
+
+# FMT
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
+# INCLUDES
+include_directories(include)
+
+# SOURCES
 set(SOURCES
-    
     include/models/modelRocketLanding3dDefinitions.hpp
     include/models/modelRocketLanding3d.hpp
 

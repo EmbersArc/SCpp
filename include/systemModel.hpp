@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cppad/cppad.hpp>
+#include <cppad/cg.hpp>
 
 #include "optimizationProblem.hpp"
 
@@ -8,6 +9,8 @@ template <size_t STATE_DIM, size_t INPUT_DIM, size_t K>
 class SystemModel
 {
   public:
+    const bool compile = true;
+
     typedef double default_t;
     typedef Eigen::Matrix<default_t, STATE_DIM, 1> state_vector_t;
     typedef Eigen::Matrix<default_t, STATE_DIM, STATE_DIM> state_matrix_t;
@@ -17,6 +20,7 @@ class SystemModel
     typedef Eigen::Matrix<default_t, Eigen::Dynamic, 1> dynamic_vector_t;
 
     typedef CppAD::AD<default_t> scalar_ad_t;
+    // typedef std::conditional<compile, CppAD::cg::AD<default_scalar_ad_t>, default_scalar_ad_t>::type scalar_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, 1> state_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM> state_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1> input_vector_ad_t;
