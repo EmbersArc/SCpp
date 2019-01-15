@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cppad/cppad.hpp>
 #include <cppad/cg.hpp>
 
 #include "optimizationProblem.hpp"
