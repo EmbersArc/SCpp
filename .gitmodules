@@ -1,0 +1,12 @@
+[submodule "lib/eigen"]
+	path = lib/eigen
+	url = https://github.com/eigenteam/eigen-git-mirror.git
+[submodule "lib/ecos"]
+	path = lib/ecos
+	url = https://github.com/embotech/ecos.git
+[submodule "lib/CppAD"]
+	path = lib/CppAD
+	url = https://github.com/coin-or/CppAD.git
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = https://github.com/fmtlib/fmt.git
