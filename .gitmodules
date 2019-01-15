@@ -10,3 +10,6 @@
 [submodule "lib/fmt"]
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/CppADCodeGen"]
+	path = lib/CppADCodeGen
+	url = https://github.com/joaoleal/CppADCodeGen.git

@@ -17,6 +17,7 @@ endif()
 
 include_directories(include)
 include_directories(SYSTEM lib/CppAD/include)
+include_directories(SYSTEM lib/CppADCodeGen)
 include_directories(lib/ecos/include)
 include_directories(lib/ecos/external/SuiteSparse_config)
 include_directories(SYSTEM lib/eigen)
