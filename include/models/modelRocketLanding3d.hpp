@@ -15,9 +15,9 @@ template <typename T>
 Eigen::Matrix<T, 3, 3> skew(const Eigen::Matrix<T, 3, 1> &v)
 {
     Eigen::Matrix<T, 3, 3> skewMatrix;
-    skewMatrix << 0, -v(2), v(1),
-        v(2), 0, -v(0),
-        -v(1), v(0), 0;
+    skewMatrix << T(0), -v(2), v(1),
+        v(2), T(0), -v(0),
+        -v(1), v(0), T(0);
     return skewMatrix;
 }
 
@@ -36,18 +36,18 @@ template <typename T>
 Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
 {
     Eigen::Matrix<T, 4, 4> omegaMatrix;
-    omegaMatrix << 0, -w(0), -w(1), -w(2),
-        w(0), 0, w(2), -w(1),
-        w(1), -w(2), 0, w(0),
-        w(2), w(1), -w(0), 0;
+    omegaMatrix << T(0), -w(0), -w(1), -w(2),
+        w(0), T(0), w(2), -w(1),
+        w(1), -w(2), T(0), w(0),
+        w(2), w(1), -w(0), T(0);
 
     return omegaMatrix;
 }
 
-class ModelRocketLanding3D : public SystemModel<rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K>
+class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K>
 {
   public:
-    typedef SystemModel<rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K> BASE;
+    typedef SystemModel<ModelRocketLanding3D, rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K> BASE;
 
     ModelRocketLanding3D(){};
 
@@ -56,30 +56,31 @@ class ModelRocketLanding3D : public SystemModel<rocket3d::STATE_DIM_, rocket3d::
         return "RocketLanding3D";
     }
 
-    double getFinalTimeGuess()
+    static double getFinalTimeGuess()
     {
         return 8.;
     }
 
+    template <typename T>
     void systemFlowMap(
-        const state_vector_ad_t &x,
-        const input_vector_ad_t &u,
-        state_vector_ad_t &f) override
+        const Eigen::Matrix<T, BASE::state_dim_, 1> &x,
+        const Eigen::Matrix<T, BASE::input_dim_, 1> &u,
+        Eigen::Matrix<T, BASE::state_dim_, 1> &f)
     {
-        auto alpha_m_ = scalar_ad_t(alpha_m);
-        auto g_I_ = g_I.cast<scalar_ad_t>();
-        auto J_B_ = J_B.cast<scalar_ad_t>().asDiagonal();
-        auto r_T_B_ = r_T_B.cast<scalar_ad_t>();
+        auto alpha_m_ = T(alpha_m);
+        auto g_I_ = g_I.cast<T>();
+        auto J_B_ = J_B.cast<T>().asDiagonal();
+        auto r_T_B_ = r_T_B.cast<T>();
 
         f(0) = -alpha_m_ * u.norm();
         f.segment(1, 3) << x.segment(4, 3);
-        f.segment(4, 3) << 1. / x(0) * dirCosineMatrix<scalar_ad_t>(x.segment(7, 4)).transpose() * u + g_I_;
-        f.segment(7, 4) << 0.5 * omegaMatrix<scalar_ad_t>(x.segment(11, 3)) * x.segment(7, 4);
-        f.segment(11, 3) << J_B_.inverse() * (skew<scalar_ad_t>(r_T_B_) * u - skew<scalar_ad_t>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
+        f.segment(4, 3) << 1. / x(0) * dirCosineMatrix<T>(x.segment(7, 4)).transpose() * u + g_I_;
+        f.segment(7, 4) << T(0.5) * omegaMatrix<T>(x.segment(11, 3)) * x.segment(7, 4);
+        f.segment(11, 3) << J_B_.inverse() * (skew<T>(r_T_B_) * u - skew<T>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
     }
 
-    void initializeTrajectory(Eigen::Matrix<double, rocket3d::STATE_DIM_, K> &X,
-                              Eigen::Matrix<double, rocket3d::INPUT_DIM_, K> &U)
+    void initializeTrajectory(Eigen::Matrix<double, BASE::state_dim_, K> &X,
+                              Eigen::Matrix<double, BASE::input_dim_, K> &U)
     {
         //    Nondimensionalize();
 

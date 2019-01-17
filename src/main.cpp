@@ -33,13 +33,13 @@ string get_output_path()
 
 int main()
 {
-    print("Initializing path.\n");
-    remove_all(get_output_path());
-    create_directory(get_output_path());
-
     print("Initializing model.\n");
     Model model;
     model.initializeModel();
+
+    print("Initializing path.\n");
+    remove_all(get_output_path());
+    create_directory(get_output_path());
 
     print("Initializing algorithm.\n");
     double weight_trust_region_sigma = 1e-1;
