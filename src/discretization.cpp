@@ -28,10 +28,9 @@ class DiscretizationODE
         Model::state_vector_t f;
         model.computef(x, u, f);
         Model::state_matrix_t A_bar;
-        model.computeA(x, u, A_bar);
-        A_bar *= sigma;
         Model::control_matrix_t B_bar;
-        model.computeB(x, u, B_bar);
+        model.computeJacobians(x, u, A_bar, B_bar);
+        A_bar *= sigma;
         B_bar *= sigma;
 
         Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
@@ -85,7 +84,7 @@ void calculate_discretization(
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
         integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
- 
+
         size_t cols = 1;
 
         A_bar[k] = V.block<Model::state_dim_, Model::state_dim_>(0, cols);

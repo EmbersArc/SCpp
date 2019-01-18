@@ -56,7 +56,10 @@
         "cstdarg": "cpp",
         "core": "cpp",
         "dense": "cpp",
-        "cholesky": "cpp"
+        "cholesky": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "filesystem": "cpp"
     },
     "python.pythonPath": "/home/sven/anaconda3/bin/python",
     "C_Cpp.configurationWarnings": "Disabled"

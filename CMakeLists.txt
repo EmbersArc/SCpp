@@ -29,6 +29,9 @@ link_libraries(stdc++fs)
 # FMT
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
+# CPPAD
+link_libraries(dl)
+
 # INCLUDES
 include_directories(include)
 

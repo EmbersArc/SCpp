@@ -19,7 +19,6 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     array<Model::state_vector_t, (K - 1)> &Sigma_bar,
     array<Model::state_vector_t, (K - 1)> &z_bar)
 {
-
     optimization_problem::SecondOrderConeProgram socp;
 
     socp.create_tensor_variable("X", {Model::state_dim_, K});            // states
@@ -42,13 +41,11 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
 
     for (size_t k = 0; k < K - 1; k++)
     {
-
         // Build linearized model equality constraint
         //    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
         // -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
         for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
         {
-
             // -I * x(k+1)
             optimization_problem::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
 
@@ -118,9 +115,8 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         auto sigma_fn3 = param_fn([&sigma]() { return sigma; });
         auto sigma_fn4 = param_fn([&sigma]() { return (0.5 - 0.5 * sigma * sigma); });
 
-        socp.add_constraint(
-            optimization_problem::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2,
-                                         (1.0) * var("sigma", {})}) <= sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
+        socp.add_constraint(optimization_problem::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2,
+                                                         (1.0) * var("sigma", {})}) <= sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
 
         // Minimize Delta_sigma
         socp.add_minimization_term(param(weight_trust_region_sigma) * var("Delta_sigma", {}));

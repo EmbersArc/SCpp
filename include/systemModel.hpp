@@ -1,7 +1,6 @@
 #pragma once
 
-// #include <cppad/cg.hpp>
-#include <cppad/cppad.hpp>
+#include <cppad/cg.hpp>
 
 #include "optimizationProblem.hpp"
 
@@ -12,19 +11,22 @@ class SystemModel
     typedef Eigen::Matrix<double, STATE_DIM, 1> state_vector_t;
     typedef Eigen::Matrix<double, STATE_DIM, STATE_DIM> state_matrix_t;
     typedef Eigen::Matrix<double, INPUT_DIM, 1> input_vector_t;
-    typedef Eigen::Matrix<double, INPUT_DIM, INPUT_DIM> input_matrix_t;
     typedef Eigen::Matrix<double, STATE_DIM, INPUT_DIM> control_matrix_t;
     typedef Eigen::Matrix<double, Eigen::Dynamic, 1> dynamic_vector_t;
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> dynamic_matrix_t;
+    typedef Eigen::Map<dynamic_vector_t> dynamic_vector_map_t;
 
-    typedef CppAD::AD<double> scalar_ad_t;
-    // typedef CppAD::cg::CG<double> scalar_cg_ad_t;
-    // typedef std::conditional<false, CppAD::AD<scalar_cg_ad_t>, CppAD::AD<default_scalar_ad_t>>::type scalar_ad_t;
+    typedef CppAD::cg::CG<double> scalar_cg_ad_t;
+    typedef CppAD::AD<scalar_cg_ad_t> scalar_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, 1> state_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM> state_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1> input_vector_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, INPUT_DIM> input_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM> control_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
+    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
+
+    typedef Eigen::Matrix<double, STATE_DIM, K> state_trajectory_matrix_t;
+    typedef Eigen::Matrix<double, INPUT_DIM, K> input_trajectory_matrix_t;
 
     enum : size_t
     {
@@ -32,141 +34,107 @@ class SystemModel
         input_dim_ = INPUT_DIM,
     };
 
+    // Default constructor
     SystemModel(){};
-    void initializeModel();
-    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
-    void computeA(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A);
-    void computeB(const state_vector_t &x, const input_vector_t &u, control_matrix_t &B);
 
+    // Set up and compile dynamics function
+    void initializeModel();
+
+    // Computes the state derivative
+    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
+    // Computes state and control Jacobians
+    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+
+    // Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
+    virtual void initializeTrajectory(state_trajectory_matrix_t &X,
+                                      input_trajectory_matrix_t &U) = 0;
+
+    // Function to add constraints of a derived model. Has to be implemented by the derived class.
+    virtual void addApplicationConstraints(
+        optimization_problem::SecondOrderConeProgram &socp,
+        state_trajectory_matrix_t &X0,
+        input_trajectory_matrix_t &U0) = 0;
+
+    // The state derivative function. Has to be implemented by the derived class.
     template <typename T>
     void systemFlowMap(
         const Eigen::Matrix<T, STATE_DIM, 1> &x,
         const Eigen::Matrix<T, INPUT_DIM, 1> &u,
         Eigen::Matrix<T, STATE_DIM, 1> &f);
 
+  private:
+    // Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
     void systemFlowMapAD(
         const dynamic_vector_ad_t &tapedInput,
         dynamic_vector_ad_t &f);
 
-    void initializeTrajectory(Eigen::Matrix<double, STATE_DIM, K> &X,
-                              Eigen::Matrix<double, INPUT_DIM, K> &U);
-
-    virtual void addApplicationConstraints(
-        optimization_problem::SecondOrderConeProgram &socp,
-        Eigen::Matrix<double, STATE_DIM, K> &X0,
-        Eigen::Matrix<double, INPUT_DIM, K> &U0) = 0;
-
-  private:
-    CppAD::ADFun<double> f_;
-    vector<bool> sparsityA_, sparsityB_;
-    vector<size_t> rowsA_, colsA_;
-    vector<size_t> rowsB_, colsB_;
-    CppAD::sparse_jacobian_work workA_, workB_;
+    // Compilation and dynamic linking
+    std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib_;
+    std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
 };
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
 void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::initializeModel()
 {
-    // set up spasity
-    {
-        rowsA_.resize(STATE_DIM * STATE_DIM);
-        colsA_.resize(STATE_DIM * STATE_DIM);
-        rowsB_.resize(STATE_DIM * INPUT_DIM);
-        colsB_.resize(STATE_DIM * INPUT_DIM);
-        size_t countA = 0;
-        size_t countB = 0;
-        for (size_t i = 0; i < STATE_DIM + INPUT_DIM; i++)
-        {
-            for (size_t j = 0; j < STATE_DIM; j++)
-            {
-                if (i < STATE_DIM)
-                {
-                    rowsA_[countA] = j;
-                    colsA_[countA] = i;
-                    countA++;
-                }
-                else
-                {
-                    rowsB_[countB] = j;
-                    colsB_[countB] = i;
-                    countB++;
-                }
-            }
-        }
-    }
+    // input vector
+    dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
+    x.setRandom();
 
-    sparsityA_.resize((STATE_DIM + INPUT_DIM) * STATE_DIM);
-    sparsityB_.resize((STATE_DIM + INPUT_DIM) * STATE_DIM);
-    for (size_t i = 0; i < sparsityA_.size(); i++)
-    {
-        if (i % (STATE_DIM + INPUT_DIM) < STATE_DIM)
-        {
-            sparsityA_[i] = true;
-        }
-        else
-        {
-            sparsityB_[i] = true;
-        }
-    }
+    // declare x as independent
+    CppAD::Independent(x);
 
-    // record the model
-    {
-        // input vector
-        dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
-        x.setRandom();
+    // create fixed size types since CT uses fixed size types
+    dynamic_vector_ad_t dxFixed;
 
-        // declare x as independent
-        CppAD::Independent(x);
+    systemFlowMapAD(x, dxFixed);
 
-        // create fixed size types since CT uses fixed size types
-        dynamic_vector_ad_t dxFixed;
+    // store operation sequence in f: x -> dx and stop recording
+    CppAD::ADFun<scalar_cg_ad_t> f(x, dxFixed);
 
-        systemFlowMapAD(x, dxFixed);
+    f.optimize();
 
-        // store operation sequence in f: x -> dx and stop recording
-        CppAD::ADFun<double> f(x, dxFixed);
+    // generates source code
+    CppAD::cg::ModelCSourceGen<double> cgen(f, "model");
+    cgen.setCreateJacobian(true);
+    cgen.setCreateForwardZero(true);
+    CppAD::cg::ModelLibraryCSourceGen<double> libcgen(cgen);
 
-        f.optimize();
+    // compile source code
+    CppAD::cg::GccCompiler<double> compiler;
+    CppAD::cg::DynamicModelLibraryProcessor<double> processor(libcgen);
+    compiler.setCompileFlags({"-O3", "-std=c11"});
+    dynamicLib_ = processor.createDynamicLibrary(compiler);
 
-        f_ = f;
-    }
+    // // save to files
+    // CppAD::cg::SaveFilesModelLibraryProcessor<double> processorSave(libcgen);
+    // processorSave.saveSources();
+
+    model_ = dynamicLib_->model("model");
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
 void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
+    dynamic_vector_map_t x_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
+    dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
-    f = f_.Forward(0, input);
+    model_->ForwardZero(x_map, f_map);
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computeA(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A)
+void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
+    dynamic_vector_map_t x_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
+    Eigen::Matrix<double, STATE_DIM + INPUT_DIM, STATE_DIM> J;
+    dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
-    dynamic_vector_t jac(STATE_DIM * STATE_DIM);
-    f_.SparseJacobianForward(input, sparsityA_, rowsA_, colsA_, jac, workA_);
-
-    Eigen::Map<state_matrix_t> out(jac.data());
-
-    A = out;
-}
-
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computeB(const state_vector_t &x, const input_vector_t &u, control_matrix_t &B)
-{
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
-    input << x, u;
-
-    dynamic_vector_t jac(STATE_DIM * INPUT_DIM);
-    f_.SparseJacobianForward(input, sparsityB_, rowsB_, colsB_, jac, workB_);
-
-    Eigen::Map<control_matrix_t> out(jac.data());
-
-    B = out;
+    model_->Jacobian(x_map, J_map);
+    A = J.template topRows<STATE_DIM>().transpose();
+    B = J.template bottomRows<INPUT_DIM>().transpose();
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
@@ -184,8 +152,8 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
     dynamic_vector_ad_t &f)
 {
-    state_vector_ad_t x = tapedInput.segment(0, STATE_DIM);
-    input_vector_ad_t u = tapedInput.segment(STATE_DIM, INPUT_DIM);
+    state_vector_ad_t x = tapedInput.template segment<STATE_DIM>(0);
+    input_vector_ad_t u = tapedInput.template segment<INPUT_DIM>(STATE_DIM);
 
     state_vector_ad_t fFixed;
     static_cast<Derived *>(this)->template systemFlowMap<scalar_ad_t>(x, u, fFixed);

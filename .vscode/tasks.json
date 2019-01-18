@@ -9,7 +9,7 @@
             "options": {
                 "cwd": "${workspaceFolder}/build"
             },
-            "command": "clear && make && ./SCpp",
+            "command": "clear && make -j8 && ./SCpp",
             "group": {
                 "kind": "build",
                 "isDefault": true

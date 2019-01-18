@@ -79,8 +79,8 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
         f.segment(11, 3) << J_B_.inverse() * (skew<T>(r_T_B_) * u - skew<T>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
     }
 
-    void initializeTrajectory(Eigen::Matrix<double, BASE::state_dim_, K> &X,
-                              Eigen::Matrix<double, BASE::input_dim_, K> &U)
+    void initializeTrajectory(state_trajectory_matrix_t &X,
+                              input_trajectory_matrix_t &U) override
     {
         //    Nondimensionalize();
 
@@ -99,9 +99,11 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
             const double alpha1 = double(K - k) / K;
             const double alpha2 = double(k) / K;
 
+            // mass, position and linear velocity
             X(0, k) = alpha1 * x_init(0) + alpha2 * x_final(0);
             X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
 
+            // do SLERP for quaternion
             Eigen::Quaterniond q0, q1;
             q0.w() = q_B_I_init(0);
             q0.vec() = q_B_I_init.tail<3>();
@@ -109,15 +111,19 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
             q1.vec() << q_B_I_final.tail<3>();
             Eigen::Quaterniond slerpQuaternion = q0.slerp(alpha2, q1);
             X.col(k).segment(7, 4) << slerpQuaternion.w(), slerpQuaternion.vec();
+
+            // angular velocity
             X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
-            U.col(k) = X(0, k) * -g_I;
+
+            // input
+            U.col(k) = (alpha1 * m_wet + alpha2 * m_dry) * -g_I;
         }
     }
 
     void addApplicationConstraints(
         optimization_problem::SecondOrderConeProgram &socp,
-        Eigen::Matrix<double, rocket3d::STATE_DIM_, K> &X0,
-        Eigen::Matrix<double, rocket3d::INPUT_DIM_, K> &U0) override
+        state_trajectory_matrix_t &X0,
+        input_trajectory_matrix_t &U0) override
     {
         auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
         //    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
@@ -213,12 +219,13 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
   private:
     string modelName_;
 
-    Eigen::Vector3d g_I = {0, 0, -2};
-    Eigen::Vector3d J_B = {1e-2, 1e-2, 1e-2};
-    Eigen::Vector3d r_T_B = {0, 0, -1e-2};
-    double alpha_m = 0.01;
-    double T_min = 0.3;
-    double T_max = 5.;
+    Eigen::Vector3d g_I = {0, 0, -1};
+    Eigen::Vector3d J_B = {0.168 * 2e-2, 0.168 * 1, 0.168 * 1};
+    Eigen::Vector3d r_T_B = {0, 0, -0.25};
+    double I_sp = 30.;
+    double alpha_m = 1. / (I_sp * abs(g_I(2)));
+    double T_min = 1.5;
+    double T_max = 6.5;
 
     //initial state
     double m_wet = 2.;
@@ -237,8 +244,8 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
 
     const double tan_delta_max = tan(20. / 180. * M_PI);
     const double cos_theta_max = cos(90. / 180. * M_PI);
-    const double tan_gamma_gs = tan(20. / 180. * M_PI);
-    const double w_B_max = 60. / 180. * M_PI;
+    const double tan_gamma_gs = tan(75. / 180. * M_PI);
+    const double w_B_max = 30. / 180. * M_PI;
 };
 
 } // namespace rocket3d
