@@ -1,55 +1,64 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <string>
 
-#include "modelRocketLanding3dDefinitions.hpp"
+#include <Eigen/Dense>
 
 #include "systemModel.hpp"
 #include "ecosWrapper.hpp"
-#include "constants.hpp"
+#include "parameters.hpp"
+
+#include "rocketLanding3dDefinitions.hpp"
+
+using std::string;
 
 namespace rocket3d
 {
 
-template <typename T>
-Eigen::Matrix<T, 3, 3> skew(const Eigen::Matrix<T, 3, 1> &v)
-{
-    Eigen::Matrix<T, 3, 3> skewMatrix;
-    skewMatrix << T(0), -v(2), v(1),
-        v(2), T(0), -v(0),
-        -v(1), v(0), T(0);
-    return skewMatrix;
-}
-
-template <typename T>
-Eigen::Matrix<T, 3, 3> dirCosineMatrix(const Eigen::Matrix<T, 4, 1> &q)
-{
-    Eigen::Matrix<T, 3, 3> dirCosineMatrix;
-    dirCosineMatrix << 1 - 2 * (q(2) * q(2) + q(3) * q(3)), 2 * (q(1) * q(2) + q(0) * q(3)), 2 * (q(1) * q(3) - q(0) * q(2)),
-        2 * (q(1) * q(2) - q(0) * q(3)), 1 - 2 * (q(1) * q(1) + q(3) * q(3)), 2 * (q(2) * q(3) + q(0) * q(1)),
-        2 * (q(1) * q(3) + q(0) * q(2)), 2 * (q(2) * q(3) - q(0) * q(1)), 1 - 2 * (q(1) * q(1) + q(2) * q(2));
-
-    return dirCosineMatrix;
-}
-
-template <typename T>
-Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
-{
-    Eigen::Matrix<T, 4, 4> omegaMatrix;
-    omegaMatrix << T(0), -w(0), -w(1), -w(2),
-        w(0), T(0), w(2), -w(1),
-        w(1), -w(2), T(0), w(0),
-        w(2), w(1), -w(0), T(0);
-
-    return omegaMatrix;
-}
-
-class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K>
+class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_>
 {
   public:
-    typedef SystemModel<ModelRocketLanding3D, rocket3d::STATE_DIM_, rocket3d::INPUT_DIM_, K> BASE;
+    typedef SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_> BASE;
 
-    ModelRocketLanding3D(){};
+    RocketLanding3D()
+    {
+        string configFilePath = format("../include/models/config/{}.info", getModelName());
+        loadMatrix(configFilePath, "g_I", g_I);
+        loadMatrix(configFilePath, "J_B", J_B);
+        loadMatrix(configFilePath, "r_T_B", r_T_B);
+
+        loadMatrix(configFilePath, "x_init", x_init);
+        loadMatrix(configFilePath, "x_final", x_final);
+
+        loadScalar(configFilePath, "constrain_initial_orientation", constrain_initial_orientation);
+
+        if (!constrain_initial_orientation)
+        {
+            x_init.segment(8, 3) << 1., 0., 0., 0.;
+        }
+
+        loadScalar(configFilePath, "T_min", T_min);
+        loadScalar(configFilePath, "T_max", T_max);
+        loadScalar(configFilePath, "alpha_m", alpha_m);
+
+        double delta_max;
+        double theta_max;
+        double gamma_gs;
+
+        loadScalar(configFilePath, "delta_max", delta_max);
+        loadScalar(configFilePath, "theta_max", theta_max);
+        loadScalar(configFilePath, "gamma_gs", gamma_gs);
+        loadScalar(configFilePath, "w_B_max", w_B_max);
+
+        deg2rad(delta_max);
+        deg2rad(theta_max);
+        deg2rad(gamma_gs);
+        deg2rad(w_B_max);
+
+        tan_delta_max = tan(delta_max);
+        cos_theta_max = cos(theta_max);
+        tan_gamma_gs = tan(gamma_gs);
+    }
 
     static string getModelName()
     {
@@ -79,22 +88,14 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
         f.segment(11, 3) << J_B_.inverse() * (skew<T>(r_T_B_) * u - skew<T>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
     }
 
-    void initializeTrajectory(state_trajectory_matrix_t &X,
-                              input_trajectory_matrix_t &U) override
+    void initializeTrajectory(Eigen::MatrixXd &X,
+                              Eigen::MatrixXd &U) override
     {
         //    Nondimensionalize();
 
-        if (!constrain_initial_orientation)
-        {
-            q_B_I_init = {1., 0., 0., 0.};
-        }
+        const size_t K = X.cols();
 
-        state_vector_t x_init;
-        x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-        state_vector_t x_final;
-        x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
-
-        for (int k = 0; k < K; k++)
+        for (size_t k = 0; k < K; k++)
         {
             const double alpha1 = double(K - k) / K;
             const double alpha2 = double(k) / K;
@@ -105,10 +106,10 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
 
             // do SLERP for quaternion
             Eigen::Quaterniond q0, q1;
-            q0.w() = q_B_I_init(0);
-            q0.vec() = q_B_I_init.tail<3>();
-            q1.w() = q_B_I_final(0);
-            q1.vec() << q_B_I_final.tail<3>();
+            q0.w() = x_init(7);
+            q0.vec() = x_init.segment(8, 3);
+            q1.w() = x_final(0);
+            q1.vec() << x_final.segment(8, 3);
             Eigen::Quaterniond slerpQuaternion = q0.slerp(alpha2, q1);
             X.col(k).segment(7, 4) << slerpQuaternion.w(), slerpQuaternion.vec();
 
@@ -116,23 +117,20 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
             X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
             // input
-            U.col(k) = (alpha1 * m_wet + alpha2 * m_dry) * -g_I;
+            U.col(k) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
         }
     }
 
     void addApplicationConstraints(
         optimization_problem::SecondOrderConeProgram &socp,
-        state_trajectory_matrix_t &X0,
-        input_trajectory_matrix_t &U0) override
+        Eigen::MatrixXd &X0,
+        Eigen::MatrixXd &U0) override
     {
+        const size_t K = X0.cols();
+
         auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
         //    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
         //    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
-
-        state_vector_t x_init;
-        x_init << m_wet, r_I_init, v_I_init, q_B_I_init, w_B_init;
-        state_vector_t x_final;
-        x_final << m_dry, r_I_final, v_I_final, q_B_I_final, w_B_final;
 
         // Initial state
         socp.add_constraint((-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0);
@@ -154,7 +152,7 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
         socp.add_constraint((-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0);
 
         // Final State (mass is free)
-        for (size_t i = 1; i < rocket3d::STATE_DIM_; i++)
+        for (size_t i = 1; i < STATE_DIM_; i++)
         {
             socp.add_constraint((-1.0) * var("X", {i, K - 1}) + (x_final(i)) == 0.0);
         }
@@ -167,7 +165,7 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
             // Mass
             //     x(0) >= m_dry
             //     for all k
-            socp.add_constraint((1.0) * var("X", {0, k}) + (-m_dry) >= (0.0));
+            socp.add_constraint((1.0) * var("X", {0, k}) + (-x_final(0)) >= (0.0));
 
             // Max Tilt Angle
             //
@@ -216,36 +214,45 @@ class ModelRocketLanding3D : public SystemModel<ModelRocketLanding3D, rocket3d::
         }
     }
 
+    // void Nondimensionalize()
+    // {
+    //     double r_scale = r_I_init.norm();
+    //     double m_scale = m_wet;
+
+    //     alpha_m *= r_scale;
+    //     r_T_B /= r_scale;
+    //     g_I /= r_scale;
+    //     J_B /= (m_scale * r_scale * r_scale);
+
+    //     m_wet /= m_scale;
+    //     r_I_init /= r_scale;
+    //     v_I_init /= r_scale;
+
+    //     m_dry /= m_scale;
+    //     r_I_final /= r_scale;
+    //     v_I_final /= r_scale;
+
+    //     T_max /= m_scale * r_scale;
+    //     T_min /= m_scale * r_scale;
+    // }
+
   private:
-    string modelName_;
+    Eigen::Vector3d g_I;
+    Eigen::Vector3d J_B;
+    Eigen::Vector3d r_T_B;
+    double alpha_m;
+    double T_min;
+    double T_max;
 
-    Eigen::Vector3d g_I = {0, 0, -1};
-    Eigen::Vector3d J_B = {0.168 * 2e-2, 0.168 * 1, 0.168 * 1};
-    Eigen::Vector3d r_T_B = {0, 0, -0.25};
-    double I_sp = 30.;
-    double alpha_m = 1. / (I_sp * abs(g_I(2)));
-    double T_min = 1.5;
-    double T_max = 6.5;
+    state_vector_t x_init;
+    state_vector_t x_final;
 
-    //initial state
-    double m_wet = 2.;
-    Eigen::Vector3d r_I_init = {0, 4, 4};
-    Eigen::Vector3d v_I_init = {1, 0, 0};
-    Eigen::Vector4d q_B_I_init = {1., 0., 0., 0.};
-    bool constrain_initial_orientation = false;
-    Eigen::Vector3d w_B_init = {0., 0., 0.};
+    bool constrain_initial_orientation;
 
-    //final state
-    double m_dry = 1.;
-    Eigen::Vector3d r_I_final = {0., 0., 0.};
-    Eigen::Vector3d v_I_final = {0, 0., -1e-1};
-    Eigen::Vector4d q_B_I_final = {1., 0., 0., 0.};
-    Eigen::Vector3d w_B_final = {0., 0., 0.};
-
-    const double tan_delta_max = tan(20. / 180. * M_PI);
-    const double cos_theta_max = cos(90. / 180. * M_PI);
-    const double tan_gamma_gs = tan(75. / 180. * M_PI);
-    const double w_B_max = 30. / 180. * M_PI;
+    double tan_delta_max;
+    double cos_theta_max;
+    double tan_gamma_gs;
+    double w_B_max;
 };
 
 } // namespace rocket3d

@@ -61,6 +61,6 @@
         "forward_list": "cpp",
         "filesystem": "cpp"
     },
-    "python.pythonPath": "/home/sven/anaconda3/bin/python",
+    "python.pythonPath": "/home/sven/anaconda3/envs/python37/bin/python",
     "C_Cpp.configurationWarnings": "Disabled"
 }

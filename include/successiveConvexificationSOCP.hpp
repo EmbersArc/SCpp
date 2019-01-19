@@ -15,12 +15,12 @@ build_successive_convexification_SOCP(
     double &weight_trust_region_sigma,
     double &weight_trust_region_xu,
     double &weight_virtual_control,
-    Eigen::Matrix<double, Model::state_dim_, K> &X,
-    Eigen::Matrix<double, Model::input_dim_, K> &U,
+    Eigen::MatrixXd &X,
+    Eigen::MatrixXd &U,
     double &sigma,
-    array<Model::state_matrix_t, (K - 1)> &A_bar,
-    array<Model::control_matrix_t, (K - 1)> &B_bar,
-    array<Model::control_matrix_t, (K - 1)> &C_bar,
-    array<Model::state_vector_t, (K - 1)> &Sigma_bar,
-    array<Model::state_vector_t, (K - 1)> &z_bar);
+    vector<Model::state_matrix_t> &A_bar,
+    vector<Model::control_matrix_t> &B_bar,
+    vector<Model::control_matrix_t> &C_bar,
+    vector<Model::state_vector_t> &Sigma_bar,
+    vector<Model::state_vector_t> &z_bar);
 }

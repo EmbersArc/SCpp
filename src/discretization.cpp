@@ -1,5 +1,7 @@
+
+#include <omp.h>
+
 #include "discretization.hpp"
-#include "constants.hpp"
 
 class DiscretizationODE
 {
@@ -26,10 +28,10 @@ class DiscretizationODE
         const Model::input_vector_t u = u_t + t / dt * (u_t1 - u_t);
 
         Model::state_vector_t f;
-        model.computef(x, u, f);
+        model.computef(x, u, f, omp_get_thread_num());
         Model::state_matrix_t A_bar;
         Model::control_matrix_t B_bar;
-        model.computeJacobians(x, u, A_bar, B_bar);
+        model.computeJacobians(x, u, A_bar, B_bar, omp_get_thread_num());
         A_bar *= sigma;
         B_bar *= sigma;
 
@@ -62,27 +64,31 @@ class DiscretizationODE
 void calculate_discretization(
     Model &model,
     double &sigma,
-    Eigen::Matrix<double, Model::state_dim_, K> &X,
-    Eigen::Matrix<double, Model::input_dim_, K> &U,
-    array<Model::state_matrix_t, (K - 1)> &A_bar,
-    array<Model::control_matrix_t, (K - 1)> &B_bar,
-    array<Model::control_matrix_t, (K - 1)> &C_bar,
-    array<Model::state_vector_t, (K - 1)> &Sigma_bar,
-    array<Model::state_vector_t, (K - 1)> &z_bar)
+    Eigen::MatrixXd &X,
+    Eigen::MatrixXd &U,
+    vector<Model::state_matrix_t> &A_bar,
+    vector<Model::control_matrix_t> &B_bar,
+    vector<Model::control_matrix_t> &C_bar,
+    vector<Model::state_vector_t> &Sigma_bar,
+    vector<Model::state_vector_t> &z_bar)
 {
+    const size_t K = X.cols();
+
     const double dt = 1 / double(K - 1);
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-// #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for
     for (size_t k = 0; k < K - 1; k++)
     {
+        model.setMaxThreads(omp_get_max_threads());
         DiscretizationODE::state_type V;
         V.setZero();
         V.col(0) = X.col(k);
         V.block<Model::state_dim_, Model::state_dim_>(0, 1).setIdentity();
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
+
         integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
 
         size_t cols = 1;

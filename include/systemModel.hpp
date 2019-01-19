@@ -1,10 +1,12 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <cppad/cg.hpp>
+#include <omp.h>
 
 #include "optimizationProblem.hpp"
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
 class SystemModel
 {
   public:
@@ -25,8 +27,8 @@ class SystemModel
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
 
-    typedef Eigen::Matrix<double, STATE_DIM, K> state_trajectory_matrix_t;
-    typedef Eigen::Matrix<double, INPUT_DIM, K> input_trajectory_matrix_t;
+    typedef Eigen::Matrix<double, STATE_DIM, Eigen::Dynamic> state_trajectory_matrix_t;
+    typedef Eigen::Matrix<double, INPUT_DIM, Eigen::Dynamic> input_trajectory_matrix_t;
 
     enum : size_t
     {
@@ -41,19 +43,21 @@ class SystemModel
     void initializeModel();
 
     // Computes the state derivative
-    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
+    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum = 0);
     // Computes state and control Jacobians
-    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, size_t modelNum = 0);
+    // How many models are prepared for multithreading
+    void setMaxThreads(size_t num);
 
     // Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
-    virtual void initializeTrajectory(state_trajectory_matrix_t &X,
-                                      input_trajectory_matrix_t &U) = 0;
+    virtual void initializeTrajectory(Eigen::MatrixXd &X,
+                                      Eigen::MatrixXd &U) = 0;
 
     // Function to add constraints of a derived model. Has to be implemented by the derived class.
     virtual void addApplicationConstraints(
         optimization_problem::SecondOrderConeProgram &socp,
-        state_trajectory_matrix_t &X0,
-        input_trajectory_matrix_t &U0) = 0;
+        Eigen::MatrixXd &X0,
+        Eigen::MatrixXd &U0) = 0;
 
     // The state derivative function. Has to be implemented by the derived class.
     template <typename T>
@@ -68,13 +72,13 @@ class SystemModel
         const dynamic_vector_ad_t &tapedInput,
         dynamic_vector_ad_t &f);
 
-    // Compilation and dynamic linking
+    // Dynamic library and prepared model instances
     std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib_;
-    std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
+    vector<std::unique_ptr<CppAD::cg::GenericModel<double>>> models_;
 };
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::initializeModel()
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::initializeModel()
 {
     // input vector
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
@@ -109,37 +113,37 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::initializeModel()
     // CppAD::cg::SaveFilesModelLibraryProcessor<double> processorSave(libcgen);
     // processorSave.saveSources();
 
-    model_ = dynamicLib_->model("model");
+    setMaxThreads(1);
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
-    dynamic_vector_map_t x_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
+    dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
-    model_->ForwardZero(x_map, f_map);
+    models_[modelNum]->ForwardZero(input_map, f_map);
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, size_t modelNum)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
-    dynamic_vector_map_t x_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
-    Eigen::Matrix<double, STATE_DIM + INPUT_DIM, STATE_DIM> J;
+    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
+    Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
-    model_->Jacobian(x_map, J_map);
-    A = J.template topRows<STATE_DIM>().transpose();
-    B = J.template bottomRows<INPUT_DIM>().transpose();
+    models_[modelNum]->Jacobian(input_map, J_map);
+    A = J.template leftCols<STATE_DIM>();
+    B = J.template rightCols<INPUT_DIM>();
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
 template <typename T>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::systemFlowMap(
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMap(
     const Eigen::Matrix<T, STATE_DIM, 1> &x,
     const Eigen::Matrix<T, INPUT_DIM, 1> &u,
     Eigen::Matrix<T, STATE_DIM, 1> &f)
@@ -147,8 +151,8 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::systemFlowMap(
     throw std::runtime_error("systemFlowMap() method should be implemented by the derived class.");
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM, size_t K>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::systemFlowMapAD(
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
     dynamic_vector_ad_t &f)
 {
@@ -158,4 +162,20 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM, K>::systemFlowMapAD(
     state_vector_ad_t fFixed;
     static_cast<Derived *>(this)->template systemFlowMap<scalar_ad_t>(x, u, fFixed);
     f = fFixed;
+}
+
+template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::setMaxThreads(size_t num)
+{
+    if (models_.size() < num)
+    {
+        for (size_t i = models_.size(); i < num; i++)
+        {
+            models_.emplace_back(dynamicLib_->model("model"));
+        }
+    }
+    else if (models_.size() > num)
+    {
+        models_.resize(num);
+    }
 }

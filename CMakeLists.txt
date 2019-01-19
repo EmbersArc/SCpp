@@ -37,14 +37,15 @@ include_directories(include)
 
 # SOURCES
 set(SOURCES
-    include/models/modelRocketLanding3dDefinitions.hpp
-    include/models/modelRocketLanding3d.hpp
+    include/models/rocketLanding3dDefinitions.hpp
+    include/models/rocketLanding3d.hpp
 
     include/ecosWrapper.hpp
         src/ecosWrapper.cpp
     include/eigenIntegration.hpp
 
     include/systemModel.hpp
+    include/parameters.hpp
     include/optimizationProblem.hpp
         src/optimizationProblem.cpp
     include/discretization.hpp

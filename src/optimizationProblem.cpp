@@ -310,7 +310,7 @@ double AffineTerm::evaluate(const vector<double> &soln_values) const
     double p = parameter.get_value();
     if (variable)
     {
-        return p * soln_values.at(variable.value().problem_index);
+        return p * soln_values[variable.value().problem_index];
     }
     else
     {

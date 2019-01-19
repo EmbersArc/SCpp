@@ -25,6 +25,7 @@ def key_press_event(event):
     my_plot(fig, figures_i)
     plt.draw()
 
+
 def my_plot(fig, figures_i):
     iteration = str(figures_i).zfill(3)
 
@@ -45,9 +46,15 @@ def my_plot(fig, figures_i):
         qw, qx, qy, qz = X[7:11, k]
 
         CBI = np.array([
-            [1 - 2 * (qy ** 2 + qz ** 2), 2 * (qx * qy + qw * qz), 2 * (qx * qz - qw * qy)],
-            [2 * (qx * qy - qw * qz), 1 - 2 * (qx ** 2 + qz ** 2), 2 * (qy * qz + qw * qx)],
-            [2 * (qx * qz + qw * qy), 2 * (qy * qz - qw * qx), 1 - 2 * (qx ** 2 + qy ** 2)]
+            [1 - 2 * (qy ** 2 + qz ** 2),
+             2 * (qx * qy + qw * qz),
+             2 * (qx * qz - qw * qy)],
+            [2 * (qx * qy - qw * qz),
+             1 - 2 * (qx ** 2 + qz ** 2),
+             2 * (qy * qz + qw * qx)],
+            [2 * (qx * qz + qw * qy),
+             2 * (qy * qz - qw * qx),
+             1 - 2 * (qx ** 2 + qy ** 2)]
         ])
 
         Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
@@ -57,10 +64,12 @@ def my_plot(fig, figures_i):
         # ax.quiver(rx, ry, rz, vx, vy, vz, length=0.1, color='green')
 
         # attitude vector
-        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.1, arrow_length_ratio=0.0, color='blue')
+        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.1,
+                  arrow_length_ratio=0.0, color='blue')
 
         # thrust vector
-        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.02, arrow_length_ratio=0.0, color='red')
+        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.02,
+                  arrow_length_ratio=0.0, color='red')
 
     ax.axis('equal')
     ax.plot(X[1, :], X[2, :], X[3, :], color='black')
@@ -70,7 +79,8 @@ def my_plot(fig, figures_i):
 
 def main():
     global figures_i, figures_N
-    figures_N = sum(f.endswith("X.txt") for f in os.listdir("output/RocketLanding3D/"))
+    figures_N = sum(f.endswith("X.txt")
+                    for f in os.listdir("output/RocketLanding3D/"))
 
     fig = plt.figure(figsize=(10, 10))
     my_plot(fig, figures_i)

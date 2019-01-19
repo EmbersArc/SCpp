@@ -1,0 +1,9 @@
+K 20
+
+weight_trust_region_sigma   1e-1
+weight_trust_region_xu      1e-3
+weight_virtual_control      1e5
+nu_tol                      1e-8
+delta_tol                   1e-3
+
+max_iterations 50

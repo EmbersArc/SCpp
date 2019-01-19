@@ -33,6 +33,11 @@ string get_output_path()
 
 int main()
 {
+    size_t K;
+
+    string configFilePath = "../include/config/SCParameters.info";
+    loadScalar(configFilePath, "K", K);
+
     print("Initializing model.\n");
     Model model;
     model.initializeModel();
@@ -42,52 +47,60 @@ int main()
     create_directory(get_output_path());
 
     print("Initializing algorithm.\n");
-    double weight_trust_region_sigma = 1e-1;
-    double weight_trust_region_xu = 1e-3;
-    double weight_virtual_control = 1e5;
-    double nu_tol = 1e-8;
-    double delta_tol = 1e-3;
+    double weight_trust_region_sigma;
+    double weight_trust_region_xu;
+    double weight_virtual_control;
+    double nu_tol;
+    double delta_tol;
 
-    Eigen::Matrix<double, Model::state_dim_, K> X;
-    Eigen::Matrix<double, Model::input_dim_, K> U;
+    loadScalar(configFilePath, "weight_trust_region_sigma", weight_trust_region_sigma);
+    loadScalar(configFilePath, "weight_trust_region_xu", weight_trust_region_xu);
+    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
+    loadScalar(configFilePath, "nu_tol", nu_tol);
+    loadScalar(configFilePath, "delta_tol", delta_tol);
+
+    Eigen::MatrixXd X(size_t(Model::state_dim_), K);
+    Eigen::MatrixXd U(size_t(Model::input_dim_), K);
 
     model.initializeTrajectory(X, U);
 
     double sigma = model.getFinalTimeGuess();
 
-    array<Model::state_matrix_t, (K - 1)> A_bar;
-    array<Model::control_matrix_t, (K - 1)> B_bar;
-    array<Model::control_matrix_t, (K - 1)> C_bar;
-    array<Model::state_vector_t, (K - 1)> Sigma_bar;
-    array<Model::state_vector_t, (K - 1)> z_bar;
+    vector<Model::state_matrix_t> A_bar(K - 1);
+    vector<Model::control_matrix_t> B_bar(K - 1);
+    vector<Model::control_matrix_t> C_bar(K - 1);
+    vector<Model::state_vector_t> Sigma_bar(K - 1);
+    vector<Model::state_vector_t> z_bar(K - 1);
 
     print("Initializing solver.\n");
     optimization_problem::SecondOrderConeProgram socp = sc::build_successive_convexification_SOCP(model,
                                                                                                   weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
                                                                                                   X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
-
     // Cache indices for performance
     const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
-    size_t X_indices[Model::state_dim_][K];
-    size_t U_indices[Model::input_dim_][K];
+
+    Eigen::MatrixXi X_indices(size_t(Model::state_dim_), K);
+    Eigen::MatrixXi U_indices(size_t(Model::input_dim_), K);
+
     for (size_t k = 0; k < K; k++)
     {
-        for (size_t i = 0; i < Model::state_dim_; ++i)
+        for (size_t i = 0; i < Model::state_dim_; i++)
         {
-            X_indices[i][k] = socp.get_tensor_variable_index("X", {i, k});
+            X_indices(i, k) = socp.get_tensor_variable_index("X", {i, k});
         }
-        for (size_t i = 0; i < Model::input_dim_; ++i)
+        for (size_t i = 0; i < Model::input_dim_; i++)
         {
-            U_indices[i][k] = socp.get_tensor_variable_index("U", {i, k});
+            U_indices(i, k) = socp.get_tensor_variable_index("U", {i, k});
         }
     }
 
     EcosWrapper solver(socp);
 
     print("Starting Successive Convexification.\n");
-    const size_t iterations = 50;
+    size_t max_iterations;
+    loadScalar(configFilePath, "max_iterations", max_iterations);
     const double timer_total = tic();
-    for (size_t it = 0; it < iterations; it++)
+    for (size_t it = 0; it < max_iterations; it++)
     {
         string itString = format("<Iteration {}>", it);
         print("{:=^{}}\n", itString, 60);
@@ -128,7 +141,7 @@ int main()
         //     {
         //         {
         //             ofstream f(format("{}z_bar{}.txt", get_output_path(), k));
-        //             f << z_bar.at(k);
+        //             f << z_bar[k];
         //         }
         //     }
         // }
@@ -148,13 +161,13 @@ int main()
         // Read solution
         for (size_t k = 0; k < K; k++)
         {
-            for (size_t i = 0; i < Model::state_dim_; ++i)
+            for (size_t i = 0; i < Model::state_dim_; i++)
             {
-                X(i, k) = solver.get_solution_value(X_indices[i][k]);
+                X(i, k) = solver.get_solution_value(X_indices(i, k));
             }
-            for (size_t i = 0; i < Model::input_dim_; ++i)
+            for (size_t i = 0; i < Model::input_dim_; i++)
             {
-                U(i, k) = solver.get_solution_value(U_indices[i][k]);
+                U(i, k) = solver.get_solution_value(U_indices(i, k));
             }
         }
         sigma = solver.get_solution_value(sigma_index);
@@ -173,7 +186,7 @@ int main()
             print("Converged after {} iterations.\n", it + 1);
             break;
         }
-        else if (it == iterations - 1)
+        else if (it == max_iterations - 1)
         {
             print("No convergence after {} iterations.\n", it + 1);
         }

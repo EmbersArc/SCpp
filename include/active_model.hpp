@@ -1,5 +1,5 @@
 #pragma once
 
-#include "models/modelRocketLanding3d.hpp"
+#include "models/rocketLanding3d.hpp"
 
-using Model = rocket3d::ModelRocketLanding3D;
+using Model = rocket3d::RocketLanding3D;
