@@ -31,6 +31,7 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         loadMatrix(configFilePath, "x_final", x_final);
 
         loadScalar(configFilePath, "constrain_initial_orientation", constrain_initial_orientation);
+        loadScalar(configFilePath, "final_time_guess", final_time_guess);
 
         if (!constrain_initial_orientation)
         {
@@ -39,6 +40,7 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
 
         loadScalar(configFilePath, "T_min", T_min);
         loadScalar(configFilePath, "T_max", T_max);
+        loadScalar(configFilePath, "t_max", t_max);
         loadScalar(configFilePath, "alpha_m", alpha_m);
 
         double delta_max;
@@ -65,9 +67,9 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         return "RocketLanding3D";
     }
 
-    static double getFinalTimeGuess()
+    double getFinalTimeGuess() const
     {
-        return 8.;
+        return final_time_guess;
     }
 
     template <typename T>
@@ -81,11 +83,20 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         auto J_B_ = J_B.cast<T>().asDiagonal();
         auto r_T_B_ = r_T_B.cast<T>();
 
-        f(0) = -alpha_m_ * u.norm();
-        f.segment(1, 3) << x.segment(4, 3);
-        f.segment(4, 3) << 1. / x(0) * dirCosineMatrix<T>(x.segment(7, 4)).transpose() * u + g_I_;
-        f.segment(7, 4) << T(0.5) * omegaMatrix<T>(x.segment(11, 3)) * x.segment(7, 4);
-        f.segment(11, 3) << J_B_.inverse() * (skew<T>(r_T_B_) * u - skew<T>(x.segment(11, 3)) * J_B_ * x.segment(11, 3));
+        auto T_B = u.template head<3>();
+        Eigen::Matrix<T, 3, 1> T_r;
+        T_r << T(0.), T(0.), u(3);
+
+        auto m = x(0);
+        auto v_I = x.template segment<3>(4);
+        auto q_B_I = x.template segment<4>(7);
+        auto w_B = x.template segment<3>(11);
+
+        f(0) = -alpha_m_ * T_B.norm();
+        f.segment(1, 3) << v_I;
+        f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * T_B + g_I_;
+        f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
+        f.segment(11, 3) << J_B_.inverse() * (T_r + r_T_B_.cross(T_B) - w_B.cross(J_B_ * w_B));
     }
 
     void initializeTrajectory(Eigen::MatrixXd &X,
@@ -117,7 +128,8 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
             X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
             // input
-            U.col(k) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
+            U.col(k).head(3) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
+            U.col(k)(3) = 0.;
         }
     }
 
@@ -207,6 +219,9 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
                            (1.0) * var("U", {1, k}),
                            (1.0) * var("U", {2, k})}) <= (T_max));
 
+            // Maximum Roll Torque
+            socp.add_constraint((-1.0) * var("U", {3, k}) + (t_max) >= (0.0));
+
             // Maximum Gimbal Angle
             socp.add_constraint(
                 op::norm2({(1.0) * var("U", {0, k}),
@@ -214,27 +229,27 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         }
     }
 
-    void Nondimensionalize()
-    {
-        double r_scale = x_init.segment(1, 3).norm();
-        double m_scale = x_init(0);
+    // void Nondimensionalize()
+    // {
+    //     double r_scale = x_init.segment(1, 3).norm();
+    //     double m_scale = x_init(0);
 
-        alpha_m *= r_scale;
-        r_T_B /= r_scale;
-        g_I /= r_scale;
-        J_B /= (m_scale * r_scale * r_scale);
+    //     alpha_m *= r_scale;
+    //     r_T_B /= r_scale;
+    //     g_I /= r_scale;
+    //     J_B /= (m_scale * r_scale * r_scale);
 
-        x_init(0) /= m_scale;
-        x_init.segment(1, 3) /= r_scale;
-        x_init.segment(4, 3) /= r_scale;
+    //     x_init(0) /= m_scale;
+    //     x_init.segment(1, 3) /= r_scale;
+    //     x_init.segment(4, 3) /= r_scale;
 
-        x_final(0) /= m_scale;
-        x_final.segment(1, 3) /= r_scale;
-        x_final.segment(4, 3) /= r_scale;
+    //     x_final(0) /= m_scale;
+    //     x_final.segment(1, 3) /= r_scale;
+    //     x_final.segment(4, 3) /= r_scale;
 
-        T_max /= m_scale * r_scale;
-        T_min /= m_scale * r_scale;
-    }
+    //     T_max /= m_scale * r_scale;
+    //     T_min /= m_scale * r_scale;
+    // }
 
   private:
     Eigen::Vector3d g_I;
@@ -243,11 +258,13 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     double alpha_m;
     double T_min;
     double T_max;
+    double t_max;
 
     state_vector_t x_init;
     state_vector_t x_final;
 
     bool constrain_initial_orientation;
+    double final_time_guess;
 
     double tan_delta_max;
     double cos_theta_max;

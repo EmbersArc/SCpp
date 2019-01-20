@@ -289,10 +289,11 @@ bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values
     const double tol = 0.1;
     bool feasible = true;
     auto check_feasibility = [&](const auto &constraint) { return feasibility_check_message(tol, constraint.evaluate(soln_values), constraint); };
+    auto check_feasibility_abs = [&](const auto &constraint) { return feasibility_check_message(tol, fabs(constraint.evaluate(soln_values)), constraint); };
 
     feasible &= std::all_of(secondOrderConeConstraints.begin(), secondOrderConeConstraints.end(), check_feasibility);
     feasible &= std::all_of(postiveConstraints.begin(), postiveConstraints.end(), check_feasibility);
-    feasible &= std::all_of(equalityConstraints.begin(), equalityConstraints.end(), check_feasibility);
+    feasible &= std::all_of(equalityConstraints.begin(), equalityConstraints.end(), check_feasibility_abs);
 
     return feasible;
 }

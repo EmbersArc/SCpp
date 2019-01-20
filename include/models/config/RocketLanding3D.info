@@ -33,10 +33,10 @@ x_init
     (5,0)   0.
     (6,0)   0.
 
-    (7,0)   1.
-    (8,0)   0.
+    (7,0)   0.
+    (8,0)   0.707
     (9,0)   0.
-    (10,0)   0.
+    (10,0)   -0.707
 
     (11,0)   0.
     (12,0)   0.
@@ -67,9 +67,11 @@ x_final
 }
 
 constrain_initial_orientation true
+final_time_guess 6.
 
 T_min       0.3
 T_max       5.0
+t_max       0.02
 alpha_m     0.01
 
 delta_max   20.

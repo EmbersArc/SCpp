@@ -57,18 +57,23 @@ def my_plot(fig, figures_i):
              1 - 2 * (qx ** 2 + qy ** 2)]
         ])
 
-        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:, k])
+        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:3, k])
         dx, dy, dz = np.dot(np.transpose(CBI), np.array([0., 0., 1.]))
+        tx, ty, tz = np.dot(np.transpose(CBI), np.array([0., 1., 0.]))
 
         # # speed vector
         # ax.quiver(rx, ry, rz, vx, vy, vz, length=0.1, color='green')
 
         # attitude vector
-        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.1,
+        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.2,
                   arrow_length_ratio=0.0, color='blue')
 
+        # heading vector
+        ax.quiver(rx, ry, rz, tx, ty, tz, length=0.2,
+                  arrow_length_ratio=0.0, color='green')
+
         # thrust vector
-        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.02,
+        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.04,
                   arrow_length_ratio=0.0, color='red')
 
     ax.axis('equal')

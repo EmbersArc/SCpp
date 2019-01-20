@@ -84,7 +84,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
         op::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
         {
-            for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
+            for (size_t row_index = 0; row_index < Model::state_dim_; row_index++)
             {
                 // -nu_bound <= nu
                 socp.add_constraint((1.0) * var("nu_bound", {row_index, k}) + (1.0) * var("nu", {row_index, k}) >= (0.0));
