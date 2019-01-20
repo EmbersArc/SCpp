@@ -122,15 +122,15 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     }
 
     void addApplicationConstraints(
-        optimization_problem::SecondOrderConeProgram &socp,
+        op::SecondOrderConeProgram &socp,
         Eigen::MatrixXd &X0,
         Eigen::MatrixXd &U0) override
     {
         const size_t K = X0.cols();
 
         auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
-        //    auto param = [](double &param_value){ return optimization_problem::Parameter(&param_value); };
-        //    auto param_fn = [](std::function<double()> callback){ return optimization_problem::Parameter(callback); };
+        //    auto param = [](double &param_value){ return op::Parameter(&param_value); };
+        //    auto param_fn = [](std::function<double()> callback){ return op::Parameter(callback); };
 
         // Initial state
         socp.add_constraint((-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0);
@@ -172,26 +172,26 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
             // norm2([x(8), x(9)]) <= c
             // with c := sqrt((1 - cos_theta_max) / 2)
             const double c = sqrt((1.0 - cos_theta_max) / 2.);
-            socp.add_constraint(optimization_problem::norm2({(1.0) * var("X", {8, k}),
-                                                             (1.0) * var("X", {9, k})}) <= (c));
+            socp.add_constraint(op::norm2({(1.0) * var("X", {8, k}),
+                                           (1.0) * var("X", {9, k})}) <= (c));
 
             // Glide Slope
             socp.add_constraint(
-                optimization_problem::norm2({(1.0) * var("X", {1, k}),
-                                             (1.0) * var("X", {2, k})}) <= (1.0 / tan_gamma_gs) * var("X", {3, k}));
+                op::norm2({(1.0) * var("X", {1, k}),
+                           (1.0) * var("X", {2, k})}) <= (1.0 / tan_gamma_gs) * var("X", {3, k}));
 
             // Max Rotation Velocity
             socp.add_constraint(
-                optimization_problem::norm2({(1.0) * var("X", {11, k}),
-                                             (1.0) * var("X", {12, k}),
-                                             (1.0) * var("X", {13, k})}) <= (w_B_max));
+                op::norm2({(1.0) * var("X", {11, k}),
+                           (1.0) * var("X", {12, k}),
+                           (1.0) * var("X", {13, k})}) <= (w_B_max));
         }
 
         // Control Constraints
         for (size_t k = 0; k < K; k++)
         {
             // Linearized Minimum Thrust
-            // optimization_problem::AffineExpression lhs;
+            // op::AffineExpression lhs;
             // for (size_t i = 0; i < n_inputs; i++)
             // {
             //     lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
@@ -203,38 +203,38 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
 
             // Maximum Thrust
             socp.add_constraint(
-                optimization_problem::norm2({(1.0) * var("U", {0, k}),
-                                             (1.0) * var("U", {1, k}),
-                                             (1.0) * var("U", {2, k})}) <= (T_max));
+                op::norm2({(1.0) * var("U", {0, k}),
+                           (1.0) * var("U", {1, k}),
+                           (1.0) * var("U", {2, k})}) <= (T_max));
 
             // Maximum Gimbal Angle
             socp.add_constraint(
-                optimization_problem::norm2({(1.0) * var("U", {0, k}),
-                                             (1.0) * var("U", {1, k})}) <= (tan_delta_max)*var("U", {2, k}));
+                op::norm2({(1.0) * var("U", {0, k}),
+                           (1.0) * var("U", {1, k})}) <= (tan_delta_max)*var("U", {2, k}));
         }
     }
 
-    // void Nondimensionalize()
-    // {
-    //     double r_scale = r_I_init.norm();
-    //     double m_scale = m_wet;
+    void Nondimensionalize()
+    {
+        double r_scale = x_init.segment(1, 3).norm();
+        double m_scale = x_init(0);
 
-    //     alpha_m *= r_scale;
-    //     r_T_B /= r_scale;
-    //     g_I /= r_scale;
-    //     J_B /= (m_scale * r_scale * r_scale);
+        alpha_m *= r_scale;
+        r_T_B /= r_scale;
+        g_I /= r_scale;
+        J_B /= (m_scale * r_scale * r_scale);
 
-    //     m_wet /= m_scale;
-    //     r_I_init /= r_scale;
-    //     v_I_init /= r_scale;
+        x_init(0) /= m_scale;
+        x_init.segment(1, 3) /= r_scale;
+        x_init.segment(4, 3) /= r_scale;
 
-    //     m_dry /= m_scale;
-    //     r_I_final /= r_scale;
-    //     v_I_final /= r_scale;
+        x_final(0) /= m_scale;
+        x_final.segment(1, 3) /= r_scale;
+        x_final.segment(4, 3) /= r_scale;
 
-    //     T_max /= m_scale * r_scale;
-    //     T_min /= m_scale * r_scale;
-    // }
+        T_max /= m_scale * r_scale;
+        T_min /= m_scale * r_scale;
+    }
 
   private:
     Eigen::Vector3d g_I;

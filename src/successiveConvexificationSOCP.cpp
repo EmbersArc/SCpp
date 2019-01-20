@@ -5,7 +5,7 @@
 namespace sc
 {
 
-optimization_problem::SecondOrderConeProgram build_successive_convexification_SOCP(
+op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
     double &weight_trust_region_sigma,
     double &weight_trust_region_xu,
@@ -21,7 +21,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
 {
     const size_t K = X.cols();
 
-    optimization_problem::SecondOrderConeProgram socp;
+    op::SecondOrderConeProgram socp;
 
     socp.create_tensor_variable("X", {Model::state_dim_, K});            // states
     socp.create_tensor_variable("U", {Model::input_dim_, K});            // inputs
@@ -35,8 +35,8 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
 
     // shortcuts to access solver variables and create parameters
     auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
-    auto param = [](double &param_value) { return optimization_problem::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback) { return optimization_problem::Parameter(callback); };
+    auto param = [](double &param_value) { return op::Parameter(&param_value); };
+    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     // Main objective: minimize total time
     socp.add_minimization_term(1.0 * var("sigma", {}));
@@ -49,7 +49,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
         {
             // -I * x(k+1)
-            optimization_problem::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
+            op::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
 
             // A * x(k)
             for (size_t col_index = 0; col_index < Model::state_dim_; ++col_index)
@@ -81,7 +81,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
     // s.t. sum(nu_bound) <= norm1_nu
     //      -nu_bound <= nu <= nu_bound
     {
-        optimization_problem::AffineExpression bound_sum;
+        op::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
         {
             for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
@@ -117,7 +117,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
         auto sigma_fn3 = param_fn([&sigma]() { return sigma; });
         auto sigma_fn4 = param_fn([&sigma]() { return (0.5 - 0.5 * sigma * sigma); });
 
-        socp.add_constraint(optimization_problem::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2,
+        socp.add_constraint(op::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2,
                                                          (1.0) * var("sigma", {})}) <= sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
 
         // Minimize Delta_sigma
@@ -141,10 +141,10 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
          * 
          */
 
-        vector<optimization_problem::AffineExpression> norm2_args;
+        vector<op::AffineExpression> norm2_args;
 
         { // (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
-            optimization_problem::AffineExpression norm2_first_arg;
+            op::AffineExpression norm2_first_arg;
 
             // (-x0^T)*x
             for (size_t i = 0; i < Model::state_dim_; ++i)
@@ -185,7 +185,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
 
         // Right hand side
         // ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
-        optimization_problem::AffineExpression rhs;
+        op::AffineExpression rhs;
 
         // ( x0^T)*x
         for (size_t i = 0; i < Model::state_dim_; ++i)
@@ -207,7 +207,7 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
                   return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
               });
 
-        socp.add_constraint(optimization_problem::norm2(norm2_args) <= rhs);
+        socp.add_constraint(op::norm2(norm2_args) <= rhs);
     }
 
     /*
@@ -215,12 +215,12 @@ optimization_problem::SecondOrderConeProgram build_successive_convexification_SO
      *   norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
      */
     {
-        vector<optimization_problem::AffineExpression> norm2_args;
+        vector<op::AffineExpression> norm2_args;
         for (size_t k = 0; k < K; k++)
         {
             norm2_args.push_back((1.0) * var("Delta", {k}));
         }
-        socp.add_constraint(optimization_problem::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}));
+        socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}));
 
         // Minimize norm2_Delta
         socp.add_minimization_term(param(weight_trust_region_xu) * var("norm2_Delta", {}));

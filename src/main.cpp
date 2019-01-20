@@ -42,11 +42,12 @@ int main()
     Model model;
     model.initializeModel();
 
-    print("Initializing path.\n");
+    print("Initializing output path.\n");
     remove_all(get_output_path());
     create_directory(get_output_path());
 
     print("Initializing algorithm.\n");
+    size_t max_iterations;
     double weight_trust_region_sigma;
     double weight_trust_region_xu;
     double weight_virtual_control;
@@ -58,13 +59,7 @@ int main()
     loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
     loadScalar(configFilePath, "nu_tol", nu_tol);
     loadScalar(configFilePath, "delta_tol", delta_tol);
-
-    Eigen::MatrixXd X(size_t(Model::state_dim_), K);
-    Eigen::MatrixXd U(size_t(Model::input_dim_), K);
-
-    model.initializeTrajectory(X, U);
-
-    double sigma = model.getFinalTimeGuess();
+    loadScalar(configFilePath, "max_iterations", max_iterations);
 
     vector<Model::state_matrix_t> A_bar(K - 1);
     vector<Model::control_matrix_t> B_bar(K - 1);
@@ -72,16 +67,21 @@ int main()
     vector<Model::state_vector_t> Sigma_bar(K - 1);
     vector<Model::state_vector_t> z_bar(K - 1);
 
+    print("Initializing trajectory.\n");
+    Eigen::MatrixXd X(size_t(Model::state_dim_), K);
+    Eigen::MatrixXd U(size_t(Model::input_dim_), K);
+    model.initializeTrajectory(X, U);
+    double sigma = model.getFinalTimeGuess();
+
     print("Initializing solver.\n");
-    optimization_problem::SecondOrderConeProgram socp = sc::build_successive_convexification_SOCP(model,
-                                                                                                  weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
-                                                                                                  X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
+    op::SecondOrderConeProgram socp = sc::build_sc_SOCP(model,
+                                                        weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
+                                                        X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
+    
     // Cache indices for performance
     const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
-
     Eigen::MatrixXi X_indices(size_t(Model::state_dim_), K);
     Eigen::MatrixXi U_indices(size_t(Model::input_dim_), K);
-
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim_; i++)
@@ -93,12 +93,10 @@ int main()
             U_indices(i, k) = socp.get_tensor_variable_index("U", {i, k});
         }
     }
-
+    
     EcosWrapper solver(socp);
 
     print("Starting Successive Convexification.\n");
-    size_t max_iterations;
-    loadScalar(configFilePath, "max_iterations", max_iterations);
     const double timer_total = tic();
     for (size_t it = 0; it < max_iterations; it++)
     {

@@ -19,7 +19,7 @@ using std::pair;
 using std::string;
 using std::vector;
 
-namespace optimization_problem
+namespace op
 {
 struct Variable
 { // represents an optimization variable x_i
@@ -173,4 +173,4 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
 
     bool feasibility_check(const vector<double> &soln_values) const;
 };
-} // namespace optimization_problem
+} // namespace op

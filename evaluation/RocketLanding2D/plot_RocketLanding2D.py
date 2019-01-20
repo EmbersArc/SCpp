@@ -1,7 +1,7 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import collections  as mc
-from math import cos, sin
+from matplotlib import collections as mc
 
 figures_i = 0
 figures_N = 40
@@ -30,8 +30,8 @@ def my_plot(fig, figures_i):
 
     iteration = str(figures_i).zfill(3)
 
-    X = np.loadtxt("../../output/model_landing_3dof/iteration" + iteration + "_X.txt")
-    U = np.loadtxt("../../output/model_landing_3dof/iteration" + iteration + "_U.txt")
+    X = np.loadtxt(f"output/RocketLanding2D/iteration{iteration}_X.txt")
+    U = np.loadtxt(f"output/RocketLanding2D/iteration{iteration}_U.txt")
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -52,20 +52,21 @@ def my_plot(fig, figures_i):
 
         # speed vector
         speed_scale = 0.8
-        lines.append([(rx, ry), (rx + speed_scale * vx, ry + speed_scale * vy)])
+        lines.append(
+            [(rx, ry), (rx + speed_scale * vx, ry + speed_scale * vy)])
         line_colors.append((0, 1, 0, 1))
 
         # attitude vector
-        heading_scale = 6
-        c_theta = heading_scale * cos(theta)
-        s_theta = heading_scale * sin(theta)
+        heading_scale = 0.1
+        c_theta = heading_scale * np.cos(theta)
+        s_theta = heading_scale * np.sin(theta)
         lines.append([(rx, ry), (rx + s_theta, ry + c_theta)])
         line_colors.append((0, 0, 1, 1))
 
         # thrust vector
-        throttle_scale = 6
-        Tx = throttle_scale * throttle * sin(theta + gimbal)
-        Ty = throttle_scale * throttle * cos(theta + gimbal)
+        throttle_scale = 0.1
+        Tx = throttle_scale * throttle * np.sin(theta + gimbal)
+        Ty = throttle_scale * throttle * np.cos(theta + gimbal)
         lines.append([(rx, ry), (rx - Tx, ry - Ty)])
         line_colors.append((1, 0, 0, 1))
 
@@ -77,10 +78,14 @@ def my_plot(fig, figures_i):
 
 
 def main():
-    fig = plt.figure(figsize=(10, 12))
+    global figures_i, figures_N
+    figures_N = sum(f.endswith("X.txt")
+                    for f in os.listdir("output/RocketLanding3D/"))
+    fig = plt.figure(figsize=(10, 10))
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()

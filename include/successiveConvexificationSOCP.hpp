@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "optimizationProblem.hpp"
 #include "active_model.hpp"
 
@@ -9,8 +7,7 @@ using std::array;
 
 namespace sc
 {
-optimization_problem::SecondOrderConeProgram
-build_successive_convexification_SOCP(
+op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
     double &weight_trust_region_sigma,
     double &weight_trust_region_xu,

@@ -55,7 +55,7 @@ class SystemModel
 
     // Function to add constraints of a derived model. Has to be implemented by the derived class.
     virtual void addApplicationConstraints(
-        optimization_problem::SecondOrderConeProgram &socp,
+        op::SecondOrderConeProgram &socp,
         Eigen::MatrixXd &X0,
         Eigen::MatrixXd &U0) = 0;
 

@@ -39,6 +39,8 @@ include_directories(include)
 set(SOURCES
     include/models/rocketLanding3dDefinitions.hpp
     include/models/rocketLanding3d.hpp
+    include/models/rocketLanding2dDefinitions.hpp
+    include/models/rocketLanding2d.hpp
 
     include/ecosWrapper.hpp
         src/ecosWrapper.cpp

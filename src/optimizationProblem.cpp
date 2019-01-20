@@ -1,6 +1,6 @@
 #include "optimizationProblem.hpp"
 
-namespace optimization_problem
+namespace op
 {
 
 string Variable::print() const
@@ -288,20 +288,12 @@ bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values
 {
     const double tol = 0.1;
     bool feasible = true;
-    for (const auto &equalityConstraint : equalityConstraints)
-    {
-        feasible &= feasibility_check_message(tol, fabs(equalityConstraint.evaluate(soln_values)), equalityConstraint);
-    }
+    auto check_feasibility = [&](const auto &constraint) { return feasibility_check_message(tol, constraint.evaluate(soln_values), constraint); };
 
-    for (const auto &postiveConstraint : postiveConstraints)
-    {
-        feasible &= feasibility_check_message(tol, postiveConstraint.evaluate(soln_values), postiveConstraint);
-    }
+    feasible &= std::all_of(secondOrderConeConstraints.begin(), secondOrderConeConstraints.end(), check_feasibility);
+    feasible &= std::all_of(postiveConstraints.begin(), postiveConstraints.end(), check_feasibility);
+    feasible &= std::all_of(equalityConstraints.begin(), equalityConstraints.end(), check_feasibility);
 
-    for (const auto &secondOrderConeConstraint : secondOrderConeConstraints)
-    {
-        feasible &= feasibility_check_message(tol, secondOrderConeConstraint.evaluate(soln_values), secondOrderConeConstraint);
-    }
     return feasible;
 }
 
@@ -320,23 +312,17 @@ double AffineTerm::evaluate(const vector<double> &soln_values) const
 
 double AffineExpression::evaluate(const vector<double> &soln_values) const
 {
-    double sum = 0;
-    for (const auto &term : terms)
-    {
-        sum += term.evaluate(soln_values);
-    }
-    return sum;
+    auto sum_terms = [&soln_values](double sum, const auto &term) { return sum + term.evaluate(soln_values); };
+    return std::accumulate(terms.begin(), terms.end(), 0., sum_terms);
 }
 
 double Norm2::evaluate(const vector<double> &soln_values) const
 {
-    double sum_sq = 0;
-    for (const auto &arg : arguments)
-    {
+    auto sum_squares = [&soln_values](double sum, const auto &arg) {
         double val = arg.evaluate(soln_values);
-        sum_sq += val * val;
-    }
-    return sqrt(sum_sq);
+        return val * val;
+    };
+    return sqrt(std::accumulate(arguments.begin(), arguments.end(), 0., sum_squares));
 }
 
 double SecondOrderConeConstraint::evaluate(const vector<double> &soln_values) const
@@ -354,4 +340,4 @@ double EqualityConstraint::evaluate(const vector<double> &soln_values) const
     return -lhs.evaluate(soln_values);
 }
 
-} // end namespace optimization_problem
+} // end namespace op

@@ -82,6 +82,7 @@ void calculate_discretization(
     for (size_t k = 0; k < K - 1; k++)
     {
         model.setMaxThreads(omp_get_max_threads());
+        
         DiscretizationODE::state_type V;
         V.setZero();
         V.col(0) = X.col(k);
