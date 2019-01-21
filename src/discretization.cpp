@@ -6,37 +6,38 @@
 class DiscretizationODE
 {
   private:
-    Model::input_vector_t u_t, u_t1;
+    Model::input_vector_t u_t0, u_t1;
     double sigma, dt;
     Model &model;
 
   public:
-    static constexpr size_t n_V_states = 3 + Model::state_dim_ + 2 * Model::input_dim_;
+    static const size_t n_V_states = 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2;
     using state_type = Eigen::Matrix<double, Model::state_dim_, n_V_states>;
 
     DiscretizationODE(
-        const Model::input_vector_t &u_t,
+        const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
         const double &sigma,
         double dt,
         Model &model)
-        : u_t(u_t), u_t1(u_t1), sigma(sigma), dt(dt), model(model) {}
+        : u_t0(u_t0), u_t1(u_t1), sigma(sigma), dt(dt), model(model) {}
 
     void operator()(const state_type &V, state_type &dVdt, const double t)
     {
         const Model::state_vector_t x = V.col(0);
-        const Model::input_vector_t u = u_t + t / dt * (u_t1 - u_t);
+        const Model::input_vector_t u = u_t0 + t / dt * (u_t1 - u_t0);
 
         Model::state_vector_t f;
-        model.computef(x, u, f, omp_get_thread_num());
         Model::state_matrix_t A_bar;
         Model::control_matrix_t B_bar;
-        model.computeJacobians(x, u, A_bar, B_bar, omp_get_thread_num());
+        const size_t thread_num = omp_get_thread_num();
+        model.computef(x, u, f, thread_num);
+        model.computeJacobians(x, u, A_bar, B_bar, thread_num);
         A_bar *= sigma;
         B_bar *= sigma;
 
-        Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
-        Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
+        const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
+        const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
 
         size_t cols = 0;
 
@@ -64,8 +65,8 @@ class DiscretizationODE
 void calculate_discretization(
     Model &model,
     double &sigma,
-    Eigen::MatrixXd &X,
-    Eigen::MatrixXd &U,
+    const Eigen::MatrixXd &X,
+    const Eigen::MatrixXd &U,
     vector<Model::state_matrix_t> &A_bar,
     vector<Model::control_matrix_t> &B_bar,
     vector<Model::control_matrix_t> &C_bar,
@@ -74,15 +75,14 @@ void calculate_discretization(
 {
     const size_t K = X.cols();
 
-    const double dt = 1 / double(K - 1);
+    const double dt = 1. / double(K - 1);
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-#pragma omp parallel for
+    // model.setMaxThreads(omp_get_max_threads());
+// #pragma omp parallel for
     for (size_t k = 0; k < K - 1; k++)
     {
-        model.setMaxThreads(omp_get_max_threads());
-        
         DiscretizationODE::state_type V;
         V.setZero();
         V.col(0) = X.col(k);

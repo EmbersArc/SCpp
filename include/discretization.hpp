@@ -10,8 +10,8 @@ using std::array;
 void calculate_discretization(
     Model &model,
     double &sigma,
-    Eigen::MatrixXd &X,
-    Eigen::MatrixXd &U,
+    const Eigen::MatrixXd &X,
+    const Eigen::MatrixXd &U,
     vector<Model::state_matrix_t> &A_bar,
     vector<Model::control_matrix_t> &B_bar,
     vector<Model::control_matrix_t> &C_bar,

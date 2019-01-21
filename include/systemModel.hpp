@@ -45,7 +45,7 @@ class SystemModel
     // Computes the state derivative
     void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum = 0);
     // Computes state and control Jacobians
-    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, size_t modelNum = 0);
+    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, const size_t modelNum = 0);
     // How many models are prepared for multithreading
     void setMaxThreads(size_t num);
 
@@ -128,7 +128,7 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computef(const state_vector_t &
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, size_t modelNum)
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, const size_t modelNum)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
