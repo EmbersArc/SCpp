@@ -57,26 +57,30 @@ def my_plot(fig, figures_i):
              1 - 2 * (qx ** 2 + qy ** 2)]
         ])
 
-        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[:3, k])
+        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[0:3, k])
         dx, dy, dz = np.dot(np.transpose(CBI), np.array([0., 0., 1.]))
-        tx, ty, tz = np.dot(np.transpose(CBI), np.array([0., 1., 0.]))
+        tx, ty, tz = np.dot(np.transpose(CBI), np.array([1., 0., 0.]))
 
         # # speed vector
         # ax.quiver(rx, ry, rz, vx, vy, vz, length=0.1, color='green')
 
         # attitude vector
-        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.2,
+        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.04,
                   arrow_length_ratio=0.0, color='blue')
 
-        # heading vector
-        ax.quiver(rx, ry, rz, tx, ty, tz, length=0.2,
+        # up vector
+        ax.quiver(rx, ry, rz, tx, ty, tz, length=0.01,
                   arrow_length_ratio=0.0, color='green')
 
         # thrust vector
-        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.04,
+        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.1,
                   arrow_length_ratio=0.0, color='red')
 
-    ax.axis('equal')
+    scale = np.max(X[1:4, :])
+    ax.set_xlim3d(-scale/2, scale/2)
+    ax.set_ylim3d(-scale/2, scale/2)
+    ax.set_zlim3d(0, scale)
+    ax.set_aspect('equal')
     ax.plot(X[1, :], X[2, :], X[3, :], color='black')
 
     fig.suptitle("iter " + str(figures_i), fontsize=14)
@@ -88,6 +92,7 @@ def main():
                     for f in os.listdir("output/RocketLanding3D/"))
 
     fig = plt.figure(figsize=(10, 10))
+    figures_i = figures_N - 1
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()

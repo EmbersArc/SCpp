@@ -82,6 +82,7 @@ def main():
     figures_N = sum(f.endswith("X.txt")
                     for f in os.listdir("output/RocketLanding3D/"))
     fig = plt.figure(figsize=(10, 10))
+    figures_i = figures_N - 1
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()
