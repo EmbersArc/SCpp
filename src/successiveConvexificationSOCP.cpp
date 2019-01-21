@@ -8,8 +8,9 @@ namespace sc
 op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
     double &weight_trust_region_sigma,
-    double &weight_trust_region_xu,
-    double &weight_virtual_control,
+    Model::state_vector_t &weight_trust_region_x,
+    Model::input_vector_t &weight_trust_region_u,
+    Model::state_vector_t &weight_virtual_control,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
     double &sigma,
@@ -46,7 +47,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
         // Build linearized model equality constraint
         //    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
         // -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
-        for (size_t row_index = 0; row_index < Model::state_dim_; ++row_index)
+        for (size_t row_index = 0; row_index < Model::state_dim_; row_index++)
         {
             // -I * x(k+1)
             op::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
@@ -84,32 +85,32 @@ op::SecondOrderConeProgram build_sc_SOCP(
         op::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
         {
-            for (size_t row_index = 0; row_index < Model::state_dim_; row_index++)
+            for (size_t i = 0; i < Model::state_dim_; i++)
             {
                 // -nu_bound <= nu
-                socp.add_constraint((1.0) * var("nu_bound", {row_index, k}) + (1.0) * var("nu", {row_index, k}) >= (0.0));
-                // nu <= nu_bound
-                socp.add_constraint((1.0) * var("nu_bound", {row_index, k}) + (-1.0) * var("nu", {row_index, k}) >= (0.0));
+                socp.add_constraint((1.0) * var("nu_bound", {i, k}) + (1.0) * var("nu", {i, k}) >= (0.0));
+                //  nu <= nu_bound
+                socp.add_constraint((1.0) * var("nu_bound", {i, k}) + (-1.0) * var("nu", {i, k}) >= (0.0));
 
                 // sum(-nu_bound)
-                bound_sum = bound_sum + (-1.0) * var("nu_bound", {row_index, k});
+                bound_sum = bound_sum + (-1.0) * var("nu_bound", {i, k});
             }
         }
         // sum(-nu_bound) <= norm1_nu
         socp.add_constraint((1.0) * var("norm1_nu", {}) + bound_sum >= (0.0));
 
         // Minimize the virtual control
-        socp.add_minimization_term(param(weight_virtual_control) * var("norm1_nu", {}));
+        socp.add_minimization_term(param(weight_virtual_control(0)) * var("norm1_nu", {}));
     }
 
     // Build sigma trust region
-    // (sigma-sigma0) * (sigma-sigma0) <= Delta_sigma
+    // (sigma - sigma0) * (sigma - sigma0) <= Delta_sigma
     //          is equivalent to
     //   norm2([
-    //       ((-sigma0)*sigma   +(-0.5)*Delta_sigma  +(0.5+0.5*sigma0*sigma0)  ),
+    //       ((-sigma0) * sigma + (-0.5) * Delta_sigma + (0.5 + 0.5 * sigma0 * sigma0)),
     //       sigma
     //   ])
-    //   <= (  +(sigma0)*sigma  +(0.5)*Delta_sigma    +(0.5-0.5*sigma0*sigma0)   )
+    //   <= (+(sigma0) * sigma + (0.5) * Delta_sigma + (0.5 - 0.5 * sigma0 * sigma0))
     {
         // Formulas involving sigma, from the above comment
         auto sigma_fn1 = param_fn([&sigma]() { return -sigma; });
@@ -117,8 +118,8 @@ op::SecondOrderConeProgram build_sc_SOCP(
         auto sigma_fn3 = param_fn([&sigma]() { return sigma; });
         auto sigma_fn4 = param_fn([&sigma]() { return (0.5 - 0.5 * sigma * sigma); });
 
-        socp.add_constraint(op::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2,
-                                                         (1.0) * var("sigma", {})}) <= sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
+        socp.add_constraint(op::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2, (1.0) * var("sigma", {})}) <=
+                            sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
 
         // Minimize Delta_sigma
         socp.add_minimization_term(param(weight_trust_region_sigma) * var("Delta_sigma", {}));
@@ -133,81 +134,26 @@ op::SecondOrderConeProgram build_sc_SOCP(
          * The constraint is equivalent to the SOCP form:
          * 
          * norm2(
-         *         ( (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)),
-         *         (I)*x, 
-         *         (I)*u
-         * )
-         *     <= (  ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0));
+         *        0.5 - 0.5 * Delta
+         *        W * [(x - x0)^T | (u - u0)^T]^T
+         *      )
+         *     <= 0.5 + 0.5 * Delta;
          * 
          */
 
         vector<op::AffineExpression> norm2_args;
 
-        { // (-x0^T)*x  +(-u0^T)*u  +(-0.5)*Delta  +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
-            op::AffineExpression norm2_first_arg;
+        norm2_args.push_back((-0.5) * var("Delta", {k}) + (0.5));
 
-            // (-x0^T)*x
-            for (size_t i = 0; i < Model::state_dim_; ++i)
-            {
-                norm2_first_arg = norm2_first_arg +
-                                  param_fn([&X, i, k]() { return -X(i, k); }) * var("X", {i, k});
-            }
-
-            // +(-u0^T)*u
-            for (size_t i = 0; i < Model::input_dim_; ++i)
-            {
-                norm2_first_arg = norm2_first_arg +
-                                  param_fn([&U, i, k]() { return -U(i, k); }) * var("U", {i, k});
-            }
-
-            // +(-0.5)*Delta
-            norm2_first_arg = norm2_first_arg + (-0.5) * var("Delta", {k});
-
-            // +(0.5 + 0.5*x0^T*x0 + 0.5*u0^T*u0)
-            norm2_first_arg = norm2_first_arg + param_fn([&X, &U, k]() {
-                                  return 0.5 * (1.0 + X.col(k).dot(X.col(k)) + U.col(k).dot(U.col(k)));
-                              });
-
-            norm2_args.push_back(norm2_first_arg);
-        }
-
-        // (I)*x,
-        for (size_t i = 0; i < Model::state_dim_; ++i)
+        for (size_t i = 0; i < Model::state_dim_; i++)
         {
-            norm2_args.push_back((1.0) * var("X", {i, k}));
+            norm2_args.push_back((-1.0) * var("X", {i, k}) + param(X(i, k)));
         }
-
-        // (I)*u
-        for (size_t i = 0; i < Model::input_dim_; ++i)
+        for (size_t i = 0; i < Model::input_dim_; i++)
         {
-            norm2_args.push_back((1.0) * var("U", {i, k}));
+            norm2_args.push_back((-1.0) * var("U", {i, k}) + param(U(i, k)));
         }
-
-        // Right hand side
-        // ( x0^T)*x  +( u0^T)*u  +( 0.5)*Delta  +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
-        op::AffineExpression rhs;
-
-        // ( x0^T)*x
-        for (size_t i = 0; i < Model::state_dim_; ++i)
-        {
-            rhs = rhs + param(X(i, k)) * var("X", {i, k});
-        }
-
-        // +( u0^T)*u
-        for (size_t i = 0; i < Model::input_dim_; ++i)
-        {
-            rhs = rhs + param(U(i, k)) * var("U", {i, k});
-        }
-
-        // +( 0.5)*Delta
-        rhs = rhs + (0.5) * var("Delta", {k});
-
-        // +(0.5 - 0.5*x0^T*x0 - 0.5*u0^T*u0)
-        rhs = rhs + param_fn([&X, &U, k]() {
-                  return 0.5 * (1.0 - X.col(k).dot(X.col(k)) - U.col(k).dot(U.col(k)));
-              });
-
-        socp.add_constraint(op::norm2(norm2_args) <= rhs);
+        socp.add_constraint(op::norm2(norm2_args) <= (0.5) * var("Delta", {k}) + (0.5));
     }
 
     /*
@@ -223,10 +169,12 @@ op::SecondOrderConeProgram build_sc_SOCP(
         socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}));
 
         // Minimize norm2_Delta
-        socp.add_minimization_term(param(weight_trust_region_xu) * var("norm2_Delta", {}));
+        socp.add_minimization_term(param(weight_trust_region_x(0)) * var("norm2_Delta", {}));
     }
 
-    socp.add_constraint((1.0) * var("sigma", {}) + (-0.01) >= (0.0)); // Total time must not be negative
+    // Total time must not be negative
+    socp.add_constraint((1.0) * var("sigma", {}) + (-0.01) >= (0.0));
+
     model.addApplicationConstraints(socp, X, U);
     return socp;
 }

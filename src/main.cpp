@@ -40,23 +40,26 @@ int main()
 
     print("Initializing model.\n");
     Model model;
+    model.nondimensionalize();
     model.initializeModel();
 
-    print("Initializing output path.\n");
+    print("Initializing output directory.\n");
     remove_all(get_output_path());
     create_directory(get_output_path());
 
     print("Initializing algorithm.\n");
-    size_t max_iterations;
     double weight_trust_region_sigma;
-    double weight_trust_region_xu;
-    double weight_virtual_control;
+    double weight_trust_region_xu_factor;
+    double weight_virtual_control_factor;
+    double trust_region_factor;
     double nu_tol;
     double delta_tol;
+    size_t max_iterations;
 
     loadScalar(configFilePath, "weight_trust_region_sigma", weight_trust_region_sigma);
-    loadScalar(configFilePath, "weight_trust_region_xu", weight_trust_region_xu);
-    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
+    loadScalar(configFilePath, "weight_trust_region_xu", weight_trust_region_xu_factor);
+    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control_factor);
+    loadScalar(configFilePath, "trust_region_factor", trust_region_factor);
     loadScalar(configFilePath, "nu_tol", nu_tol);
     loadScalar(configFilePath, "delta_tol", delta_tol);
     loadScalar(configFilePath, "max_iterations", max_iterations);
@@ -67,6 +70,18 @@ int main()
     vector<Model::state_vector_t> Sigma_bar(K - 1);
     vector<Model::state_vector_t> z_bar(K - 1);
 
+    Model::state_vector_t weight_trust_region_x;
+    Model::input_vector_t weight_trust_region_u;
+    Model::state_vector_t weight_virtual_control;
+
+    weight_trust_region_x.setOnes();
+    weight_trust_region_u.setOnes();
+    weight_virtual_control.setOnes();
+
+    weight_trust_region_x *= weight_trust_region_xu_factor;
+    weight_trust_region_u *= weight_trust_region_xu_factor;
+    weight_virtual_control *= weight_virtual_control_factor;
+
     print("Initializing trajectory.\n");
     Eigen::MatrixXd X(size_t(Model::state_dim_), K);
     Eigen::MatrixXd U(size_t(Model::input_dim_), K);
@@ -75,9 +90,9 @@ int main()
 
     print("Initializing solver.\n");
     op::SecondOrderConeProgram socp = sc::build_sc_SOCP(model,
-                                                        weight_trust_region_sigma, weight_trust_region_xu, weight_virtual_control,
+                                                        weight_trust_region_sigma, weight_trust_region_x, weight_trust_region_u, weight_virtual_control,
                                                         X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
-    
+
     // Cache indices for performance
     const size_t sigma_index = socp.get_tensor_variable_index("sigma", {});
     Eigen::MatrixXi X_indices(size_t(Model::state_dim_), K);
@@ -93,7 +108,7 @@ int main()
             U_indices(i, k) = socp.get_tensor_variable_index("U", {i, k});
         }
     }
-    
+
     EcosWrapper solver(socp);
 
     print("Starting Successive Convexification.\n");
@@ -102,8 +117,6 @@ int main()
     {
         string itString = format("<Iteration {}>", it);
         print("{:=^{}}\n", itString, 60);
-
-        weight_trust_region_xu *= 2.;
 
         const double timer_iteration = tic();
         double timer = tic();

@@ -17,16 +17,6 @@ void deg2rad(T &deg)
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 3> skew(const Eigen::Matrix<T, 3, 1> &v)
-{
-    Eigen::Matrix<T, 3, 3> skewMatrix;
-    skewMatrix << T(0), -v(2), v(1),
-        v(2), T(0), -v(0),
-        -v(1), v(0), T(0);
-    return skewMatrix;
-}
-
-template <typename T>
 Eigen::Matrix<T, 3, 3> dirCosineMatrix(const Eigen::Matrix<T, 4, 1> &q)
 {
     Eigen::Matrix<T, 3, 3> dirCosineMatrix;
