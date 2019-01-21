@@ -1,9 +1,12 @@
-K 20
+K 30
 
 weight_trust_region_sigma   1e-1
 weight_trust_region_xu      1e-3
 weight_virtual_control      1e5
-nu_tol                      1e-8
-delta_tol                   1e-3
+
+nu_tol                      1e-6
+delta_tol                   1e-2
+
+trust_region_factor 1.5
 
 max_iterations 50
