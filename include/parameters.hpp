@@ -75,7 +75,14 @@ inline void loadMatrix(
         {
             try
             {
-                matrix(i, j) = pt.get<scalar_t>(format("{}.({},{})", matrixName, i, j));
+                if (cols == 1)
+                {
+                    matrix(i) = pt.get<scalar_t>(format("{}.({})", matrixName, i));
+                }
+                else
+                {
+                    matrix(i, j) = pt.get<scalar_t>(format("{}.({},{})", matrixName, i, j));
+                }
             }
             catch (const std::exception &e)
             {
