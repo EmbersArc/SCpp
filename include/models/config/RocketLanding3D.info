@@ -2,36 +2,36 @@ g_I
 {
     (0)   0.0
     (1)   0.0
-    (2)   -1.0
+    (2)   -9.81
 }
 
 J_B
 {
-    (0)   1e-2
-    (1)   1e-2
-    (2)   1e-2
+    (0)   4000000.
+    (1)   4000000.
+    (2)   100000.
 }
 
 r_T_B
 {
     (0)   0
     (1)   0
-    (2)   -1e-2
+    (2)   -14.
 }
 
 ; initial values
 x_init
 {
     ; mass
-    (0)     2.
+    (0)     30000.
 
     ; position
     (1)     0.
-    (2)     4.
-    (3)     4.
+    (2)     100.
+    (3)     1000.
 
     ; velocity
-    (4)     1.
+    (4)     -20.
     (5)     0.
     (6)     0.
 
@@ -51,7 +51,7 @@ x_init
 x_final
 {
     ; mass
-    (0)     1.
+    (0)     22000.
 
     ; position
     (1)     0.
@@ -61,7 +61,7 @@ x_final
     ; velocity
     (4)     0.
     (5)     0.
-    (6)     -0.1
+    (6)     -5.
 
     ; orientation
     (7)     1.
@@ -75,19 +75,17 @@ x_final
     (13)    0.
 }
 
-constrain_initial_orientation false
-final_time_guess 6.
+final_time_guess 10.
 
-T_min       0.3
-T_max       5.0
-t_max       0.
-I_sp        100.
+T_min       200000.
+T_max       800000.
+I_sp        282.
 
 ; maximum gimbal
-gimbal_max   20.
+gimbal_max  10.
 ; maximum angle
-theta_max   70.
+theta_max   90.
 ; glideslope angle
-gamma_gs    30.
+gamma_gs    20.
 ; maximum angluar velocity
 w_B_max     60.

@@ -30,17 +30,10 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         loadMatrix(configFilePath, "x_init", x_init);
         loadMatrix(configFilePath, "x_final", x_final);
 
-        loadScalar(configFilePath, "constrain_initial_orientation", constrain_initial_orientation);
         loadScalar(configFilePath, "final_time_guess", final_time_guess);
-
-        if (!constrain_initial_orientation)
-        {
-            x_init.segment(7, 4) << 1., 0., 0., 0.;
-        }
 
         loadScalar(configFilePath, "T_min", T_min);
         loadScalar(configFilePath, "T_max", T_max);
-        loadScalar(configFilePath, "t_max", t_max);
 
         double I_sp;
         loadScalar(configFilePath, "I_sp", I_sp);
@@ -78,20 +71,16 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         auto J_B_ = J_B.cast<T>().asDiagonal();
         auto r_T_B_ = r_T_B.cast<T>();
 
-        auto T_B = u.template head<3>();
-        // Eigen::Matrix<T, 3, 1> T_r;
-        // T_r << T(0.), T(0.), u(3);
-
         auto m = x(0);
         auto v_I = x.template segment<3>(4);
         auto q_B_I = x.template segment<4>(7);
         auto w_B = x.template segment<3>(11);
 
-        f(0) = -alpha_m_ * T_B.norm();
+        f(0) = -alpha_m_ * u.norm();
         f.segment(1, 3) << v_I;
-        f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * T_B + g_I_;
+        f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * u + g_I_;
         f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
-        f.segment(11, 3) << J_B_.inverse() * (r_T_B_.cross(T_B)) - w_B.cross(w_B);
+        f.segment(11, 3) << J_B_.inverse() * (r_T_B_.cross(u)) - w_B.cross(w_B);
     }
 
     void initializeTrajectory(Eigen::MatrixXd &X,
@@ -138,29 +127,28 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
         // Initial state
-        socp.add_constraint((-1.0) * var("X", {0, 0}) + (x_init(0)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {1, 0}) + (x_init(1)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {2, 0}) + (x_init(2)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {3, 0}) + (x_init(3)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {4, 0}) + (x_init(4)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {5, 0}) + (x_init(5)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {6, 0}) + (x_init(6)) == 0.0);
-        if (constrain_initial_orientation)
+        for (size_t i = 0; i < STATE_DIM_; i++)
         {
-            socp.add_constraint((-1.0) * var("X", {7, 0}) + (x_init(7)) == 0.0);
-            socp.add_constraint((-1.0) * var("X", {8, 0}) + (x_init(8)) == 0.0);
-            socp.add_constraint((-1.0) * var("X", {9, 0}) + (x_init(9)) == 0.0);
-            socp.add_constraint((-1.0) * var("X", {10, 0}) + (x_init(10)) == 0.0);
+            socp.add_constraint((-1.0) * var("X", {i, 0}) + (x_init(i)) == 0.0);
         }
-        socp.add_constraint((-1.0) * var("X", {11, 0}) + (x_init(11)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {12, 0}) + (x_init(12)) == 0.0);
-        socp.add_constraint((-1.0) * var("X", {13, 0}) + (x_init(13)) == 0.0);
 
-        // Final State (mass is free)
-        for (size_t i = 1; i < STATE_DIM_; i++)
-        {
-            socp.add_constraint((-1.0) * var("X", {i, K - 1}) + (x_final(i)) == 0.0);
-        }
+        // Final State
+        // mass is free, quaternion
+        // socp.add_constraint((-1.0) * var("X", {0, K - 1}) + (x_final(0)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {1, K - 1}) + (x_final(1)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {2, K - 1}) + (x_final(2)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {3, K - 1}) + (x_final(3)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {4, K - 1}) + (x_final(4)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {5, K - 1}) + (x_final(5)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {6, K - 1}) + (x_final(6)) == 0.0);
+        // socp.add_constraint((-1.0) * var("X", {7, K - 1}) + (x_final(7)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {8, K - 1}) + (x_final(8)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {9, K - 1}) + (x_final(9)) == 0.0);
+        // socp.add_constraint((-1.0) * var("X", {10, K - 1}) + (x_final(10)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {11, K - 1}) + (x_final(11)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {12, K - 1}) + (x_final(12)) == 0.0);
+        socp.add_constraint((-1.0) * var("X", {13, K - 1}) + (x_final(13)) == 0.0);
+
         socp.add_constraint((1.0) * var("U", {0, K - 1}) == (0.0));
         socp.add_constraint((1.0) * var("U", {1, K - 1}) == (0.0));
 
@@ -173,7 +161,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
             socp.add_constraint((1.0) * var("X", {0, k}) + (-x_final(0)) >= (0.0));
 
             // Max Tilt Angle
-            //
             // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
             socp.add_constraint(op::norm2({(1.0) * var("X", {8, k}),
                                            (1.0) * var("X", {9, k})}) <= sqrt((1.0 - cos(theta_max)) / 2.));
@@ -210,9 +197,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
                            (1.0) * var("U", {1, k}),
                            (1.0) * var("U", {2, k})}) <= (T_max));
 
-            // Maximum Roll Torque
-            // socp.add_constraint((-1.0) * var("U", {3, k}) + (t_max) >= (0.0));
-
             // Maximum Gimbal Angle
             socp.add_constraint(
                 op::norm2({(1.0) * var("U", {0, k}),
@@ -220,7 +204,8 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         }
     }
 
-    void nondimensionalize()
+    void
+    nondimensionalize()
     {
         m_scale = x_init(0);
         r_scale = x_init.segment(1, 3).norm();
@@ -240,8 +225,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
 
         T_min /= m_scale * r_scale;
         T_max /= m_scale * r_scale;
-
-        t_max /= m_scale * r_scale * r_scale;
     }
 
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
@@ -268,13 +251,12 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         input_vector_t w;
         w.setOnes();
         w.head(3) *= T_max;
-        w(3) *= t_max;
         return w;
     }
 
   private:
-    double m_scale = 1.;
-    double r_scale = 1.;
+    double m_scale;
+    double r_scale;
 
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
@@ -282,7 +264,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     double alpha_m;
     double T_min;
     double T_max;
-    double t_max;
 
     state_vector_t x_init;
     state_vector_t x_final;
@@ -294,6 +275,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     double theta_max;
     double gamma_gs;
     double w_B_max;
-};
+}; // namespace rocket3d
 
 } // namespace rocket3d
