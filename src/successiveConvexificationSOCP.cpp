@@ -7,18 +7,17 @@ namespace sc
 
 op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
-    double &weight_trust_region_sigma,
-    Model::state_vector_t &weight_trust_region_x,
-    Model::input_vector_t &weight_trust_region_u,
-    Model::state_vector_t &weight_virtual_control,
+    double &weight_trust_region_time,
+    double &weight_trust_region_state,
+    double &weight_virtual_control,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
     double &sigma,
-    vector<Model::state_matrix_t> &A_bar,
-    vector<Model::control_matrix_t> &B_bar,
-    vector<Model::control_matrix_t> &C_bar,
-    vector<Model::state_vector_t> &Sigma_bar,
-    vector<Model::state_vector_t> &z_bar)
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &Sigma_bar,
+    Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.cols();
 
@@ -28,19 +27,19 @@ op::SecondOrderConeProgram build_sc_SOCP(
     socp.create_tensor_variable("U", {Model::input_dim_, K});            // inputs
     socp.create_tensor_variable("nu", {Model::state_dim_, K - 1});       // virtual control
     socp.create_tensor_variable("nu_bound", {Model::state_dim_, K - 1}); // virtual control
-    socp.create_tensor_variable("norm1_nu", {});                         // virtual control norm upper bound
-    socp.create_tensor_variable("sigma", {});                            // total time
-    socp.create_tensor_variable("Delta_sigma", {});                      // squared change of sigma
+    socp.create_tensor_variable("norm1_nu");                             // virtual control norm upper bound
+    socp.create_tensor_variable("sigma");                                // total time
+    socp.create_tensor_variable("Delta_sigma");                          // squared change of sigma
     socp.create_tensor_variable("Delta", {K});                           // squared change of the stacked [ x(k), u(k) ] vector
-    socp.create_tensor_variable("norm2_Delta", {});                      // 2-norm of the Delta(k) variables
+    socp.create_tensor_variable("norm2_Delta");                          // 2-norm of the Delta(k) variables
 
     // shortcuts to access solver variables and create parameters
-    auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
+    auto var = [&](const string &name, const vector<size_t> &indices = {}) { return socp.get_variable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
+    // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     // Main objective: minimize total time
-    socp.add_minimization_term(1.0 * var("sigma", {}));
+    socp.add_minimization_term(1.0 * var("sigma"));
 
     for (size_t k = 0; k < K - 1; k++)
     {
@@ -65,7 +64,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
                 eq = eq + param(C_bar.at(k)(row_index, col_index)) * var("U", {col_index, k + 1});
 
             // Sigma sigma
-            eq = eq + param(Sigma_bar.at(k)(row_index, 0)) * var("sigma", {});
+            eq = eq + param(Sigma_bar.at(k)(row_index, 0)) * var("sigma");
 
             // z
             eq = eq + param(z_bar.at(k)(row_index, 0));
@@ -97,32 +96,30 @@ op::SecondOrderConeProgram build_sc_SOCP(
             }
         }
         // sum(-nu_bound) <= norm1_nu
-        socp.add_constraint((1.0) * var("norm1_nu", {}) + bound_sum >= (0.0));
+        socp.add_constraint((1.0) * var("norm1_nu") + bound_sum >= (0.0));
 
         // Minimize the virtual control
-        socp.add_minimization_term(param(weight_virtual_control(0)) * var("norm1_nu", {}));
+        socp.add_minimization_term(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    // Build sigma trust region
-    // (sigma - sigma0) * (sigma - sigma0) <= Delta_sigma
-    //          is equivalent to
-    //   norm2([
-    //       ((-sigma0) * sigma + (-0.5) * Delta_sigma + (0.5 + 0.5 * sigma0 * sigma0)),
-    //       sigma
-    //   ])
-    //   <= (+(sigma0) * sigma + (0.5) * Delta_sigma + (0.5 - 0.5 * sigma0 * sigma0))
+    /* Build sigma trust region
+    * (sigma - sigma0) * (sigma - sigma0) <= Delta_sigma
+    *          is equivalent to
+    * norm2(
+    *        0.5 - 0.5 * Delta_sigma
+    *        sigma0 - sigma
+    *      )
+    *      <= 0.5 + 0.5 * Delta_sigma;
+    */
     {
-        // Formulas involving sigma, from the above comment
-        auto sigma_fn1 = param_fn([&sigma]() { return -sigma; });
-        auto sigma_fn2 = param_fn([&sigma]() { return (0.5 + 0.5 * sigma * sigma); });
-        auto sigma_fn3 = param_fn([&sigma]() { return sigma; });
-        auto sigma_fn4 = param_fn([&sigma]() { return (0.5 - 0.5 * sigma * sigma); });
+        vector<op::AffineExpression> norm2_args;
+        norm2_args = {(0.5) + (-0.5) * var("Delta_sigma"),
+                      param(sigma) + (-1.0) * var("sigma")};
 
-        socp.add_constraint(op::norm2({sigma_fn1 * var("sigma", {}) + (-0.5) * var("Delta_sigma", {}) + sigma_fn2, (1.0) * var("sigma", {})}) <=
-                            sigma_fn3 * var("sigma", {}) + (0.5) * var("Delta_sigma", {}) + sigma_fn4);
+        socp.add_constraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta_sigma"));
 
         // Minimize Delta_sigma
-        socp.add_minimization_term(param(weight_trust_region_sigma) * var("Delta_sigma", {}));
+        socp.add_minimization_term(param(weight_trust_region_time) * var("Delta_sigma"));
     }
 
     for (size_t k = 0; k < K; k++)
@@ -135,7 +132,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
          * 
          * norm2(
          *        0.5 - 0.5 * Delta
-         *        W * [(x - x0)^T | (u - u0)^T]^T
+         *        [(x - x0)^T | (u - u0)^T]^T
          *      )
          *     <= 0.5 + 0.5 * Delta;
          * 
@@ -143,17 +140,19 @@ op::SecondOrderConeProgram build_sc_SOCP(
 
         vector<op::AffineExpression> norm2_args;
 
-        norm2_args.push_back((-0.5) * var("Delta", {k}) + (0.5));
+        norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
 
         for (size_t i = 0; i < Model::state_dim_; i++)
         {
-            norm2_args.push_back((-1.0) * var("X", {i, k}) + param(X(i, k)));
+            norm2_args.push_back((-1.0) * var("X", {i, k}) +
+                                 (1.0) * X(i, k));
         }
         for (size_t i = 0; i < Model::input_dim_; i++)
         {
-            norm2_args.push_back((-1.0) * var("U", {i, k}) + param(U(i, k)));
+            norm2_args.push_back((-1.0) * var("U", {i, k}) +
+                                 (1.0) * U(i, k));
         }
-        socp.add_constraint(op::norm2(norm2_args) <= (0.5) * var("Delta", {k}) + (0.5));
+        socp.add_constraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }
 
     /*
@@ -166,14 +165,14 @@ op::SecondOrderConeProgram build_sc_SOCP(
         {
             norm2_args.push_back((1.0) * var("Delta", {k}));
         }
-        socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta", {}));
+        socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta"));
 
         // Minimize norm2_Delta
-        socp.add_minimization_term(param(weight_trust_region_x(0)) * var("norm2_Delta", {}));
+        socp.add_minimization_term(param(weight_trust_region_state) * var("norm2_Delta"));
     }
 
     // Total time must not be negative
-    socp.add_constraint((1.0) * var("sigma", {}) + (-0.01) >= (0.0));
+    socp.add_constraint((1.0) * var("sigma") + (-0.01) >= (0.0));
 
     model.addApplicationConstraints(socp, X, U);
     return socp;
