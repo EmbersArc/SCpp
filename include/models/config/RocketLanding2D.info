@@ -27,3 +27,4 @@ I               15.
 T_min           100.
 T_max           500.
 gimbal_max      0.3
+theta_max       0.8
