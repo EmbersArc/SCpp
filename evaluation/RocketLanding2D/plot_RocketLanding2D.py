@@ -51,13 +51,13 @@ def my_plot(fig, figures_i):
         gimbal = U[1, k]
 
         # speed vector
-        speed_scale = 0.8
+        speed_scale = 0.
         lines.append(
             [(rx, ry), (rx + speed_scale * vx, ry + speed_scale * vy)])
         line_colors.append((0, 1, 0, 1))
 
         # attitude vector
-        heading_scale = 0.1
+        heading_scale = 0.05
         c_theta = heading_scale * np.cos(theta)
         s_theta = heading_scale * np.sin(theta)
         lines.append([(rx, ry), (rx + s_theta, ry + c_theta)])
@@ -80,7 +80,7 @@ def my_plot(fig, figures_i):
 def main():
     global figures_i, figures_N
     figures_N = sum(f.endswith("X.txt")
-                    for f in os.listdir("output/RocketLanding3D/"))
+                    for f in os.listdir("output/RocketLanding2D/"))
     fig = plt.figure(figsize=(10, 10))
     figures_i = figures_N - 1
     my_plot(fig, figures_i)
