@@ -8,7 +8,7 @@ namespace sc
 op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
     double &weight_trust_region_time,
-    double &weight_trust_region_state,
+    double &weight_trust_region_trajectory,
     double &weight_virtual_control,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,

@@ -8,7 +8,7 @@ namespace sc
 op::SecondOrderConeProgram build_sc_SOCP(
     Model &model,
     double &weight_trust_region_time,
-    double &weight_trust_region_state,
+    double &weight_trust_region_trajectory,
     double &weight_virtual_control,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
@@ -144,13 +144,11 @@ op::SecondOrderConeProgram build_sc_SOCP(
 
         for (size_t i = 0; i < Model::state_dim_; i++)
         {
-            norm2_args.push_back((-1.0) * var("X", {i, k}) +
-                                 (1.0) * X(i, k));
+            norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
         }
         for (size_t i = 0; i < Model::input_dim_; i++)
         {
-            norm2_args.push_back((-1.0) * var("U", {i, k}) +
-                                 (1.0) * U(i, k));
+            norm2_args.push_back(param(U(i, k)) + (-1.0) * var("U", {i, k}));
         }
         socp.add_constraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }
@@ -168,7 +166,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
         socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta"));
 
         // Minimize norm2_Delta
-        socp.add_minimization_term(param(weight_trust_region_state) * var("norm2_Delta"));
+        socp.add_minimization_term(param(weight_trust_region_trajectory) * var("norm2_Delta"));
     }
 
     // Total time must not be negative
