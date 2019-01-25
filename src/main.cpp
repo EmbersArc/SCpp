@@ -48,39 +48,27 @@ int main()
     create_directory(get_output_path());
 
     print("Initializing algorithm.\n");
-    double weight_trust_region_sigma;
-    double weight_trust_region_xu_factor;
-    double weight_virtual_control_factor;
+    double weight_trust_region_time;
+    double weight_trust_region_state;
+    double weight_virtual_control;
     double trust_region_factor;
     double nu_tol;
     double delta_tol;
     size_t max_iterations;
 
-    loadScalar(configFilePath, "weight_trust_region_sigma", weight_trust_region_sigma);
-    loadScalar(configFilePath, "weight_trust_region_xu", weight_trust_region_xu_factor);
-    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control_factor);
+    loadScalar(configFilePath, "weight_trust_region_time", weight_trust_region_time);
+    loadScalar(configFilePath, "weight_trust_region_state", weight_trust_region_state);
+    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
     loadScalar(configFilePath, "trust_region_factor", trust_region_factor);
     loadScalar(configFilePath, "nu_tol", nu_tol);
     loadScalar(configFilePath, "delta_tol", delta_tol);
     loadScalar(configFilePath, "max_iterations", max_iterations);
 
-    vector<Model::state_matrix_t> A_bar(K - 1);
-    vector<Model::control_matrix_t> B_bar(K - 1);
-    vector<Model::control_matrix_t> C_bar(K - 1);
-    vector<Model::state_vector_t> Sigma_bar(K - 1);
-    vector<Model::state_vector_t> z_bar(K - 1);
-
-    Model::state_vector_t weight_trust_region_x;
-    Model::input_vector_t weight_trust_region_u;
-    Model::state_vector_t weight_virtual_control;
-
-    weight_trust_region_x.setOnes();
-    weight_trust_region_u.setOnes();
-    weight_virtual_control.setOnes();
-
-    weight_trust_region_x *= weight_trust_region_xu_factor;
-    weight_trust_region_u *= weight_trust_region_xu_factor;
-    weight_virtual_control *= weight_virtual_control_factor;
+    Model::state_matrix_v_t A_bar(K - 1);
+    Model::control_matrix_v_t B_bar(K - 1);
+    Model::control_matrix_v_t C_bar(K - 1);
+    Model::state_vector_v_t Sigma_bar(K - 1);
+    Model::state_vector_v_t z_bar(K - 1);
 
     print("Initializing trajectory.\n");
     Eigen::MatrixXd X(size_t(Model::state_dim_), K);
@@ -90,7 +78,7 @@ int main()
 
     print("Initializing solver.\n");
     op::SecondOrderConeProgram socp = sc::build_sc_SOCP(model,
-                                                        weight_trust_region_sigma, weight_trust_region_x, weight_trust_region_u, weight_virtual_control,
+                                                        weight_trust_region_time, weight_trust_region_state, weight_virtual_control,
                                                         X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
 
     // Cache indices for performance
@@ -115,7 +103,7 @@ int main()
     const double timer_total = tic();
     for (size_t it = 0; it < max_iterations; it++)
     {
-        string itString = format("<Iteration {}>", it);
+        string itString = format("<Iteration {}>", it + 1);
         print("{:=^{}}\n", itString, 60);
 
         const double timer_iteration = tic();
@@ -123,10 +111,9 @@ int main()
         calculate_discretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
         print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
+        // Write solution to files
         timer = tic();
         string file_name_prefix = format("{}iteration{:03}_", get_output_path(), it);
-
-        // Write solution to files
         {
             ofstream f(file_name_prefix + "X.txt");
             f << X;
@@ -137,30 +124,12 @@ int main()
         }
         print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
 
-        // Write problem to file
-        // timer = tic();
-        // {
-        //     ofstream f(file_name_prefix + "problem.txt");
-        //     socp.print_problem(f);
-        // }
-        // print("{:<{}}{:.2f}ms\n", "Time, problem file:", 50, toc(timer));
-
-        // save matrices for debugging
-        // if (it == 0)
-        // {
-        //     for (unsigned int k = 0; k < K - 1; k++)
-        //     {
-        //         {
-        //             ofstream f(format("{}z_bar{}.txt", get_output_path(), k));
-        //             f << z_bar[k];
-        //         }
-        //     }
-        // }
-
+        // Solve the problem
         timer = tic();
         solver.solve_problem();
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
 
+        // Check feasibility
         timer = tic();
         if (!socp.feasibility_check(solver.get_solution_vector()))
         {
@@ -183,6 +152,7 @@ int main()
         }
         sigma = solver.get_solution_value(sigma_index);
 
+        // Output iteration summary
         print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
         print("\n");
         print("{:<{}}{: .4f}\n", "sigma", 50, sigma);
@@ -192,7 +162,8 @@ int main()
         print("\n");
         print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
         print("\n");
-        if (solver.get_solution_value("norm2_Delta", {}) < delta_tol && solver.get_solution_value("norm1_nu", {}) < nu_tol)
+        if (solver.get_solution_value("norm2_Delta", {}) + solver.get_solution_value("Delta_sigma", {}) < delta_tol && 
+        solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
             print("Converged after {} iterations.\n", it + 1);
             break;
@@ -201,6 +172,13 @@ int main()
         {
             print("No convergence after {} iterations.\n", it + 1);
         }
+        else
+        {
+            weight_trust_region_time *= trust_region_factor;
+            weight_trust_region_state *= trust_region_factor;
+        }
+
+
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
