@@ -80,7 +80,7 @@ final_time_guess 6.
 
 T_min       0.3
 T_max       5.0
-t_max       0.02
+t_max       0.
 I_sp        100.
 
 ; maximum gimbal
@@ -88,6 +88,6 @@ gimbal_max   20.
 ; maximum angle
 theta_max   70.
 ; glideslope angle
-gamma_gs    20.
+gamma_gs    30.
 ; maximum angluar velocity
 w_B_max     60.

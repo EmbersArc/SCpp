@@ -27,13 +27,13 @@ x_init
 
     ; position
     (1)     0.
-    (2)     100.
-    (3)     200.
+    (2)     50.
+    (3)     300.
 
     ; velocity
-    (4)     0.
-    (5)     -100.
-    (6)     -100.
+    (4)     -20.
+    (5)     0.
+    (6)     0.
 
     ; orientation
     (7)     1.
@@ -75,16 +75,16 @@ x_final
     (13)    0.
 }
 
-constrain_initial_orientation false
+constrain_initial_orientation true
 final_time_guess 10.
 
 T_min       300000.
 T_max       800000.
-t_max       1.
+t_max       10.
 I_sp        282.
 
 ; maximum gimbal
-gimbal_max   10.
+gimbal_max   7.
 ; maximum angle
 theta_max   70.
 ; glideslope angle
