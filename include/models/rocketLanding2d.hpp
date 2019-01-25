@@ -142,6 +142,20 @@ class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DI
         x_final.segment(0, 4) /= r_scale;
     }
 
+    state_vector_t getStateWeightVector()
+    {
+        state_vector_t w;
+        w.setOnes();
+        return w;
+    }
+
+    input_vector_t getInputWeightVector()
+    {
+        input_vector_t w;
+        w.setOnes();
+        return w;
+    }
+
   private:
     double m;
     double g;
