@@ -21,35 +21,45 @@
 
 using fmt::format;
 using fmt::print;
-using std::array;
 using std::ofstream;
-using std::filesystem::create_directory;
-using std::filesystem::remove_all;
+namespace fs = std::filesystem;
 
 string get_output_path()
 {
-    return format("../output/{}/", Model::getModelName());
+    return format("../output/{}", Model::getModelName());
 }
 
 int main()
 {
-    size_t K;
-
     string configFilePath = "../include/config/SCParameters.info";
+
+    size_t K;
     loadScalar(configFilePath, "K", K);
 
     print("Initializing model.\n");
     Model model;
-    model.nondimensionalize();
+    bool nondimensionalize;
+    loadScalar(configFilePath, "nondimensionalize", nondimensionalize);
+    if (nondimensionalize)
+    {
+        model.nondimensionalize();
+    }
     model.initializeModel();
 
     print("Initializing output directory.\n");
-    remove_all(get_output_path());
-    create_directory(get_output_path());
+    if (fs::exists(get_output_path()))
+    {
+        fs::remove_all(get_output_path());
+    }
+
+    if (not fs::create_directories(get_output_path()))
+    {
+        throw std::runtime_error("Could not create output directory!");
+    }
 
     print("Initializing algorithm.\n");
     double weight_trust_region_time;
-    double weight_trust_region_state;
+    double weight_trust_region_trajectory;
     double weight_virtual_control;
     double trust_region_factor;
     double nu_tol;
@@ -57,7 +67,7 @@ int main()
     size_t max_iterations;
 
     loadScalar(configFilePath, "weight_trust_region_time", weight_trust_region_time);
-    loadScalar(configFilePath, "weight_trust_region_state", weight_trust_region_state);
+    loadScalar(configFilePath, "weight_trust_region_trajectory", weight_trust_region_trajectory);
     loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
     loadScalar(configFilePath, "trust_region_factor", trust_region_factor);
     loadScalar(configFilePath, "nu_tol", nu_tol);
@@ -78,7 +88,7 @@ int main()
 
     print("Initializing solver.\n");
     op::SecondOrderConeProgram socp = sc::build_sc_SOCP(model,
-                                                        weight_trust_region_time, weight_trust_region_state, weight_virtual_control,
+                                                        weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
                                                         X, U, sigma, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
 
     // Cache indices for performance
@@ -113,7 +123,7 @@ int main()
 
         // Write solution to files
         timer = tic();
-        string file_name_prefix = format("{}iteration{:03}_", get_output_path(), it);
+        string file_name_prefix = format("{}/iteration{:03}_", get_output_path(), it);
         {
             ofstream f(file_name_prefix + "X.txt");
             f << X;
@@ -162,8 +172,8 @@ int main()
         print("\n");
         print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
         print("\n");
-        if (solver.get_solution_value("norm2_Delta", {}) + solver.get_solution_value("Delta_sigma", {}) < delta_tol && 
-        solver.get_solution_value("norm1_nu", {}) < nu_tol)
+        if (solver.get_solution_value("norm2_Delta", {}) + solver.get_solution_value("Delta_sigma", {}) < delta_tol &&
+            solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
             print("Converged after {} iterations.\n", it + 1);
             break;
@@ -175,10 +185,8 @@ int main()
         else
         {
             weight_trust_region_time *= trust_region_factor;
-            weight_trust_region_state *= trust_region_factor;
+            weight_trust_region_trajectory *= trust_region_factor;
         }
-
-
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
