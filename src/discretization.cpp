@@ -67,11 +67,11 @@ void calculate_discretization(
     double &sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
-    vector<Model::state_matrix_t> &A_bar,
-    vector<Model::control_matrix_t> &B_bar,
-    vector<Model::control_matrix_t> &C_bar,
-    vector<Model::state_vector_t> &Sigma_bar,
-    vector<Model::state_vector_t> &z_bar)
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &Sigma_bar,
+    Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.cols();
 
@@ -80,7 +80,7 @@ void calculate_discretization(
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
     // model.setMaxThreads(omp_get_max_threads());
-// #pragma omp parallel for
+    // #pragma omp parallel for
     for (size_t k = 0; k < K - 1; k++)
     {
         DiscretizationODE::state_type V;

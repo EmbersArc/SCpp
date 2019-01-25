@@ -12,8 +12,8 @@ void calculate_discretization(
     double &sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
-    vector<Model::state_matrix_t> &A_bar,
-    vector<Model::control_matrix_t> &B_bar,
-    vector<Model::control_matrix_t> &C_bar,
-    vector<Model::state_vector_t> &Sigma_bar,
-    vector<Model::state_vector_t> &z_bar);
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &Sigma_bar,
+    Model::state_vector_v_t &z_bar);
