@@ -77,12 +77,22 @@ AffineTerm operator*(const Parameter &parameter, const Variable &variable)
     return affineTerm;
 }
 
+AffineTerm operator*(const Variable &variable, const Parameter &parameter)
+{
+    return parameter * variable;
+}
+
 AffineTerm operator*(const double &const_parameter, const Variable &variable)
 {
     AffineTerm affineTerm;
     affineTerm.parameter = Parameter(const_parameter);
     affineTerm.variable = variable;
     return affineTerm;
+}
+
+AffineTerm operator*(const Variable &variable, const double &const_parameter)
+{
+    return const_parameter * variable;
 }
 
 AffineExpression operator+(const AffineExpression &lhs, const AffineExpression &rhs)
@@ -99,6 +109,11 @@ AffineExpression operator+(const AffineExpression &lhs, const double &rhs)
     result.terms.insert(result.terms.end(), lhs.terms.begin(), lhs.terms.end());
     result.terms.push_back(Parameter(rhs));
     return result;
+}
+
+AffineExpression operator+(const double &lhs, const AffineExpression &rhs)
+{
+    return rhs + lhs;
 }
 
 string Norm2::print() const
@@ -151,12 +166,22 @@ SecondOrderConeConstraint operator<=(const Norm2 &lhs, const AffineExpression &r
     return socc;
 }
 
+SecondOrderConeConstraint operator>=(const AffineExpression &lhs, const Norm2 &rhs)
+{
+    return rhs <= lhs;
+}
+
 SecondOrderConeConstraint operator<=(const Norm2 &lhs, const double &rhs)
 {
     SecondOrderConeConstraint socc;
     socc.lhs = lhs;
     socc.rhs = Parameter(rhs);
     return socc;
+}
+
+SecondOrderConeConstraint operator>=(const double &lhs, const Norm2 &rhs)
+{
+    return rhs <= lhs;
 }
 
 PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero)
@@ -167,12 +192,22 @@ PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero)
     return result;
 }
 
+PostiveConstraint operator<=(const double &zero, const AffineExpression &rhs)
+{
+    return rhs >= zero;
+}
+
 EqualityConstraint operator==(const AffineExpression &lhs, const double &zero)
 {
     assert(zero == 0.0);
     EqualityConstraint result;
     result.lhs = lhs;
     return result;
+}
+
+EqualityConstraint operator==(const double &zero, const AffineExpression &rhs)
+{
+    return rhs == zero;
 }
 
 inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &dimensions)

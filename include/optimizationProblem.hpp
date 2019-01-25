@@ -32,7 +32,7 @@ struct Variable
 struct AffineTerm;
 
 struct AffineExpression
-{ // represents a term like (p_1*x_1 + p_2*x_2 + b)
+{ // represents a term like (p_1*x_1 + p_2*x_2 + ... + b)
     vector<AffineTerm> terms;
     string print() const;
     double evaluate(const vector<double> &soln_values) const;
@@ -94,15 +94,15 @@ struct AffineTerm
 };
 
 struct Norm2
-{ // represents a term like norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
+{ // represents a term like norm2([p_1*x_1 + p_2*x_2 + ... + b_1,   p_3*x_3 + p_4*x_4 + ... + b_2 ])
     vector<AffineExpression> arguments;
     string print() const;
     double evaluate(const vector<double> &soln_values) const;
 };
 
 // represents a constraint like
-//      norm2([p_1*x_1 + p_2*x_2 + b_1,   p_3*x_3 + p_4*x_4 + b_2 ])
-//        <= p_5*x_5 + p_6*x_6 + b_3
+//      norm2([p_1*x_1 + p_2*x_2 + ... + b_1,   p_3*x_3 + p_4*x_4 + ... + b_2 ])
+//        <= p_5*x_5 + p_6*x_6 + ... + b_3
 struct SecondOrderConeConstraint
 {
     Norm2 lhs;
@@ -112,7 +112,7 @@ struct SecondOrderConeConstraint
 };
 
 // represents a constraint like
-//     p_1*x_1 + p_2*x_2 + b >= 0
+//     p_1*x_1 + p_2*x_2 + ... + b >= 0
 struct PostiveConstraint
 {
     AffineExpression lhs;
@@ -121,7 +121,7 @@ struct PostiveConstraint
 };
 
 // represents a constraint like
-//     p_1*x_1 + p_2*x_2 + b == 0
+//     p_1*x_1 + p_2*x_2 + ... + b == 0
 struct EqualityConstraint
 {
     AffineExpression lhs;
@@ -130,13 +130,19 @@ struct EqualityConstraint
 };
 
 AffineTerm operator*(const Parameter &parameter, const Variable &variable);
+AffineTerm operator*(const Variable &variable, const Parameter &parameter);
 AffineTerm operator*(const double &const_parameter, const Variable &variable);
+AffineTerm operator*(const Variable &variable, const double &const_parameter);
 AffineExpression operator+(const AffineExpression &lhs, const AffineExpression &rhs);
 AffineExpression operator+(const AffineExpression &lhs, const double &rhs);
+AffineExpression operator+(const double &lhs, const AffineExpression &rhs);
 Norm2 norm2(const vector<AffineExpression> &affineExpressions);
 SecondOrderConeConstraint operator<=(const Norm2 &lhs, const AffineExpression &rhs);
+SecondOrderConeConstraint operator>=(const AffineExpression &lhs, const Norm2 &rhs);
 SecondOrderConeConstraint operator<=(const Norm2 &lhs, const double &rhs);
+SecondOrderConeConstraint operator>=(const double &lhs, const Norm2 &rhs);
 PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero);
+PostiveConstraint operator<=(const double &zero, const AffineExpression &lhs);
 EqualityConstraint operator==(const AffineExpression &lhs, const double &zero);
 
 class GenericOptimizationProblem
@@ -151,7 +157,7 @@ class GenericOptimizationProblem
     size_t allocate_variable_index();
 
   public:
-    void create_tensor_variable(const string &name, const vector<size_t> &dimensions);
+    void create_tensor_variable(const string &name, const vector<size_t> &dimensions = {});
     size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
     Variable get_variable(const string &name, const vector<size_t> &indices);
     size_t get_n_variables() const { return n_variables; }
