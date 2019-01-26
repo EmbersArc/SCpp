@@ -71,6 +71,9 @@ class SystemModel
         const Eigen::Matrix<T, INPUT_DIM, 1> &u,
         Eigen::Matrix<T, STATE_DIM, 1> &f);
 
+    virtual state_vector_t getStateWeightVector() = 0;
+    virtual input_vector_t getInputWeightVector() = 0;
+
   private:
     // Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
     void systemFlowMapAD(

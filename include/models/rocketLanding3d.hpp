@@ -23,22 +23,27 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     RocketLanding3D()
     {
         string configFilePath = format("../include/models/config/{}.info", getModelName());
+
+        double I_sp;
+        double m_init, m_dry;
+        Eigen::Vector3d r_init, v_init, rpy_init, w_init;
+        Eigen::Vector3d r_final, v_final;
+
         loadMatrix(configFilePath, "g_I", g_I);
         loadMatrix(configFilePath, "J_B", J_B);
         loadMatrix(configFilePath, "r_T_B", r_T_B);
-
-        loadMatrix(configFilePath, "x_init", x_init);
-        loadMatrix(configFilePath, "x_final", x_final);
-
+        loadScalar(configFilePath, "m_init", m_init);
+        loadMatrix(configFilePath, "r_init", r_init);
+        loadMatrix(configFilePath, "v_init", v_init);
+        loadMatrix(configFilePath, "rpy_init", rpy_init);
+        loadMatrix(configFilePath, "w_init", w_init);
+        loadScalar(configFilePath, "m_dry", m_dry);
+        loadMatrix(configFilePath, "r_final", r_final);
+        loadMatrix(configFilePath, "v_final", v_final);
         loadScalar(configFilePath, "final_time_guess", final_time_guess);
-
         loadScalar(configFilePath, "T_min", T_min);
         loadScalar(configFilePath, "T_max", T_max);
-
-        double I_sp;
         loadScalar(configFilePath, "I_sp", I_sp);
-        alpha_m = 1. / (I_sp * fabs(g_I(2)));
-
         loadScalar(configFilePath, "gimbal_max", gimbal_max);
         loadScalar(configFilePath, "theta_max", theta_max);
         loadScalar(configFilePath, "gamma_gs", gamma_gs);
@@ -47,7 +52,14 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         deg2rad(gimbal_max);
         deg2rad(theta_max);
         deg2rad(gamma_gs);
+        deg2rad(w_init);
         deg2rad(w_B_max);
+        deg2rad(rpy_init);
+
+        alpha_m = 1. / (I_sp * fabs(g_I(2)));
+
+        x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+        x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
     }
 
     static string getModelName()
@@ -188,9 +200,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
             }
             socp.add_constraint(lhs + (-T_min) >= (0.0));
 
-            // // Simplified Minimum Thrust
-            // socp.add_constraint((1.0) * var("U", {2, k}) + (-T_min) >= (0.0));
-
             // Maximum Thrust
             socp.add_constraint(
                 op::norm2({(1.0) * var("U", {0, k}),
@@ -204,8 +213,7 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         }
     }
 
-    void
-    nondimensionalize()
+    void nondimensionalize()
     {
         m_scale = x_init(0);
         r_scale = x_init.segment(1, 3).norm();
@@ -239,14 +247,14 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
         U.bottomRows(1) *= m_scale * r_scale * r_scale;
     }
 
-    state_vector_t getStateWeightVector()
+    state_vector_t getStateWeightVector() override
     {
         state_vector_t w;
         w.setOnes();
         return w;
     }
 
-    input_vector_t getInputWeightVector()
+    input_vector_t getInputWeightVector() override
     {
         input_vector_t w;
         w.setOnes();

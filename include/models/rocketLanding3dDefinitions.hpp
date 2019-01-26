@@ -17,6 +17,18 @@ void deg2rad(T &deg)
 }
 
 template <typename T>
+Eigen::Matrix<T, 4, 1> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &rpy)
+{
+    Eigen::Quaternion<T> q = Eigen::AngleAxis(rpy.x(), Eigen::Matrix<T, 3, 1>::UnitX()) *
+                             Eigen::AngleAxis(rpy.y(), Eigen::Matrix<T, 3, 1>::UnitY()) *
+                             Eigen::AngleAxis(rpy.z(), Eigen::Matrix<T, 3, 1>::UnitZ());
+    Eigen::Matrix<T, 4, 1> quat;
+    quat << q.w(), q.vec();
+
+    return quat;
+}
+
+template <typename T>
 Eigen::Matrix<T, 3, 3> dirCosineMatrix(const Eigen::Matrix<T, 4, 1> &q)
 {
     Eigen::Matrix<T, 3, 3> dirCosineMatrix;
