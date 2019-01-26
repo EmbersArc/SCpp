@@ -22,21 +22,28 @@ class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DI
 
     RocketLanding2D()
     {
-        string configFilePath = format("../include/models/config/{}.info", getModelName());
+        ParameterServer param(format("../include/models/config/{}.info", getModelName()));
 
-        loadScalar(configFilePath, "m", m);
-        loadScalar(configFilePath, "g", g);
-        loadScalar(configFilePath, "r_T", r_T);
-        loadScalar(configFilePath, "I", I);
-        loadScalar(configFilePath, "T_min", T_min);
-        loadScalar(configFilePath, "T_max", T_max);
-        loadScalar(configFilePath, "gimbal_max", gimbal_max);
-        loadScalar(configFilePath, "theta_max", theta_max);
+        param.loadScalar("m", m);
+        param.loadScalar("g", g);
+        param.loadScalar("r_T", r_T);
+        param.loadScalar("I", I);
+        param.loadScalar("T_min", T_min);
+        param.loadScalar("T_max", T_max);
+        param.loadScalar("gimbal_max", gimbal_max);
+        param.loadScalar("theta_max", theta_max);
+        param.loadScalar("gamma_gs", gamma_gs);
 
-        loadMatrix(configFilePath, "x_init", x_init);
-        loadMatrix(configFilePath, "x_final", x_final);
+        param.loadMatrix("x_init", x_init);
+        param.loadMatrix("x_final", x_final);
 
-        nondimensionalize();
+        deg2rad(x_init(4));
+        deg2rad(x_init(5));
+        deg2rad(x_final(4));
+        deg2rad(x_final(5));
+        deg2rad(gimbal_max);
+        deg2rad(theta_max);
+        deg2rad(gamma_gs);
     }
 
     static string getModelName()
@@ -94,7 +101,7 @@ class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DI
     {
         const size_t K = X0.cols();
 
-        auto var = [&](const string &name, const vector<size_t> &indices) { return socp.get_variable(name, indices); };
+        auto var = [&](const string &name, const vector<size_t> &indices = {}) { return socp.get_variable(name, indices); };
         auto param = [](double &param_value) { return op::Parameter(&param_value); };
 
         // initial state
@@ -112,11 +119,11 @@ class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DI
         socp.add_constraint((-1.0) * var("X", {4, K - 1}) + param(x_final(4)) == 0.0);
         socp.add_constraint((-1.0) * var("X", {5, K - 1}) + param(x_final(5)) == 0.0);
 
-        // glide slope cone
-        // TODO
-
         for (size_t k = 0; k < K; ++k)
         {
+            // glide slope
+            socp.add_constraint(op::norm2({(1.0) * var("X", {0, k})}) <= (1.0 / tan(gamma_gs)) * var("X", {1, k}));
+
             // angle constraint
             socp.add_constraint((1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
             socp.add_constraint((-1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
@@ -170,6 +177,7 @@ class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DI
     double T_max;
     double gimbal_max;
     double theta_max;
+    double gamma_gs;
 
     state_vector_t x_init;
     state_vector_t x_final;
