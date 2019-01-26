@@ -6,7 +6,7 @@
 
 #include "systemModel.hpp"
 #include "ecosWrapper.hpp"
-#include "parameters.hpp"
+#include "parameterServer.hpp"
 
 #include "rocketLanding3dDefinitions.hpp"
 
@@ -22,32 +22,32 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
 
     RocketLanding3D()
     {
-        string configFilePath = format("../include/models/config/{}.info", getModelName());
+        ParameterServer param(format("../include/models/config/{}.info", getModelName()));
 
         double I_sp;
         double m_init, m_dry;
         Eigen::Vector3d r_init, v_init, rpy_init, w_init;
         Eigen::Vector3d r_final, v_final;
 
-        loadMatrix(configFilePath, "g_I", g_I);
-        loadMatrix(configFilePath, "J_B", J_B);
-        loadMatrix(configFilePath, "r_T_B", r_T_B);
-        loadScalar(configFilePath, "m_init", m_init);
-        loadMatrix(configFilePath, "r_init", r_init);
-        loadMatrix(configFilePath, "v_init", v_init);
-        loadMatrix(configFilePath, "rpy_init", rpy_init);
-        loadMatrix(configFilePath, "w_init", w_init);
-        loadScalar(configFilePath, "m_dry", m_dry);
-        loadMatrix(configFilePath, "r_final", r_final);
-        loadMatrix(configFilePath, "v_final", v_final);
-        loadScalar(configFilePath, "final_time_guess", final_time_guess);
-        loadScalar(configFilePath, "T_min", T_min);
-        loadScalar(configFilePath, "T_max", T_max);
-        loadScalar(configFilePath, "I_sp", I_sp);
-        loadScalar(configFilePath, "gimbal_max", gimbal_max);
-        loadScalar(configFilePath, "theta_max", theta_max);
-        loadScalar(configFilePath, "gamma_gs", gamma_gs);
-        loadScalar(configFilePath, "w_B_max", w_B_max);
+        param.loadMatrix("g_I", g_I);
+        param.loadMatrix("J_B", J_B);
+        param.loadMatrix("r_T_B", r_T_B);
+        param.loadScalar("m_init", m_init);
+        param.loadMatrix("r_init", r_init);
+        param.loadMatrix("v_init", v_init);
+        param.loadMatrix("rpy_init", rpy_init);
+        param.loadMatrix("w_init", w_init);
+        param.loadScalar("m_dry", m_dry);
+        param.loadMatrix("r_final", r_final);
+        param.loadMatrix("v_final", v_final);
+        param.loadScalar("final_time_guess", final_time_guess);
+        param.loadScalar("T_min", T_min);
+        param.loadScalar("T_max", T_max);
+        param.loadScalar("I_sp", I_sp);
+        param.loadScalar("gimbal_max", gimbal_max);
+        param.loadScalar("theta_max", theta_max);
+        param.loadScalar("gamma_gs", gamma_gs);
+        param.loadScalar("w_B_max", w_B_max);
 
         deg2rad(gimbal_max);
         deg2rad(theta_max);
@@ -263,8 +263,8 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     }
 
   private:
-    double m_scale;
-    double r_scale;
+    double m_scale = 1.;
+    double r_scale = 1.;
 
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
@@ -276,13 +276,12 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
     state_vector_t x_init;
     state_vector_t x_final;
 
-    bool constrain_initial_orientation;
     double final_time_guess;
 
     double gimbal_max;
     double theta_max;
     double gamma_gs;
     double w_B_max;
-}; // namespace rocket3d
+};
 
 } // namespace rocket3d

@@ -3,9 +3,7 @@
 #include <boost/numeric/odeint.hpp>
 
 #include "eigenIntegration.hpp"
-#include "active_model.hpp"
-
-using std::array;
+#include "activeModel.hpp"
 
 void calculate_discretization(
     Model &model,

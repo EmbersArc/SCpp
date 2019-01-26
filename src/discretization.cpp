@@ -11,8 +11,7 @@ class DiscretizationODE
     Model &model;
 
   public:
-    static const size_t n_V_states = 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2;
-    using state_type = Eigen::Matrix<double, Model::state_dim_, n_V_states>;
+    using state_type = Eigen::Matrix<double, Model::state_dim_, 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2>;
 
     DiscretizationODE(
         const Model::input_vector_t &u_t0,
@@ -24,15 +23,14 @@ class DiscretizationODE
 
     void operator()(const state_type &V, state_type &dVdt, const double t)
     {
-        const Model::state_vector_t x = V.col(0);
+        const Model::state_vector_t &x = V.col(0);
         const Model::input_vector_t u = u_t0 + t / dt * (u_t1 - u_t0);
 
         Model::state_vector_t f;
         Model::state_matrix_t A_bar;
         Model::control_matrix_t B_bar;
-        const size_t thread_num = omp_get_thread_num();
-        model.computef(x, u, f, thread_num);
-        model.computeJacobians(x, u, A_bar, B_bar, thread_num);
+        model.computef(x, u, f);
+        model.computeJacobians(x, u, A_bar, B_bar);
         A_bar *= sigma;
         B_bar *= sigma;
 
@@ -79,8 +77,6 @@ void calculate_discretization(
     using namespace boost::numeric::odeint;
     runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
 
-    // model.setMaxThreads(omp_get_max_threads());
-    // #pragma omp parallel for
     for (size_t k = 0; k < K - 1; k++)
     {
         DiscretizationODE::state_type V;
@@ -90,7 +86,7 @@ void calculate_discretization(
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
 
-        integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 10.);
+        integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 5.);
 
         size_t cols = 1;
 

@@ -13,29 +13,14 @@ using fmt::format;
 using fmt::print;
 using std::string;
 
-template <typename T>
-inline void loadScalar(
-    const string &filename,
-    const string &scalarName,
-    T &scalar)
-{
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_info(filename, pt);
-
-    try
-    {
-        scalar = pt.get<T>(scalarName);
-    }
-    catch (const std::exception &e)
-    {
-        throw std::runtime_error(format("WARNING: Failed to load scalar type: {}!\n", scalarName));
-    }
-}
-
 /**
- * An auxiliary function which loads an Eigen matrix from a file. The file uses property tree data structure with INFO format (refer to www.goo.gl/fV3yWA).
+ * An auxiliary function which loads an Eigen matrix or a scalar from a file.
+ * The file uses property tree data structure with INFO format.
  *
  * It has the following format:	<br>
+ * 
+ * scalarName   value   <br>
+ *
  * matrixName	<br>
  * {	<br>
  *   scaling 1e+0				<br>
@@ -47,27 +32,55 @@ inline void loadScalar(
  *
  * If a value for a specific element is not defined it will set by default to zero.
  *
- * @param [in] filename: File name which contains the configuration data.
- * @param [in] matrixName: The key name assigned to the matrix in the config file.
- * @param [out] matrix: The loaded matrix.
+ * For vectors the second index can be left out.
  */
-template <typename Derived>
-inline void loadMatrix(
-    const string &filename,
-    const string &matrixName,
-    Eigen::MatrixBase<Derived> &matrix)
+class ParameterServer
 {
-    typedef typename Eigen::MatrixBase<Derived>::Scalar scalar_t;
+  public:
+    ParameterServer(const string &filename);
 
+    template <typename T>
+    void loadScalar(
+        const string &scalarName,
+        T &scalar);
+
+    template <typename T>
+    void loadMatrix(
+        const string &matrixName,
+        Eigen::MatrixBase<T> &matrix);
+
+  private:
     boost::property_tree::ptree pt;
-    boost::property_tree::read_info(filename, pt);
+};
 
-    scalar_t scaling = pt.get<scalar_t>(matrixName + ".scaling", 1);
+template <typename T>
+void ParameterServer::loadScalar(
+    const string &scalarName,
+    T &scalar)
+{
+    try
+    {
+        scalar = pt.get<T>(scalarName);
+    }
+    catch (...)
+    {
+        throw std::runtime_error(format("WARNING: Failed to load scalar type: {}!\n", scalarName));
+    }
+}
+
+template <typename T>
+void ParameterServer::loadMatrix(
+    const string &matrixName,
+    Eigen::MatrixBase<T> &matrix)
+{
+    typedef typename Eigen::MatrixBase<T>::Scalar scalar_t;
+
+    const scalar_t scaling = pt.get<scalar_t>(matrixName + ".scaling", 1);
 
     matrix.setZero();
 
-    size_t rows = matrix.rows();
-    size_t cols = matrix.cols();
+    const size_t rows = matrix.rows();
+    const size_t cols = matrix.cols();
 
     for (size_t i = 0; i < rows; i++)
     {
@@ -84,7 +97,7 @@ inline void loadMatrix(
                     matrix(i, j) = pt.get<scalar_t>(format("{}.({},{})", matrixName, i, j));
                 }
             }
-            catch (const std::exception &e)
+            catch (...)
             {
                 throw std::runtime_error(format("WARNING: Failed to load matrix type: {}!\n", matrixName));
             }

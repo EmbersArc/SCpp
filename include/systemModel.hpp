@@ -50,9 +50,7 @@ class SystemModel
     // Computes the state derivative
     void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum = 0);
     // Computes state and control Jacobians
-    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, const size_t modelNum = 0);
-    // How many models are prepared for multithreading
-    void setMaxThreads(size_t num);
+    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B = 0);
 
     // Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
     virtual void initializeTrajectory(Eigen::MatrixXd &X,
@@ -82,7 +80,7 @@ class SystemModel
 
     // Dynamic library and prepared model instances
     std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib_;
-    vector<std::unique_ptr<CppAD::cg::GenericModel<double>>> models_;
+    std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
 };
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
@@ -117,11 +115,11 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::initializeModel()
     compiler.setCompileFlags({"-O3", "-std=c11"});
     dynamicLib_ = processor.createDynamicLibrary(compiler);
 
-    // // save to files
+    // save to files
     // CppAD::cg::SaveFilesModelLibraryProcessor<double> processorSave(libcgen);
     // processorSave.saveSources();
 
-    setMaxThreads(1);
+    model_ = dynamicLib_->model("model");
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
@@ -132,11 +130,11 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computef(const state_vector_t &
     dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
-    models_[modelNum]->ForwardZero(input_map, f_map);
+    model_->ForwardZero(input_map, f_map);
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B, const size_t modelNum)
+void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
@@ -144,7 +142,7 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_ve
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
-    models_[modelNum]->Jacobian(input_map, J_map);
+    model_->Jacobian(input_map, J_map);
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();
 }
@@ -170,20 +168,4 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     state_vector_ad_t fFixed;
     static_cast<Derived *>(this)->template systemFlowMap<scalar_ad_t>(x, u, fFixed);
     f = fFixed;
-}
-
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::setMaxThreads(size_t num)
-{
-    if (models_.size() < num)
-    {
-        for (size_t i = models_.size(); i < num; i++)
-        {
-            models_.emplace_back(dynamicLib_->model("model"));
-        }
-    }
-    else if (models_.size() > num)
-    {
-        models_.resize(num);
-    }
 }

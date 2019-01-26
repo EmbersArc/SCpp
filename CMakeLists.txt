@@ -41,13 +41,15 @@ set(SOURCES
     include/models/rocketLanding3d.hpp
     include/models/rocketLanding2dDefinitions.hpp
     include/models/rocketLanding2d.hpp
-
+    include/activeModel.hpp
+    
     include/ecosWrapper.hpp
         src/ecosWrapper.cpp
     include/eigenIntegration.hpp
 
     include/systemModel.hpp
-    include/parameters.hpp
+    include/parameterServer.hpp
+        src/parameterServer.cpp
     include/optimizationProblem.hpp
         src/optimizationProblem.cpp
     include/discretization.hpp

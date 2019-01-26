@@ -75,7 +75,6 @@ x_final
     (13)    0.
 }
 
-constrain_initial_orientation false
 final_time_guess 6.
 
 T_min       2.0

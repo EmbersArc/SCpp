@@ -142,7 +142,7 @@ SecondOrderConeConstraint operator>=(const AffineExpression &lhs, const Norm2 &r
 SecondOrderConeConstraint operator<=(const Norm2 &lhs, const double &rhs);
 SecondOrderConeConstraint operator>=(const double &lhs, const Norm2 &rhs);
 PostiveConstraint operator>=(const AffineExpression &lhs, const double &zero);
-PostiveConstraint operator<=(const double &zero, const AffineExpression &lhs);
+PostiveConstraint operator<=(const double &zero, const AffineExpression &rhs);
 EqualityConstraint operator==(const AffineExpression &lhs, const double &zero);
 
 class GenericOptimizationProblem

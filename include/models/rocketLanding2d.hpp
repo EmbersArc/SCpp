@@ -6,7 +6,7 @@
 
 #include "systemModel.hpp"
 #include "ecosWrapper.hpp"
-#include "parameters.hpp"
+#include "parameterServer.hpp"
 
 #include "rocketLanding2dDefinitions.hpp"
 

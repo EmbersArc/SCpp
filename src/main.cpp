@@ -13,7 +13,7 @@
 
 #include <fmt/format.h>
 
-#include "active_model.hpp"
+#include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
 #include "successiveConvexificationSOCP.hpp"
@@ -31,15 +31,15 @@ string get_output_path()
 
 int main()
 {
-    string configFilePath = "../include/config/SCParameters.info";
+    ParameterServer param("../include/config/SCParameters.info");
 
     size_t K;
-    loadScalar(configFilePath, "K", K);
+    param.loadScalar("K", K);
 
     print("Initializing model.\n");
     Model model;
     bool nondimensionalize;
-    loadScalar(configFilePath, "nondimensionalize", nondimensionalize);
+    param.loadScalar("nondimensionalize", nondimensionalize);
     if (nondimensionalize)
     {
         model.nondimensionalize();
@@ -66,13 +66,13 @@ int main()
     double delta_tol;
     size_t max_iterations;
 
-    loadScalar(configFilePath, "weight_trust_region_time", weight_trust_region_time);
-    loadScalar(configFilePath, "weight_trust_region_trajectory", weight_trust_region_trajectory);
-    loadScalar(configFilePath, "weight_virtual_control", weight_virtual_control);
-    loadScalar(configFilePath, "trust_region_factor", trust_region_factor);
-    loadScalar(configFilePath, "nu_tol", nu_tol);
-    loadScalar(configFilePath, "delta_tol", delta_tol);
-    loadScalar(configFilePath, "max_iterations", max_iterations);
+    param.loadScalar("weight_trust_region_time", weight_trust_region_time);
+    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
+    param.loadScalar("weight_virtual_control", weight_virtual_control);
+    param.loadScalar("trust_region_factor", trust_region_factor);
+    param.loadScalar("nu_tol", nu_tol);
+    param.loadScalar("delta_tol", delta_tol);
+    param.loadScalar("max_iterations", max_iterations);
 
     Model::state_matrix_v_t A_bar(K - 1);
     Model::control_matrix_v_t B_bar(K - 1);
@@ -182,7 +182,7 @@ int main()
         {
             print("No convergence after {} iterations.\n", it + 1);
         }
-        else
+        else if (solver.get_solution_value("norm1_nu", {}) < nu_tol)
         {
             weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
