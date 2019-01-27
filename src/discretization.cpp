@@ -60,7 +60,7 @@ class DiscretizationODE
     }
 };
 
-void calculate_discretization(
+void calculateDiscretization(
     Model &model,
     double &sigma,
     const Eigen::MatrixXd &X,

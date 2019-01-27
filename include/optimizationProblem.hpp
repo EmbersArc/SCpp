@@ -15,14 +15,14 @@
 using fmt::print;
 using std::map;
 using std::optional;
-using std::pair;
 using std::string;
 using std::vector;
 
 namespace op
 {
+// represents an optimization variable x_i
 struct Variable
-{ // represents an optimization variable x_i
+{
     string name;
     vector<size_t> tensor_indices;
     size_t problem_index;
@@ -31,8 +31,9 @@ struct Variable
 
 struct AffineTerm;
 
+// represents a term like (p_1*x_1 + p_2*x_2 + ... + b)
 struct AffineExpression
-{ // represents a term like (p_1*x_1 + p_2*x_2 + ... + b)
+{
     vector<AffineTerm> terms;
     string print() const;
     double evaluate(const vector<double> &soln_values) const;
@@ -84,8 +85,9 @@ class Parameter
     operator AffineExpression() const;
 };
 
+// represents a linear term (p_1*x_1) or constant term (p_1)
 struct AffineTerm
-{ // represents a linear term (p_1*x_1) or constant term (p_1)
+{
     Parameter parameter = Parameter(0.0);
     optional<Variable> variable; // a missing Variable represents a constant 1.0
     string print() const;
@@ -93,8 +95,9 @@ struct AffineTerm
     operator AffineExpression();
 };
 
+// represents a term like norm2([p_1*x_1 + p_2*x_2 + ... + b_1,   p_3*x_3 + p_4*x_4 + ... + b_2 ])
 struct Norm2
-{ // represents a term like norm2([p_1*x_1 + p_2*x_2 + ... + b_1,   p_3*x_3 + p_4*x_4 + ... + b_2 ])
+{
     vector<AffineExpression> arguments;
     string print() const;
     double evaluate(const vector<double> &soln_values) const;
@@ -165,7 +168,6 @@ class GenericOptimizationProblem
 
 struct SecondOrderConeProgram : public GenericOptimizationProblem
 {
-
     vector<SecondOrderConeConstraint> secondOrderConeConstraints;
     vector<PostiveConstraint> postiveConstraints;
     vector<EqualityConstraint> equalityConstraints;
@@ -179,4 +181,5 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
 
     bool feasibility_check(const vector<double> &soln_values) const;
 };
+
 } // namespace op

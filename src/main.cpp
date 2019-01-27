@@ -118,7 +118,7 @@ int main()
 
         const double timer_iteration = tic();
         double timer = tic();
-        calculate_discretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
+        calculateDiscretization(model, sigma, X, U, A_bar, B_bar, C_bar, Sigma_bar, z_bar);
         print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
         // Write solution to files

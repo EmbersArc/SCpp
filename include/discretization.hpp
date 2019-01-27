@@ -5,7 +5,7 @@
 #include "eigenIntegration.hpp"
 #include "activeModel.hpp"
 
-void calculate_discretization(
+void calculateDiscretization(
     Model &model,
     double &sigma,
     const Eigen::MatrixXd &X,
