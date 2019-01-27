@@ -3,7 +3,6 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <cppad/cg.hpp>
-#include <omp.h>
 
 #include "optimizationProblem.hpp"
 
@@ -11,6 +10,12 @@ template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
 class SystemModel
 {
   public:
+    enum : size_t
+    {
+        state_dim_ = STATE_DIM,
+        input_dim_ = INPUT_DIM,
+    };
+
     typedef Eigen::Matrix<double, STATE_DIM, 1> state_vector_t;
     typedef Eigen::Matrix<double, STATE_DIM, STATE_DIM> state_matrix_t;
     typedef Eigen::Matrix<double, INPUT_DIM, 1> input_vector_t;
@@ -28,18 +33,10 @@ class SystemModel
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
 
-    typedef Eigen::Matrix<double, STATE_DIM, Eigen::Dynamic> state_trajectory_matrix_t;
-    typedef Eigen::Matrix<double, INPUT_DIM, Eigen::Dynamic> input_trajectory_matrix_t;
-
     typedef vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>> state_vector_v_t;
+    typedef vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>> input_vector_v_t;
     typedef vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>> state_matrix_v_t;
     typedef vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>> control_matrix_v_t;
-
-    enum : size_t
-    {
-        state_dim_ = STATE_DIM,
-        input_dim_ = INPUT_DIM,
-    };
 
     // Default constructor
     SystemModel(){};

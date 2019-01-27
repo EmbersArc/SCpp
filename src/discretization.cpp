@@ -1,6 +1,4 @@
 
-#include <omp.h>
-
 #include "discretization.hpp"
 
 class DiscretizationODE
