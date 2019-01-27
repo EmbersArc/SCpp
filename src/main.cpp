@@ -18,6 +18,7 @@
 #include "discretization.hpp"
 #include "successiveConvexificationSOCP.hpp"
 #include "timing.hpp"
+#include "parameterServer.hpp"
 
 using fmt::format;
 using fmt::print;

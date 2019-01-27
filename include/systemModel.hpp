@@ -60,14 +60,14 @@ class SystemModel
         Eigen::MatrixXd &U0) = 0;
 
     // The state derivative function. Has to be implemented by the derived class.
-    template <typename T>
-    void systemFlowMap(
-        const Eigen::Matrix<T, STATE_DIM, 1> &x,
-        const Eigen::Matrix<T, INPUT_DIM, 1> &u,
-        Eigen::Matrix<T, STATE_DIM, 1> &f);
+    virtual void systemFlowMap(
+        const state_vector_ad_t &x,
+        const input_vector_ad_t &u,
+        state_vector_ad_t &f) = 0;
 
-    virtual state_vector_t getStateWeightVector() = 0;
-    virtual input_vector_t getInputWeightVector() = 0;
+    virtual void getStateWeightVector(state_vector_t &w) = 0;
+    virtual void getInputWeightVector(input_vector_t &w) = 0;
+    virtual void nondimensionalize() = 0;
 
   private:
     // Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
@@ -145,16 +145,6 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_ve
 }
 
 template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-template <typename T>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMap(
-    const Eigen::Matrix<T, STATE_DIM, 1> &x,
-    const Eigen::Matrix<T, INPUT_DIM, 1> &u,
-    Eigen::Matrix<T, STATE_DIM, 1> &f)
-{
-    throw std::runtime_error("systemFlowMap() method should be implemented by the derived class.");
-}
-
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
     dynamic_vector_ad_t &f)
@@ -163,6 +153,6 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     input_vector_ad_t u = tapedInput.template segment<INPUT_DIM>(STATE_DIM);
 
     state_vector_ad_t fFixed;
-    static_cast<Derived *>(this)->template systemFlowMap<scalar_ad_t>(x, u, fFixed);
+    systemFlowMap(x, u, fFixed);
     f = fFixed;
 }
