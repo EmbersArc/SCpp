@@ -8,11 +8,16 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
  - JIT code generation with CppAD
  - Intuitive interface to implement custom models
  - Rocket landing models in 2D and 3D
+ 
+**Dependencies:
 
-- Rocket trajectory model with free-final-time based on
-[Successive Convexification for 6-DoF Mars Rocket Powered Landing with Free-Final-Time](https://arxiv.org/abs/1802.03827)
-by Michael Szmuk and Behçet Açıkmeşe.
+ - Eigen
+ - Boost (odeint and ptree)
+ - CppAD and CppADCodeGen
+ - fmt (included as submodule)
+ - ECOS (included as submodule)
 
+Rocket trajectory model with free-final-time:
 ![](https://i.imgur.com/W6E0rgL.png)
 
 [Video example of generated trajectories](https://gfycat.com/InbornCoarseArcticseal)
