@@ -9,7 +9,7 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
  - Intuitive interface to implement custom models
  - Rocket landing models in 2D and 3D
  
-**Dependencies:
+**Dependencies:**
 
  - Eigen
  - Boost (odeint and ptree)
