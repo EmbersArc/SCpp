@@ -6,7 +6,7 @@
 
 #include "optimizationProblem.hpp"
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
+template <size_t STATE_DIM, size_t INPUT_DIM>
 class SystemModel
 {
   public:
@@ -46,8 +46,9 @@ class SystemModel
 
     // Computes the state derivative
     void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum = 0);
-    // Computes state and control Jacobians
-    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B = 0);
+    // Computes state and control Jacobians/Hessians
+    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+    void computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB);
 
     // Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
     virtual void initializeTrajectory(Eigen::MatrixXd &X,
@@ -80,8 +81,8 @@ class SystemModel
     std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
 };
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::initializeModel()
+template <size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
 {
     // input vector
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
@@ -97,12 +98,12 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::initializeModel()
 
     // store operation sequence in f: x -> dx and stop recording
     CppAD::ADFun<scalar_cg_ad_t> f(x, dxFixed);
-
     f.optimize();
 
     // generates source code
     CppAD::cg::ModelCSourceGen<double> cgen(f, "model");
     cgen.setCreateJacobian(true);
+    cgen.setCreateHessian(true);
     cgen.setCreateForwardZero(true);
     CppAD::cg::ModelLibraryCSourceGen<double> libcgen(cgen);
 
@@ -119,8 +120,8 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::initializeModel()
     model_ = dynamicLib_->model("model");
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum)
+template <size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
@@ -130,8 +131,8 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computef(const state_vector_t &
     model_->ForwardZero(input_map, f_map);
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
+template <size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
@@ -144,8 +145,22 @@ void SystemModel<Derived, STATE_DIM, INPUT_DIM>::computeJacobians(const state_ve
     B = J.template rightCols<INPUT_DIM>();
 }
 
-template <class Derived, size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<Derived, STATE_DIM, INPUT_DIM>::systemFlowMapAD(
+template <size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB)
+{
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
+    input << x, u;
+    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
+    Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> H;
+    dynamic_vector_map_t H_map(H.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
+
+    model_->Hessian(input_map, H_map);
+    HA = H.template leftCols<STATE_DIM>();
+    HB = H.template rightCols<INPUT_DIM>();
+}
+
+template <size_t STATE_DIM, size_t INPUT_DIM>
+void SystemModel<STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
     dynamic_vector_ad_t &f)
 {

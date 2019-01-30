@@ -14,10 +14,10 @@ using std::string;
 namespace rocket3d
 {
 
-class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_>
+class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 {
   public:
-    typedef SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_> BASE;
+    typedef SystemModel<STATE_DIM_, INPUT_DIM_> BASE;
 
     RocketLanding3D();
 
@@ -50,7 +50,6 @@ class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DI
                                     Eigen::MatrixXd &U);
 
     void getStateWeightVector(state_vector_t &w) override;
-
     void getInputWeightVector(input_vector_t &w) override;
 
   private:

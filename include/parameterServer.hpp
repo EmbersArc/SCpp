@@ -37,7 +37,7 @@ using std::string;
 class ParameterServer
 {
   public:
-    ParameterServer(const string &filename);
+    explicit ParameterServer(const string &filename);
 
     template <typename T>
     void loadScalar(

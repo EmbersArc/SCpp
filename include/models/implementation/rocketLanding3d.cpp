@@ -97,8 +97,7 @@ void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
         // input
-        U.col(k).head(3) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
-        // U.col(k)(3) = 0.;
+        U.col(k) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
     }
 }
 

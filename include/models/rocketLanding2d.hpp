@@ -14,10 +14,10 @@ using std::string;
 namespace rocket2d
 {
 
-class RocketLanding2D : public SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DIM_>
+class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 {
   public:
-    typedef SystemModel<RocketLanding2D, STATE_DIM_, INPUT_DIM_> BASE;
+    typedef SystemModel<STATE_DIM_, INPUT_DIM_> BASE;
 
     RocketLanding2D();
 

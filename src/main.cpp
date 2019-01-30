@@ -183,7 +183,7 @@ int main()
         {
             print("No convergence after {} iterations.\n", it + 1);
         }
-        else if (solver.get_solution_value("norm1_nu", {}) < nu_tol)
+        else if (solver.get_solution_value("norm1_nu", {}) < nu_tol and 3 < it)
         {
             weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;

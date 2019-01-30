@@ -1,3 +1,5 @@
+
+; ----- model definitions -----
 g_I
 {
     (0)   0.0
@@ -19,74 +21,67 @@ r_T_B
     (2)   -1e-2
 }
 
-; initial values
-x_init
-{
-    ; mass
-    (0)     2.
-
-    ; position
-    (1)     0.
-    (2)     4.
-    (3)     4.
-
-    ; velocity
-    (4)     1.
-    (5)     0.
-    (6)     0.
-
-    ; orientation
-    (7)     1.
-    (8)     0.
-    (9)     0.
-    (10)    0.
-
-    ; angular velocity
-    (11)    0.
-    (12)    0.
-    (13)    0.
-}
-
-; x_final values
-x_final
-{
-    ; mass
-    (0)     1.
-
-    ; position
-    (1)     0.
-    (2)     0.
-    (3)     0.
-
-    ; velocity
-    (4)     0.
-    (5)     0.
-    (6)     -0.1
-
-    ; orientation
-    (7)     1.
-    (8)     0.
-    (9)     0.
-    (10)    0.
-
-    ; angular velocity
-    (11)    0.
-    (12)    0.
-    (13)    0.
-}
-
-final_time_guess 6.
-
-T_min       2.0
-T_max       5.0
-t_max       0.
+T_min       2.
+T_max       5.
 I_sp        100.
 
+; ----- initial values -----
+; mass
+m_init 2.
+; position
+r_init
+{
+    (0)     0.
+    (1)     4.
+    (2)     4.
+}
+; velocity
+v_init
+{
+    (0)     1.
+    (1)     0.
+    (2)     0.
+}
+; orientation
+rpy_init
+{
+    (0)     0.
+    (1)     0.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_init
+{
+    (0)    0.
+    (1)    0.
+    (2)    0. ; not controllable
+}
+
+; ----- final values -----
+; mass
+m_dry 1.
+; position
+r_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     0.
+}
+; velocity
+v_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     -0.1
+}
+
 ; maximum gimbal
-gimbal_max   20.
+gimbal_max  20.
 ; maximum angle
 theta_max   70.
 ; glideslope angle
 gamma_gs    30.
 ; maximum angluar velocity
 w_B_max     60.
+
+final_time_guess 6.

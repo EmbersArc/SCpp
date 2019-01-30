@@ -1,10 +1,10 @@
 K 30
 
-weight_trust_region_time            1e-1
-weight_trust_region_trajectory      1e-3
-weight_virtual_control              1e4
+weight_trust_region_time            1e-2
+weight_trust_region_trajectory      1.
+weight_virtual_control              1e3
 
-trust_region_factor                 1.5
+trust_region_factor                 1.2
 
 nu_tol                              1e-6
 delta_tol                           1e-3
@@ -12,3 +12,5 @@ delta_tol                           1e-3
 max_iterations                      30
 
 nondimensionalize                   true
+
+compileJIT                          false

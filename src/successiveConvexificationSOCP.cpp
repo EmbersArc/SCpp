@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "successiveConvexificationSOCP.hpp"
 
 namespace sc
@@ -43,9 +41,12 @@ op::SecondOrderConeProgram build_sc_SOCP(
 
     for (size_t k = 0; k < K - 1; k++)
     {
-        // Build linearized model equality constraint
-        //    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
-        // -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
+        /*
+         * Build linearized model equality constraint
+         *    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
+         * -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
+         * 
+         */
         for (size_t row_index = 0; row_index < Model::state_dim_; row_index++)
         {
             // -I * x(k+1)
@@ -76,10 +77,14 @@ op::SecondOrderConeProgram build_sc_SOCP(
         }
     }
 
-    // Build virtual control norm
-    // minimize (weight_virtual_control * norm1_nu)
-    // s.t. sum(nu_bound) <= norm1_nu
-    //      -nu_bound <= nu <= nu_bound
+    /*
+     * Build virtual control norm
+     * 
+     * minimize (weight_virtual_control * norm1_nu)
+     * s.t. sum(nu_bound) <= norm1_nu
+     *      -nu_bound <= nu <= nu_bound
+     * 
+     */
     {
         op::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
@@ -102,21 +107,17 @@ op::SecondOrderConeProgram build_sc_SOCP(
         socp.add_minimization_term(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    /* Build sigma trust region
-    * (sigma - sigma0) * (sigma - sigma0) <= Delta_sigma
-    *          is equivalent to
-    * norm2(
-    *        0.5 - 0.5 * Delta_sigma
-    *        sigma0 - sigma
-    *      )
-    *      <= 0.5 + 0.5 * Delta_sigma;
-    */
+    /* 
+     * Build sigma trust region
+     * 
+     * norm2( sigma0 - sigma ) <= Delta_sigma;
+     * 
+     */
     {
         vector<op::AffineExpression> norm2_args;
-        norm2_args = {(0.5) + (-0.5) * var("Delta_sigma"),
-                      param(sigma) + (-1.0) * var("sigma")};
+        norm2_args = {param(sigma) + (-1.0) * var("sigma")};
 
-        socp.add_constraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta_sigma"));
+        socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("Delta_sigma"));
 
         // Minimize Delta_sigma
         socp.add_minimization_term(param(weight_trust_region_time) * var("Delta_sigma"));
@@ -128,20 +129,12 @@ op::SecondOrderConeProgram build_sc_SOCP(
          * Build state and input trust-region:
          *     (x - x0)^T * (x - x0)  +  (u - u0)^T * (u - u0)  <=  Delta
          * the index k is omitted, but applies to all terms in the constraint.
-         * The constraint is equivalent to the SOCP form:
          * 
-         * norm2(
-         *        0.5 - 0.5 * Delta
-         *        [(x - x0)^T | (u - u0)^T]^T
-         *      )
-         *     <= 0.5 + 0.5 * Delta;
+         * norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
          * 
          */
 
         vector<op::AffineExpression> norm2_args;
-
-        norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
-
         for (size_t i = 0; i < Model::state_dim_; i++)
         {
             norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
@@ -150,12 +143,13 @@ op::SecondOrderConeProgram build_sc_SOCP(
         {
             norm2_args.push_back(param(U(i, k)) + (-1.0) * var("U", {i, k}));
         }
-        socp.add_constraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
+        socp.add_constraint(op::norm2(norm2_args) <= (1.0) * var("Delta", {k}));
     }
 
     /*
      * Build combined state/input trust region over all K:
      *   norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
+     * 
      */
     {
         vector<op::AffineExpression> norm2_args;
