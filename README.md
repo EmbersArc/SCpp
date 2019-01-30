@@ -17,6 +17,8 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
  - CppAD and CppADCodeGen
  - fmt (included as submodule)
  - ECOS (included as submodule)
+ 
+**Examples:**
 
 Rocket trajectory model with free-final-time:
 
