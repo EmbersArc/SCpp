@@ -1,6 +1,6 @@
 
 # SCpp
-Implementation of the Successive Convexification algorithm.
+A C++ implementation of the Successive Convexification algorithm.
 
 **Features:**
 
