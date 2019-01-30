@@ -23,7 +23,7 @@ Rocket trajectory model with free-final-time:
 
 ![](https://i.imgur.com/W6E0rgL.png)
 
-[Video example of generated trajectories](https://gfycat.com/InbornCoarseArcticseal)
+[Video example of generated fixed-time trajectories](https://gfycat.com/InbornCoarseArcticseal)
 
 - 2D rocket landing problem
 [Feed-forward input tested in a box2d physics simulation](https://gfycat.com/DaringPortlyBlacklab)
