@@ -218,7 +218,6 @@ void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     X.block(1, 0, 6, K) *= r_scale;
 
     U.topRows(3) *= m_scale * r_scale;
-    U.bottomRows(1) *= m_scale * r_scale * r_scale;
 }
 
 void RocketLanding3D::getStateWeightVector(state_vector_t &w)
