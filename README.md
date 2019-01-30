@@ -1,6 +1,6 @@
 
 # SCpp
-Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Landing with Free-Final-Time" in C++
+Implementation of the Successive Convexification algorithm.
 
 **Features:**
 
@@ -17,6 +17,12 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
  - CppAD and CppADCodeGen
  - fmt (included as submodule)
  - ECOS (included as submodule)
+ 
+ **Papers:**
+ - [Successive Convexification: A Superlinearly Convergent Algorithm for Non-convex Optimal Control Problems
+](https://arxiv.org/abs/1804.06539)
+ - [Successive Convexification for 6-DoF Mars Rocket Powered Landing with Free-Final-Time
+](https://arxiv.org/abs/1802.03827)
  
 **Examples:**
 
