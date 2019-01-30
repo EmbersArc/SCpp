@@ -18,6 +18,9 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
  - ECOS (included as submodule)
 
 Rocket trajectory model with free-final-time:
+
+![](https://thumbs.gfycat.com/MenacingThornyGrackle-small.gif)
+
 ![](https://i.imgur.com/W6E0rgL.png)
 
 [Video example of generated trajectories](https://gfycat.com/InbornCoarseArcticseal)
