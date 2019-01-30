@@ -20,7 +20,7 @@ r_T_B
     (2)   -14.
 }
 
-T_min       100000.
+T_min       300000.
 T_max       800000.
 I_sp        282.
 
@@ -30,22 +30,22 @@ m_init 30000.
 ; position
 r_init
 {
-    (0)     1000.
-    (1)     1000.
-    (2)     5000.
+    (0)     0.
+    (1)     100.
+    (2)     500.
 }
 ; velocity
 v_init
 {
     (0)     0.
-    (1)     -100.
-    (2)     -200.
+    (1)     -30.
+    (2)     -50.
 }
 ; orientation
 rpy_init
 {
-    (0)     -10.
-    (1)     0.
+    (0)     0.
+    (1)     -30.
     (2)     0. ; not controllable
 }
 ; angular velocity
@@ -75,7 +75,7 @@ v_final
 }
 
 ; maximum gimbal
-gimbal_max  10.
+gimbal_max  7.
 ; maximum angle
 theta_max   45.
 ; glideslope angle
@@ -83,4 +83,4 @@ gamma_gs    70.
 ; maximum angluar velocity
 w_B_max     60.
 
-final_time_guess 20.
+final_time_guess 10.
