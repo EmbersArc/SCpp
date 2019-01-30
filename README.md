@@ -5,7 +5,7 @@ Implementation of "Successive Convexification for 6-DoF Mars Rocket Powered Land
 **Features:**
 
  - Efficient Successive Convexification algorithm
- - JIT code generation with CppAD
+ - JIT derivative code generation with CppAD
  - Intuitive interface to implement custom models
  - Rocket landing models in 2D and 3D
  
