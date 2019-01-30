@@ -124,14 +124,21 @@ int main()
 
         // Write solution to files
         timer = tic();
-        string file_name_prefix = format("{}/iteration{:03}_", get_output_path(), it);
+        Eigen::MatrixXd X_out(X);
+        Eigen::MatrixXd U_out(U);
+        model.redimensionalizeTrajectory(X_out, U_out);
+        string file_name_prefix = format("{}/{:03}_", get_output_path(), it);
         {
             ofstream f(file_name_prefix + "X.txt");
-            f << X;
+            f << X_out;
         }
         {
             ofstream f(file_name_prefix + "U.txt");
-            f << U;
+            f << U_out;
+        }
+        {
+            ofstream f(file_name_prefix + "t.txt");
+            f << sigma;
         }
         print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
 

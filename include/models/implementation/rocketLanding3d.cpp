@@ -133,7 +133,7 @@ void RocketLanding3D::addApplicationConstraints(
     // socp.add_constraint((-1.0) * var("X", {10, K - 1}) + (x_final(10)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {11, K - 1}) + (x_final(11)) == 0.0);
     socp.add_constraint((-1.0) * var("X", {12, K - 1}) + (x_final(12)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {13, K - 1}) + (x_final(13)) == 0.0);
+    // socp.add_constraint((-1.0) * var("X", {13, K - 1}) + (x_final(13)) == 0.0);
 
     socp.add_constraint((1.0) * var("U", {0, K - 1}) == (0.0));
     socp.add_constraint((1.0) * var("U", {1, K - 1}) == (0.0));

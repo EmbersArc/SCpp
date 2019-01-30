@@ -110,7 +110,7 @@ op::SecondOrderConeProgram build_sc_SOCP(
     /* 
      * Build sigma trust region
      * 
-     * norm2( sigma0 - sigma ) <= Delta_sigma;
+     *  norm2( sigma0 - sigma ) <= Delta_sigma;
      * 
      */
     {
@@ -127,10 +127,8 @@ op::SecondOrderConeProgram build_sc_SOCP(
     {
         /* 
          * Build state and input trust-region:
-         *     (x - x0)^T * (x - x0)  +  (u - u0)^T * (u - u0)  <=  Delta
-         * the index k is omitted, but applies to all terms in the constraint.
          * 
-         * norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
+         *  norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
          * 
          */
 
@@ -148,7 +146,8 @@ op::SecondOrderConeProgram build_sc_SOCP(
 
     /*
      * Build combined state/input trust region over all K:
-     *   norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
+     *  
+     *  norm2([ Delta(1), Delta(2), ... , Delta(K) ]) <= norm2_Delta
      * 
      */
     {
