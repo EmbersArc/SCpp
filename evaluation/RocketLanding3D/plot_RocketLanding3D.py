@@ -29,8 +29,8 @@ def key_press_event(event):
 def my_plot(fig, figures_i):
     iteration = str(figures_i).zfill(3)
 
-    X = np.loadtxt(f"output/RocketLanding3D/iteration{iteration}_X.txt")
-    U = np.loadtxt(f"output/RocketLanding3D/iteration{iteration}_U.txt")
+    X = np.loadtxt(f"output/RocketLanding3D/{iteration}_X.txt")
+    U = np.loadtxt(f"output/RocketLanding3D/{iteration}_U.txt")
 
     K = X.shape[1]
 
