@@ -226,7 +226,7 @@ size_t GenericOptimizationProblem::allocate_variable_index()
     return i;
 }
 
-void GenericOptimizationProblem::create_tensor_variable(const string &name, const vector<size_t> &dimensions)
+void GenericOptimizationProblem::createTensorVariable(const string &name, const vector<size_t> &dimensions)
 {
     size_t tensor_size = std::accumulate(dimensions.begin(), dimensions.end(), 1, std::multiplies<size_t>());
 
@@ -237,7 +237,7 @@ void GenericOptimizationProblem::create_tensor_variable(const string &name, cons
     tensor_variable_indices[name] = new_variable_indices;
 }
 
-size_t GenericOptimizationProblem::get_tensor_variable_index(const string &name, const vector<size_t> &indices)
+size_t GenericOptimizationProblem::getTensorVariableIndex(const string &name, const vector<size_t> &indices)
 {
     assert(tensor_variable_indices.count(name) > 0);
     auto dims = tensor_variable_dimensions[name];
@@ -254,26 +254,26 @@ Variable GenericOptimizationProblem::get_variable(const string &name, const vect
     Variable var;
     var.name = name;
     var.tensor_indices = indices;
-    var.problem_index = get_tensor_variable_index(name, indices);
+    var.problem_index = getTensorVariableIndex(name, indices);
     return var;
 }
 
-void SecondOrderConeProgram::add_constraint(SecondOrderConeConstraint c)
+void SecondOrderConeProgram::addConstraint(SecondOrderConeConstraint c)
 {
     secondOrderConeConstraints.push_back(c);
 }
 
-void SecondOrderConeProgram::add_constraint(PostiveConstraint c)
+void SecondOrderConeProgram::addConstraint(PostiveConstraint c)
 {
     postiveConstraints.push_back(c);
 }
 
-void SecondOrderConeProgram::add_constraint(EqualityConstraint c)
+void SecondOrderConeProgram::addConstraint(EqualityConstraint c)
 {
     equalityConstraints.push_back(c);
 }
 
-void SecondOrderConeProgram::add_minimization_term(AffineExpression c)
+void SecondOrderConeProgram::addMinimizationTerm(AffineExpression c)
 {
     costFunction = costFunction + c;
 }
@@ -319,7 +319,7 @@ bool feasibility_check_message(double tol, double val, const T &constraint)
     return true;
 }
 
-bool SecondOrderConeProgram::feasibility_check(const vector<double> &soln_values) const
+bool SecondOrderConeProgram::feasibilityCheck(const vector<double> &soln_values) const
 {
     const double tol = 0.1;
     bool feasible = true;

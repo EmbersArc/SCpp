@@ -80,36 +80,36 @@ void RocketLanding2D::addApplicationConstraints(
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
 
     // initial state
-    socp.add_constraint((-1.0) * var("X", {0, 0}) + param(x_init(0)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {1, 0}) + param(x_init(1)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {2, 0}) + param(x_init(2)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {3, 0}) + param(x_init(3)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {4, 0}) + param(x_init(4)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {5, 0}) + param(x_init(5)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {0, 0}) + param(x_init(0)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {1, 0}) + param(x_init(1)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {2, 0}) + param(x_init(2)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {3, 0}) + param(x_init(3)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {4, 0}) + param(x_init(4)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {5, 0}) + param(x_init(5)) == 0.0);
     // final state
-    socp.add_constraint((-1.0) * var("X", {0, K - 1}) + param(x_final(0)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {1, K - 1}) + param(x_final(1)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {2, K - 1}) + param(x_final(2)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {3, K - 1}) + param(x_final(3)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {4, K - 1}) + param(x_final(4)) == 0.0);
-    socp.add_constraint((-1.0) * var("X", {5, K - 1}) + param(x_final(5)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {0, K - 1}) + param(x_final(0)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + param(x_final(1)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + param(x_final(2)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + param(x_final(3)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + param(x_final(4)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + param(x_final(5)) == 0.0);
 
     for (size_t k = 0; k < K; ++k)
     {
         // glide slope
-        socp.add_constraint(op::norm2({(1.0) * var("X", {0, k})}) <= (1.0 / tan(gamma_gs)) * var("X", {1, k}));
+        socp.addConstraint(op::norm2({(1.0) * var("X", {0, k})}) <= (1.0 / tan(gamma_gs)) * var("X", {1, k}));
 
         // angle constraint
-        socp.add_constraint((1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
-        socp.add_constraint((-1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
+        socp.addConstraint((1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
+        socp.addConstraint((-1.0) * var("X", {4, k}) + (theta_max) >= (0.0));
 
         // throttle control constraints
-        socp.add_constraint((1.0) * var("U", {0, k}) + (-T_min) >= (0.0));
-        socp.add_constraint((-1.0) * var("U", {0, k}) + (T_max) >= (0.0));
+        socp.addConstraint((1.0) * var("U", {0, k}) + (-T_min) >= (0.0));
+        socp.addConstraint((-1.0) * var("U", {0, k}) + (T_max) >= (0.0));
 
         // gimbal control constraints
-        socp.add_constraint((1.0) * var("U", {1, k}) + (gimbal_max) >= (0.0));
-        socp.add_constraint((-1.0) * var("U", {1, k}) + (gimbal_max) >= (0.0));
+        socp.addConstraint((1.0) * var("U", {1, k}) + (gimbal_max) >= (0.0));
+        socp.addConstraint((-1.0) * var("U", {1, k}) + (gimbal_max) >= (0.0));
     }
 }
 

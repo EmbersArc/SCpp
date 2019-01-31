@@ -160,8 +160,8 @@ class GenericOptimizationProblem
     size_t allocate_variable_index();
 
   public:
-    void create_tensor_variable(const string &name, const vector<size_t> &dimensions = {});
-    size_t get_tensor_variable_index(const string &name, const vector<size_t> &indices);
+    void createTensorVariable(const string &name, const vector<size_t> &dimensions = {});
+    size_t getTensorVariableIndex(const string &name, const vector<size_t> &indices);
     Variable get_variable(const string &name, const vector<size_t> &indices);
     size_t get_n_variables() const { return n_variables; }
 };
@@ -173,13 +173,13 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
     vector<EqualityConstraint> equalityConstraints;
     AffineExpression costFunction = Parameter(0.0);
 
-    void add_constraint(SecondOrderConeConstraint c);
-    void add_constraint(PostiveConstraint c);
-    void add_constraint(EqualityConstraint c);
-    void add_minimization_term(AffineExpression c);
+    void addConstraint(SecondOrderConeConstraint c);
+    void addConstraint(PostiveConstraint c);
+    void addConstraint(EqualityConstraint c);
+    void addMinimizationTerm(AffineExpression c);
     void print_problem(std::ostream &out) const;
 
-    bool feasibility_check(const vector<double> &soln_values) const;
+    bool feasibilityCheck(const vector<double> &soln_values) const;
 };
 
 } // namespace op

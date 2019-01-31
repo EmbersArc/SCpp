@@ -32,7 +32,7 @@ Expression::t convert_affine_expression(
     return Expr::sum(Expr::vstack(exprs));
 }
 
-void MosekWrapper::solve_problem()
+void MosekWrapper::solveProblem()
 {
 
     Model::t M = new Model();

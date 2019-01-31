@@ -55,19 +55,19 @@ class EcosWrapper
   public:
     explicit EcosWrapper(op::SecondOrderConeProgram &_socp);
 
-    void solve_problem();
+    void solveProblem();
 
-    double get_solution_value(size_t problem_index) const
+    double getSolutionValue(size_t problem_index) const
     {
         return ecos_solution_vector[problem_index];
     }
 
-    double get_solution_value(const string &name, const vector<size_t> &indices)
+    double getSolutionValue(const string &name, const vector<size_t> &indices)
     {
         return ecos_solution_vector[socp.get_variable(name, indices).problem_index];
     }
 
-    vector<double> get_solution_vector()
+    vector<double> getSolutionVector()
     {
         if (ecos_n_variables > 0 && ecos_solution_vector.size() == size_t(ecos_n_variables))
         {
@@ -75,7 +75,7 @@ class EcosWrapper
         }
         else
         {
-            throw std::runtime_error("get_solution_vector(): Solution unavailable.");
+            throw std::runtime_error("getSolutionVector(): Solution unavailable.");
         }
     }
 };

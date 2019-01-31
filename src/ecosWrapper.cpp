@@ -254,7 +254,7 @@ inline vector<double> get_parameter_values(const vector<op::Parameter> &params, 
     return result;
 }
 
-void EcosWrapper::solve_problem()
+void EcosWrapper::solveProblem()
 {
 
     vector<double> ecos_cost_function_weights_values = get_parameter_values(ecos_cost_function_weights, 1.0);

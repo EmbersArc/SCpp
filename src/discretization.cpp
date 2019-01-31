@@ -9,7 +9,7 @@ class DiscretizationODE
     Model &model;
 
   public:
-    using state_type = Eigen::Matrix<double, Model::state_dim_, 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2>;
+    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim_, 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2>;
 
     DiscretizationODE(
         const Model::input_vector_t &u_t0,
@@ -19,7 +19,7 @@ class DiscretizationODE
         Model &model)
         : u_t0(u_t0), u_t1(u_t1), sigma(sigma), dt(dt), model(model) {}
 
-    void operator()(const state_type &V, state_type &dVdt, const double t)
+    void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
     {
         const Model::state_vector_t &x = V.col(0);
         const Model::input_vector_t u = u_t0 + t / dt * (u_t1 - u_t0);
@@ -66,18 +66,18 @@ void calculateDiscretization(
     Model::state_matrix_v_t &A_bar,
     Model::control_matrix_v_t &B_bar,
     Model::control_matrix_v_t &C_bar,
-    Model::state_vector_v_t &Sigma_bar,
+    Model::state_vector_v_t &S_bar,
     Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.cols();
 
     const double dt = 1. / double(K - 1);
     using namespace boost::numeric::odeint;
-    runge_kutta4<DiscretizationODE::state_type, double, DiscretizationODE::state_type, double, vector_space_algebra> stepper;
+    runge_kutta4<DiscretizationODE::ode_matrix_t, double, DiscretizationODE::ode_matrix_t, double, vector_space_algebra> stepper;
 
     for (size_t k = 0; k < K - 1; k++)
     {
-        DiscretizationODE::state_type V;
+        DiscretizationODE::ode_matrix_t V;
         V.setZero();
         V.col(0) = X.col(k);
         V.block<Model::state_dim_, Model::state_dim_>(0, 1).setIdentity();
@@ -97,7 +97,7 @@ void calculateDiscretization(
         C_bar[k] = A_bar[k] * V.block<Model::state_dim_, Model::input_dim_>(0, cols);
         cols += Model::input_dim_;
 
-        Sigma_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
+        S_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
         cols += 1;
 
         z_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
