@@ -45,7 +45,7 @@ class SystemModel
     void initializeModel();
 
     // Computes the state derivative
-    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum = 0);
+    void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
     // Computes state and control Jacobians/Hessians
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
     void computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB);
@@ -81,6 +81,12 @@ class SystemModel
     std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
 };
 
+/**
+ * @brief Initialize the model by compiling the dynamics functions.
+ * 
+ * @tparam STATE_DIM
+ * @tparam INPUT_DIM 
+ */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
 {
@@ -120,8 +126,17 @@ void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
     model_ = dynamicLib_->model("model");
 }
 
+/**
+ * @brief Compute the state derivative f(x,u)
+ * 
+ * @tparam STATE_DIM 
+ * @tparam INPUT_DIM 
+ * @param x 
+ * @param u 
+ * @param f 
+ */
 template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f, size_t modelNum)
+void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
@@ -131,6 +146,16 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const 
     model_->ForwardZero(input_map, f_map);
 }
 
+/**
+ * @brief Compute the state and control Jacobians A(x,u) and B(x,u)
+ * 
+ * @tparam STATE_DIM 
+ * @tparam INPUT_DIM 
+ * @param x 
+ * @param u 
+ * @param A 
+ * @param B 
+ */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
@@ -145,6 +170,16 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x
     B = J.template rightCols<INPUT_DIM>();
 }
 
+/**
+ * @brief Compute the state and control Hessians HA(x,u) and HB(x,u)
+ * 
+ * @tparam STATE_DIM 
+ * @tparam INPUT_DIM 
+ * @param x 
+ * @param u 
+ * @param A 
+ * @param B 
+ */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB)
 {
@@ -159,6 +194,14 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x,
     HB = H.template rightCols<INPUT_DIM>();
 }
 
+/**
+ * @brief 
+ * 
+ * @tparam STATE_DIM 
+ * @tparam INPUT_DIM 
+ * @param tapedInput 
+ * @param f 
+ */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
