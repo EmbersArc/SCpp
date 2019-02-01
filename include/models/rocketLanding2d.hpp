@@ -17,8 +17,6 @@ namespace rocket2d
 class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 {
   public:
-    typedef SystemModel<STATE_DIM_, INPUT_DIM_> BASE;
-
     RocketLanding2D();
 
     static string getModelName()
@@ -26,9 +24,9 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
         return "RocketLanding2D";
     }
 
-    static double getFinalTimeGuess()
+    double getFinalTimeGuess() override
     {
-        return 8.;
+        return final_time_guess;
     }
 
     void systemFlowMap(
@@ -46,8 +44,8 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 
     void nondimensionalize() override;
 
-    void getStateWeightVector(state_vector_t &w) override;
-    void getInputWeightVector(input_vector_t &w) override;
+    void redimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                    Eigen::MatrixXd &U) override;
 
   private:
     double m;
@@ -62,6 +60,7 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 
     state_vector_t x_init;
     state_vector_t x_final;
+    double final_time_guess;
 };
 
 } // namespace rocket2d

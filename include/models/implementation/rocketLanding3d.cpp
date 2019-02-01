@@ -149,7 +149,7 @@ void RocketLanding3D::addApplicationConstraints(
         // Max Tilt Angle
         // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {8, k}),
-                                       (1.0) * var("X", {9, k})}) <= sqrt((1.0 - cos(theta_max)) / 2.));
+                                      (1.0) * var("X", {9, k})}) <= sqrt((1.0 - cos(theta_max)) / 2.));
 
         // Glide Slope
         socp.addConstraint(
@@ -217,18 +217,7 @@ void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     X.row(0) *= m_scale;
     X.block(1, 0, 6, K) *= r_scale;
 
-    U.topRows(3) *= m_scale * r_scale;
-}
-
-void RocketLanding3D::getStateWeightVector(state_vector_t &w)
-{
-    w.setOnes();
-}
-
-void RocketLanding3D::getInputWeightVector(input_vector_t &w)
-{
-    w.setOnes();
-    w *= T_max;
+    U *= m_scale * r_scale;
 }
 
 } // namespace rocket3d

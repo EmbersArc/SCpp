@@ -15,8 +15,6 @@ namespace rocket3d
 class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 {
   public:
-    typedef SystemModel<STATE_DIM_, INPUT_DIM_> BASE;
-
     RocketLanding3D();
 
     static string getModelName()
@@ -24,7 +22,7 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
         return "RocketLanding3D";
     }
 
-    double getFinalTimeGuess() const
+    double getFinalTimeGuess() override
     {
         return final_time_guess;
     }
@@ -45,15 +43,9 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void nondimensionalize();
 
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                    Eigen::MatrixXd &U);
-
-    void getStateWeightVector(state_vector_t &w) override;
-    void getInputWeightVector(input_vector_t &w) override;
+                                    Eigen::MatrixXd &U) override;
 
   private:
-    double m_scale = 1.;
-    double r_scale = 1.;
-
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
     Eigen::Vector3d r_T_B;
@@ -61,15 +53,14 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     double T_min;
     double T_max;
 
-    state_vector_t x_init;
-    state_vector_t x_final;
-
-    double final_time_guess;
-
     double gimbal_max;
     double theta_max;
     double gamma_gs;
     double w_B_max;
+
+    state_vector_t x_init;
+    state_vector_t x_final;
+    double final_time_guess;
 };
 
 } // namespace rocket3d

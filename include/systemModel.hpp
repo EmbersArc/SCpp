@@ -38,40 +38,115 @@ class SystemModel
     typedef vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>> state_matrix_v_t;
     typedef vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>> control_matrix_v_t;
 
-    // Default constructor
+    /**
+     * @brief Construct a new System Model object
+     * 
+     */
     SystemModel(){};
 
-    // Set up and compile dynamics function
+    /**
+     * @brief Initialize the model by compiling the dynamics functions
+     * 
+     * @tparam STATE_DIM
+     * @tparam INPUT_DIM 
+     */
     void initializeModel();
 
-    // Computes the state derivative
+    /**
+     * @brief Compute the state derivative f(x,u)
+     * 
+     * @param x 
+     * @param u 
+     * @param f 
+     */
     void computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f);
-    // Computes state and control Jacobians/Hessians
+
+    /**
+     * @brief Compute the state and control Jacobians A(x,u) and B(x,u)
+     * 
+     * @param x 
+     * @param u 
+     * @param A 
+     * @param B 
+     */
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+
+    /**
+     * @brief Compute the state and control Hessians HA(x,u) and HB(x,u)
+     * 
+     * @param x 
+     * @param u 
+     * @param A 
+     * @param B 
+     */
     void computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB);
 
-    // Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
+    /**
+     * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
+     * 
+     * @param X 
+     * @param U 
+     */
     virtual void initializeTrajectory(Eigen::MatrixXd &X,
                                       Eigen::MatrixXd &U) = 0;
 
-    // Function to add constraints of a derived model. Has to be implemented by the derived class.
+    /**
+     * @brief Function to add constraints of a derived model. Has to be implemented by the derived class.
+     * 
+     * @param socp 
+     * @param X0 
+     * @param U0 
+     */
     virtual void addApplicationConstraints(
         op::SecondOrderConeProgram &socp,
         Eigen::MatrixXd &X0,
         Eigen::MatrixXd &U0) = 0;
 
-    // The state derivative function. Has to be implemented by the derived class.
+    /**
+     * @brief The state derivative function. Has to be implemented by the derived class. All types have to be scalar_ad_t.
+     * 
+     * @param x 
+     * @param u 
+     * @param f 
+     */
     virtual void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
         state_vector_ad_t &f) = 0;
 
-    virtual void getStateWeightVector(state_vector_t &w) = 0;
-    virtual void getInputWeightVector(input_vector_t &w) = 0;
-    virtual void nondimensionalize() = 0;
+    /**
+     * @brief Function to remove mass and length dimensions from all function parameters.
+     * 
+     */
+    virtual void nondimensionalize(){};
+    /**
+     * @brief Function to add mass and length dimensions to state and input trajectory.
+     * 
+     * @param X 
+     * @param U 
+     */
+    virtual void redimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                            Eigen::MatrixXd &U){};
+    double r_scale = 1;
+    double m_scale = 1;
+
+    state_vector_t x_init;
+    state_vector_t x_final;
+
+    /**
+     * @brief Get the final time guess
+     * 
+     * @return double The flight time guess
+     */
+    virtual double getFinalTimeGuess() = 0;
 
   private:
-    // Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
+    /**
+   * @brief Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
+   * 
+   * @param tapedInput 
+   * @param f 
+   */
     void systemFlowMapAD(
         const dynamic_vector_ad_t &tapedInput,
         dynamic_vector_ad_t &f);
@@ -81,32 +156,23 @@ class SystemModel
     std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
 };
 
-/**
- * @brief Initialize the model by compiling the dynamics functions.
- * 
- * @tparam STATE_DIM
- * @tparam INPUT_DIM 
- */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
 {
-    // input vector
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
     x.setRandom();
 
-    // declare x as independent
+    // start recording
     CppAD::Independent(x);
 
-    // create fixed size types since CT uses fixed size types
     dynamic_vector_ad_t dxFixed;
-
     systemFlowMapAD(x, dxFixed);
 
-    // store operation sequence in f: x -> dx and stop recording
+    // store operation sequence in x' = f(x) and stop recording
     CppAD::ADFun<scalar_cg_ad_t> f(x, dxFixed);
     f.optimize();
 
-    // generates source code
+    // generate source code
     CppAD::cg::ModelCSourceGen<double> cgen(f, "model");
     cgen.setCreateJacobian(true);
     cgen.setCreateHessian(true);
@@ -119,22 +185,9 @@ void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
     compiler.setCompileFlags({"-O3", "-std=c11"});
     dynamicLib_ = processor.createDynamicLibrary(compiler);
 
-    // save to files
-    // CppAD::cg::SaveFilesModelLibraryProcessor<double> processorSave(libcgen);
-    // processorSave.saveSources();
-
     model_ = dynamicLib_->model("model");
 }
 
-/**
- * @brief Compute the state derivative f(x,u)
- * 
- * @tparam STATE_DIM 
- * @tparam INPUT_DIM 
- * @param x 
- * @param u 
- * @param f 
- */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
@@ -146,16 +199,6 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const 
     model_->ForwardZero(input_map, f_map);
 }
 
-/**
- * @brief Compute the state and control Jacobians A(x,u) and B(x,u)
- * 
- * @tparam STATE_DIM 
- * @tparam INPUT_DIM 
- * @param x 
- * @param u 
- * @param A 
- * @param B 
- */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
@@ -170,16 +213,6 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x
     B = J.template rightCols<INPUT_DIM>();
 }
 
-/**
- * @brief Compute the state and control Hessians HA(x,u) and HB(x,u)
- * 
- * @tparam STATE_DIM 
- * @tparam INPUT_DIM 
- * @param x 
- * @param u 
- * @param A 
- * @param B 
- */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB)
 {
@@ -194,14 +227,6 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x,
     HB = H.template rightCols<INPUT_DIM>();
 }
 
-/**
- * @brief 
- * 
- * @tparam STATE_DIM 
- * @tparam INPUT_DIM 
- * @param tapedInput 
- * @param f 
- */
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemModel<STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,

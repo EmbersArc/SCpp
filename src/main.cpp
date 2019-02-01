@@ -170,7 +170,7 @@ int main()
             }
         }
 
-        // Output iteration summary
+        // Print iteration summary
         print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
         print("\n");
         print("{:<{}}{: .4f}\n", "sigma", 50, sigma);

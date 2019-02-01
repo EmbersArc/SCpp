@@ -17,6 +17,7 @@ RocketLanding2D::RocketLanding2D()
     param.loadScalar("gimbal_max", gimbal_max);
     param.loadScalar("theta_max", theta_max);
     param.loadScalar("gamma_gs", gamma_gs);
+    param.loadScalar("final_time_guess", final_time_guess);
 
     param.loadMatrix("x_init", x_init);
     param.loadMatrix("x_final", x_final);
@@ -115,8 +116,8 @@ void RocketLanding2D::addApplicationConstraints(
 
 void RocketLanding2D::nondimensionalize()
 {
-    const double r_scale = x_init.segment(0, 2).norm();
-    const double m_scale = m;
+    r_scale = x_init.segment(0, 2).norm();
+    m_scale = m;
 
     r_T /= r_scale;
     g /= r_scale;
@@ -129,14 +130,15 @@ void RocketLanding2D::nondimensionalize()
     x_final.segment(0, 4) /= r_scale;
 }
 
-void RocketLanding2D::getStateWeightVector(state_vector_t &w)
+void RocketLanding2D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                                 Eigen::MatrixXd &U)
 {
-    w.setOnes();
-}
+    X.row(0) *= r_scale;
+    X.row(1) *= r_scale;
+    X.row(2) *= r_scale;
+    X.row(3) *= r_scale;
 
-void RocketLanding2D::getInputWeightVector(input_vector_t &w)
-{
-    w.setOnes();
+    U *= m_scale * r_scale;
 }
 
 } // namespace rocket2d
