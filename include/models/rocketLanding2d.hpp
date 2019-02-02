@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include <Eigen/Dense>
-
 #include "systemModel.hpp"
 #include "ecosWrapper.hpp"
 
