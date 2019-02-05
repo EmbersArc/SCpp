@@ -45,7 +45,11 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
-    state_vector_t getRandomInitialState();
+    /**
+     * @brief Varies the initial state randomly.
+     * 
+     */
+    void randomizeInitialState();
 
   private:
     Eigen::Vector3d g_I;
@@ -59,6 +63,8 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     double theta_max;
     double gamma_gs;
     double w_B_max;
+
+    Eigen::Vector3d rpy_init;
 
     state_vector_t x_init;
     state_vector_t x_final;

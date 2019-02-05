@@ -12,7 +12,7 @@ RocketLanding3D::RocketLanding3D()
 
     double I_sp;
     double m_init, m_dry;
-    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
+    Eigen::Vector3d r_init, v_init, w_init;
     Eigen::Vector3d r_final, v_final;
 
     param.loadMatrix("g_I", g_I);
@@ -44,8 +44,8 @@ RocketLanding3D::RocketLanding3D()
 
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
-    // x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
-    x_init << getRandomInitialState();
+    x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+    randomizeInitialState();
     x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
 }
 
@@ -122,7 +122,7 @@ void RocketLanding3D::addApplicationConstraints(
     }
 
     // Final State
-    // mass is free, roll is free
+    // mass and roll are free
     // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + (x_final(0)) == 0.0);
     socp.addConstraint((-1.0) * var("X", {1, K - 1}) + (x_final(1)) == 0.0);
     socp.addConstraint((-1.0) * var("X", {2, K - 1}) + (x_final(2)) == 0.0);
@@ -138,6 +138,7 @@ void RocketLanding3D::addApplicationConstraints(
     socp.addConstraint((-1.0) * var("X", {12, K - 1}) + (x_final(12)) == 0.0);
     // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + (x_final(13)) == 0.0);
 
+    // Final Input
     socp.addConstraint((1.0) * var("U", {0, K - 1}) == (0.0));
     socp.addConstraint((1.0) * var("U", {1, K - 1}) == (0.0));
 
@@ -223,35 +224,31 @@ void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     U *= m_scale * r_scale;
 }
 
-RocketLanding3D::state_vector_t RocketLanding3D::getRandomInitialState()
+void RocketLanding3D::randomizeInitialState()
 {
-    std::random_device rd;
     std::mt19937 eng(time(0));
+    auto dist = std::uniform_real_distribution<double>(-1., 1.);
 
-    state_vector_t x_init;
-    x_init.setZero();
+    // mass
+    x_init(0) *= 1.;
 
-    x_init(0) = 30000.;
+    // position
+    x_init(1) *= dist(eng);
+    x_init(2) *= dist(eng);
+    x_init(3) *= 1.;
 
-    auto dist = std::uniform_real_distribution<double>(-100., 100.);
-    x_init(1) = dist(eng);
-    x_init(2) = dist(eng);
-    x_init(3) = 500.;
+    // velocity
+    x_init(4) *= dist(eng);
+    x_init(5) *= dist(eng);
+    x_init(6) *= 1. + 0.2 * dist(eng);
 
-    dist = std::uniform_real_distribution<double>(-40., 40.);
-    x_init(4) = dist(eng);
-    x_init(5) = dist(eng);
-    x_init(6) = dist(eng) - 80.;
-
-    dist = std::uniform_real_distribution<double>(-20., 20.);
-    double rx = dist(eng);
-    double ry = dist(eng);
+    // orientation
+    double rx = dist(eng) * rpy_init(0);
+    double ry = dist(eng) * rpy_init(1);
     deg2rad(rx);
     deg2rad(ry);
     Eigen::Vector3d euler(rx, ry, 0.);
     x_init.segment(7, 4) << eulerToQuaternion(euler);
-
-    return x_init;
 }
 
 } // namespace rocket3d
