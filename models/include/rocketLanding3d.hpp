@@ -12,6 +12,10 @@ using std::string;
 namespace rocket3d
 {
 
+/**
+ * @brief A 3D rocket landing model.
+ * 
+ */
 class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
 {
   public:

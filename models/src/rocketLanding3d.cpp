@@ -62,9 +62,9 @@ void RocketLanding3D::systemFlowMap(
     auto r_T_B_ = r_T_B.cast<T>();
 
     auto m = x(0);
-    auto v_I = x.template segment<3>(4);
-    auto q_B_I = x.template segment<4>(7);
-    auto w_B = x.template segment<3>(11);
+    auto v_I = x.segment<3>(4);
+    auto q_B_I = x.segment<4>(7);
+    auto w_B = x.segment<3>(11);
 
     f(0) = -alpha_m_ * u.norm();
     f.segment(1, 3) << v_I;
