@@ -3,3 +3,5 @@ output/*
 old/
 *.blend*
 .vscode
+
+blender_import_multiple.py

@@ -55,7 +55,7 @@ class EcosWrapper
   public:
     explicit EcosWrapper(op::SecondOrderConeProgram &_socp);
 
-    void solveProblem();
+    void solveProblem(bool verbose = false);
 
     double getSolutionValue(size_t problem_index) const
     {

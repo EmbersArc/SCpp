@@ -39,7 +39,7 @@ bool check_unique_variables_in_affine_expression(const op::AffineExpression &aff
 
 size_t count_constants_in_affine_expression(const op::AffineExpression &affineExpression)
 {
-    return std::count_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](auto term) { return !term.variable; });
+    return std::count_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](const auto &term) { return !term.variable; });
 }
 
 void error_check_affine_expression(const op::AffineExpression &affineExpression)
@@ -56,7 +56,7 @@ void error_check_affine_expression(const op::AffineExpression &affineExpression)
 
 op::Parameter get_constant_or_zero(const op::AffineExpression &affineExpression)
 {
-    auto constantIterator = std::find_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](auto term) { return !term.variable; });
+    auto constantIterator = std::find_if(affineExpression.terms.begin(), affineExpression.terms.end(), [](const auto &term) { return !term.variable; });
     if (constantIterator != affineExpression.terms.end())
     {
         return constantIterator->parameter;
@@ -84,8 +84,8 @@ void sparse_DOK_to_CCS(
     vector<tuple<idxint, idxint, op::Parameter>> sparse_COO;
     sparse_COO.reserve(sparse_DOK.size());
     std::transform(sparse_DOK.begin(), sparse_DOK.end(), std::back_inserter(sparse_COO),
-                   [](auto e) { return std::make_tuple(e.first.first, e.first.second, e.second); });
-    //                                            row index ^    column index ^      value ^
+                   [](const auto &e) { return std::make_tuple(e.first.first, e.first.second, e.second); });
+    //                                                  row index ^    column index ^      value ^
 
     // sort coordinate list by column, then by row
     std::sort(sparse_COO.begin(), sparse_COO.end(),
@@ -101,7 +101,7 @@ void sparse_DOK_to_CCS(
 
     // create CCS format
     vector<size_t> non_zero_count_per_column(n_columns, 0);
-    for (size_t i = 0; i < sparse_COO.size(); ++i)
+    for (size_t i = 0; i < sparse_COO.size(); i++)
     {
         data_CCS.push_back(get<2>(sparse_COO[i]));
         rows_CCS.push_back(get<0>(sparse_COO[i]));
@@ -131,7 +131,6 @@ void copy_affine_expression_linear_parts_to_sparse_DOK(
 
 EcosWrapper::EcosWrapper(op::SecondOrderConeProgram &_socp) : socp(_socp)
 {
-
     ecos_cone_constraint_dimensions.clear();
     ecos_G_data_CCS.clear();
     ecos_G_columns_CCS.clear();
@@ -182,7 +181,7 @@ EcosWrapper::EcosWrapper(op::SecondOrderConeProgram &_socp) : socp(_socp)
         map<pair<idxint, idxint>, op::Parameter> A_sparse_DOK;
         vector<op::Parameter> b(socp.equalityConstraints.size());
 
-        for (size_t i = 0; i < socp.equalityConstraints.size(); ++i)
+        for (size_t i = 0; i < socp.equalityConstraints.size(); i++)
         {
             auto const &affine_expression = socp.equalityConstraints[i].lhs;
             b[i] = get_constant_or_zero(affine_expression);
@@ -246,17 +245,14 @@ EcosWrapper::EcosWrapper(op::SecondOrderConeProgram &_socp) : socp(_socp)
 
 inline vector<double> get_parameter_values(const vector<op::Parameter> &params, double factor)
 {
-    vector<double> result(params.size(), 0.0);
-    for (size_t i = 0; i < params.size(); ++i)
-    {
-        result[i] = params[i].get_value() * factor;
-    }
+    vector<double> result;
+    result.reserve(params.size());
+    std::transform(params.begin(), params.end(), std::back_inserter(result), [factor](const auto &param) { return param.get_value() * factor; });
     return result;
 }
 
-void EcosWrapper::solveProblem()
+void EcosWrapper::solveProblem(bool verbose)
 {
-
     vector<double> ecos_cost_function_weights_values = get_parameter_values(ecos_cost_function_weights, 1.0);
     vector<double> ecos_h_values = get_parameter_values(ecos_h, 1.0);
     vector<double> ecos_b_values = get_parameter_values(ecos_b, 1.0);
@@ -282,17 +278,22 @@ void EcosWrapper::solveProblem()
         ecos_h_values.data(),
         ecos_b_values.data());
 
-    if (mywork)
+    if (mywork != nullptr)
     {
-        mywork->stgs->verbose = false;
+        mywork->stgs->verbose = verbose;
 
         ecos_exitflag = ECOS_solve(mywork);
 
         // copy solution
-        for (int i = 0; i < ecos_n_variables; ++i)
+        for (int i = 0; i < ecos_n_variables; i++)
         {
             ecos_solution_vector[i] = mywork->x[i];
         }
+
+        ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
     }
-    ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
+    else
+    {
+        throw std::runtime_error("Could not set up problem.");
+    }
 }

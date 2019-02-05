@@ -1,4 +1,6 @@
-#include "models/rocketLanding3d.hpp"
+#include <random>
+
+#include "rocketLanding3d.hpp"
 #include "parameterServer.hpp"
 
 namespace rocket3d
@@ -6,7 +8,7 @@ namespace rocket3d
 
 RocketLanding3D::RocketLanding3D()
 {
-    ParameterServer param(format("../include/models/config/{}.info", getModelName()));
+    ParameterServer param(format("../models/config/{}.info", getModelName()));
 
     double I_sp;
     double m_init, m_dry;
@@ -42,7 +44,8 @@ RocketLanding3D::RocketLanding3D()
 
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
-    x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+    // x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+    x_init << getRandomInitialState();
     x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
 }
 
@@ -119,7 +122,7 @@ void RocketLanding3D::addApplicationConstraints(
     }
 
     // Final State
-    // mass is free, quaternion
+    // mass is free, roll is free
     // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + (x_final(0)) == 0.0);
     socp.addConstraint((-1.0) * var("X", {1, K - 1}) + (x_final(1)) == 0.0);
     socp.addConstraint((-1.0) * var("X", {2, K - 1}) + (x_final(2)) == 0.0);
@@ -218,6 +221,37 @@ void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     X.block(1, 0, 6, K) *= r_scale;
 
     U *= m_scale * r_scale;
+}
+
+RocketLanding3D::state_vector_t RocketLanding3D::getRandomInitialState()
+{
+    std::random_device rd;
+    std::mt19937 eng(time(0));
+
+    state_vector_t x_init;
+    x_init.setZero();
+
+    x_init(0) = 30000.;
+
+    auto dist = std::uniform_real_distribution<double>(-100., 100.);
+    x_init(1) = dist(eng);
+    x_init(2) = dist(eng);
+    x_init(3) = 500.;
+
+    dist = std::uniform_real_distribution<double>(-40., 40.);
+    x_init(4) = dist(eng);
+    x_init(5) = dist(eng);
+    x_init(6) = dist(eng) - 80.;
+
+    dist = std::uniform_real_distribution<double>(-20., 20.);
+    double rx = dist(eng);
+    double ry = dist(eng);
+    deg2rad(rx);
+    deg2rad(ry);
+    Eigen::Vector3d euler(rx, ry, 0.);
+    x_init.segment(7, 4) << eulerToQuaternion(euler);
+
+    return x_init;
 }
 
 } // namespace rocket3d

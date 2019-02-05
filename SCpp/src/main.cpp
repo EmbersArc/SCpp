@@ -32,7 +32,11 @@ string getOutputPath()
 
 int main()
 {
-    ParameterServer param("../include/config/SCParameters.info");
+    vector<Eigen::MatrixXd> all_X;
+    vector<Eigen::MatrixXd> all_U;
+    vector<double> all_sigma;
+
+    ParameterServer param("../SCpp/config/SCParameters.info");
 
     size_t K;
     param.loadScalar("K", K);
@@ -46,17 +50,6 @@ int main()
         model.nondimensionalize();
     }
     model.initializeModel();
-
-    print("Initializing output directory.\n");
-    if (fs::exists(getOutputPath()))
-    {
-        fs::remove_all(getOutputPath());
-    }
-
-    if (not fs::create_directories(getOutputPath()))
-    {
-        throw std::runtime_error("Could not create output directory!");
-    }
 
     print("Initializing algorithm.\n");
     double weight_trust_region_time;
@@ -86,6 +79,10 @@ int main()
     Eigen::MatrixXd U(size_t(Model::input_dim_), K);
     model.initializeTrajectory(X, U);
     double sigma = model.getFinalTimeGuess();
+    // Save first trajectory
+    all_X.push_back(X);
+    all_U.push_back(U);
+    all_sigma.push_back(sigma);
 
     print("Initializing solver.\n");
     op::SecondOrderConeProgram socp = sc::buildSCSOCP(model,
@@ -112,7 +109,9 @@ int main()
 
     print("Starting Successive Convexification.\n");
     const double timer_total = tic();
-    for (size_t it = 0; it < max_iterations; it++)
+    size_t it = 0;
+    bool converged = false;
+    while (it < max_iterations and not converged)
     {
         string itString = format("<Iteration {}>", it);
         print("{:=^{}}\n", itString, 60);
@@ -121,26 +120,6 @@ int main()
         double timer = tic();
         calculateDiscretization(model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
         print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
-
-        // Write solution to files
-        timer = tic();
-        Eigen::MatrixXd X_out(X);
-        Eigen::MatrixXd U_out(U);
-        model.redimensionalizeTrajectory(X_out, U_out);
-        string file_name_prefix = format("{}/{:03}_", getOutputPath(), it);
-        {
-            ofstream f(file_name_prefix + "X.txt");
-            f << X_out;
-        }
-        {
-            ofstream f(file_name_prefix + "U.txt");
-            f << U_out;
-        }
-        {
-            ofstream f(file_name_prefix + "t.txt");
-            f << sigma;
-        }
-        print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
 
         // Solve the problem
         timer = tic();
@@ -157,7 +136,6 @@ int main()
         print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
         // Read solution
-        sigma = solver.getSolutionValue(sigma_index);
         for (size_t k = 0; k < K; k++)
         {
             for (size_t i = 0; i < Model::state_dim_; i++)
@@ -169,6 +147,12 @@ int main()
                 U(i, k) = solver.getSolutionValue(U_indices(i, k));
             }
         }
+        sigma = solver.getSolutionValue(sigma_index);
+
+        // Save solution
+        all_X.push_back(X);
+        all_U.push_back(U);
+        all_sigma.push_back(sigma);
 
         // Print iteration summary
         print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
@@ -183,6 +167,7 @@ int main()
         if (solver.getSolutionValue("norm2_Delta", {}) < delta_tol && solver.getSolutionValue("norm1_nu", {}) < nu_tol)
         {
             print("Converged after {} iterations.\n", it + 1);
+            converged = true;
             break;
         }
         else if (solver.getSolutionValue("norm1_nu", {}) < nu_tol)
@@ -190,10 +175,45 @@ int main()
             weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
         }
-        else if (it == max_iterations)
+        else if (it == max_iterations - 1)
         {
             print("No convergence after {} iterations.\n", max_iterations);
         }
+        it++;
+    }
+
+    if (converged)
+    {
+    // Write solution to files
+        double timer = tic();
+        print("Initializing output directory.\n");
+        string outputDirectory = format("{}/{}", getOutputPath(), time(0));
+
+        if (not fs::exists(outputDirectory) and not fs::create_directories(outputDirectory))
+        {
+            throw std::runtime_error("Could not create output directory!");
+        }
+
+        for (size_t i = 0; i < all_X.size(); i++)
+        {
+            Eigen::MatrixXd X_out(all_X[i]);
+            Eigen::MatrixXd U_out(all_U[i]);
+            model.redimensionalizeTrajectory(X_out, U_out);
+            string file_name_prefix = format("{}/{:03}_", outputDirectory, i);
+            {
+                ofstream f(file_name_prefix + "X.txt");
+                f << X_out;
+            }
+            {
+                ofstream f(file_name_prefix + "U.txt");
+                f << U_out;
+            }
+            {
+                ofstream f(file_name_prefix + "t.txt");
+                f << all_sigma[i];
+            }
+        }
+        print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));

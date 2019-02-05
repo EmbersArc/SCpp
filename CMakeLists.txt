@@ -33,37 +33,23 @@ add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 link_libraries(dl)
 
 # INCLUDES
-include_directories(include)
+include_directories(models/include)
+include_directories(SCpp/include)
 
 # SOURCES
 set(SOURCES
-    include/models/rocketLanding3dDefinitions.hpp
-    include/models/rocketLanding3d.hpp
-    include/models/implementation/rocketLanding3d.cpp
-
-    include/models/rocketLanding2dDefinitions.hpp
-    include/models/rocketLanding2d.hpp
-    include/models/implementation/rocketLanding2d.cpp
+    models/src/rocketLanding3d.cpp
+    models/src/rocketLanding2d.cpp
     
-    include/activeModel.hpp
-    
-    include/ecosWrapper.hpp
-        src/ecosWrapper.cpp
-    include/eigenIntegration.hpp
+    SCpp/src/ecosWrapper.cpp
 
-    include/systemModel.hpp
-    include/parameterServer.hpp
-        src/parameterServer.cpp
-    include/optimizationProblem.hpp
-        src/optimizationProblem.cpp
-    include/discretization.hpp
-        src/discretization.cpp
-    include/successiveConvexificationSOCP.hpp
-        src/successiveConvexificationSOCP.cpp
-    include/timing.hpp
-        src/timing.cpp
+    SCpp/src/parameterServer.cpp
+    SCpp/src/optimizationProblem.cpp
+    SCpp/src/discretization.cpp
+    SCpp/src/successiveConvexificationSOCP.cpp
+    SCpp/src/timing.cpp
 
-        src/main.cpp
+    SCpp/src/main.cpp
 )
 
 add_executable(SCpp ${SOURCES})

@@ -1,8 +1,14 @@
 #pragma once
+#define JIT true
 
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
+
+#if JIT
 #include <cppad/cg.hpp>
+#else
+#include <cppad/cppad.hpp>
+#endif
 
 #include "optimizationProblem.hpp"
 
@@ -24,8 +30,14 @@ class SystemModel
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> dynamic_matrix_t;
     typedef Eigen::Map<dynamic_vector_t> dynamic_vector_map_t;
 
-    typedef CppAD::cg::CG<double> scalar_cg_ad_t;
-    typedef CppAD::AD<scalar_cg_ad_t> scalar_ad_t;
+#if JIT
+    typedef CppAD::cg::CG<double> scalar_t;
+#else
+    typedef double scalar_t;
+#endif
+
+    typedef CppAD::AD<scalar_t> scalar_ad_t;
+
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, 1> state_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM> state_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1> input_vector_ad_t;
@@ -70,16 +82,6 @@ class SystemModel
      * @param B 
      */
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
-
-    /**
-     * @brief Compute the state and control Hessians HA(x,u) and HB(x,u)
-     * 
-     * @param x 
-     * @param u 
-     * @param A 
-     * @param B 
-     */
-    void computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB);
 
     /**
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
@@ -151,9 +153,14 @@ class SystemModel
         const dynamic_vector_ad_t &tapedInput,
         dynamic_vector_ad_t &f);
 
+    // CppAD function
+    CppAD::ADFun<scalar_t> f_;
+
+#if JIT
     // Dynamic library and prepared model instances
     std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib_;
     std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
+#endif
 };
 
 template <size_t STATE_DIM, size_t INPUT_DIM>
@@ -169,11 +176,12 @@ void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
     systemFlowMapAD(x, dxFixed);
 
     // store operation sequence in x' = f(x) and stop recording
-    CppAD::ADFun<scalar_cg_ad_t> f(x, dxFixed);
-    f.optimize();
+    f_ = CppAD::ADFun<scalar_t>(x, dxFixed);
+    f_.optimize();
 
+#if JIT
     // generate source code
-    CppAD::cg::ModelCSourceGen<double> cgen(f, "model");
+    CppAD::cg::ModelCSourceGen<double> cgen(f_, "model");
     cgen.setCreateJacobian(true);
     cgen.setCreateHessian(true);
     cgen.setCreateForwardZero(true);
@@ -184,8 +192,8 @@ void SystemModel<STATE_DIM, INPUT_DIM>::initializeModel()
     CppAD::cg::DynamicModelLibraryProcessor<double> processor(libcgen);
     compiler.setCompileFlags({"-O3", "-std=c11"});
     dynamicLib_ = processor.createDynamicLibrary(compiler);
-
     model_ = dynamicLib_->model("model");
+#endif
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM>
@@ -196,7 +204,11 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const 
     dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
+#if JIT
     model_->ForwardZero(input_map, f_map);
+#else
+    f_map = f_.Forward(0, input);
+#endif
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM>
@@ -204,27 +216,18 @@ void SystemModel<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
-    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
+    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
+#if JIT
     model_->Jacobian(input_map, J_map);
+#else
+    J_map = f_.Jacobian(input);
+#endif
+
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemModel<STATE_DIM, INPUT_DIM>::computeHessians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &HA, control_matrix_t &HB)
-{
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
-    input << x, u;
-    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
-    Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> H;
-    dynamic_vector_map_t H_map(H.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
-
-    model_->Hessian(input_map, H_map);
-    HA = H.template leftCols<STATE_DIM>();
-    HB = H.template rightCols<INPUT_DIM>();
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM>

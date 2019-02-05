@@ -9,6 +9,6 @@ trust_region_factor                 1.2
 nu_tol                              1e-6
 delta_tol                           1e-3
 
-max_iterations                      30
+max_iterations                      10
 
 nondimensionalize                   true

@@ -1,4 +1,4 @@
-#include "models/rocketLanding2d.hpp"
+#include "rocketLanding2d.hpp"
 #include "parameterServer.hpp"
 
 namespace rocket2d
@@ -6,7 +6,7 @@ namespace rocket2d
 
 RocketLanding2D::RocketLanding2D()
 {
-    ParameterServer param(format("../include/models/config/{}.info", getModelName()));
+    ParameterServer param(format("../models/config/{}.info", getModelName()));
 
     param.loadScalar("m", m);
     param.loadScalar("g", g);

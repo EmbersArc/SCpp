@@ -45,6 +45,8 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
+    state_vector_t getRandomInitialState();
+
   private:
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
