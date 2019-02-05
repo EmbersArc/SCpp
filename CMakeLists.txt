@@ -53,5 +53,5 @@ set(SOURCES
 )
 
 add_executable(SCpp ${SOURCES})
-target_link_libraries(SCpp PRIVATE fmt-header-only)
+target_link_libraries(SCpp PRIVATE fmt)
 
