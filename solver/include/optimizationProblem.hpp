@@ -157,13 +157,13 @@ class GenericOptimizationProblem
     map<string, vector<size_t>> tensor_variable_dimensions;
     map<string, vector<size_t>> tensor_variable_indices;
 
-    size_t allocate_variable_index();
+    size_t allocateVariableIndex();
 
   public:
     void createTensorVariable(const string &name, const vector<size_t> &dimensions = {});
     size_t getTensorVariableIndex(const string &name, const vector<size_t> &indices);
-    Variable get_variable(const string &name, const vector<size_t> &indices);
-    size_t get_n_variables() const { return n_variables; }
+    Variable getVariable(const string &name, const vector<size_t> &indices);
+    size_t getNumVariables() const { return n_variables; }
 };
 
 struct SecondOrderConeProgram : public GenericOptimizationProblem
@@ -177,7 +177,7 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
     void addConstraint(PostiveConstraint c);
     void addConstraint(EqualityConstraint c);
     void addMinimizationTerm(AffineExpression c);
-    void print_problem(std::ostream &out) const;
+    void printProblem(std::ostream &out) const;
 
     bool feasibilityCheck(const vector<double> &soln_values) const;
 };

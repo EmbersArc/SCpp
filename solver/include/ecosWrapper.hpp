@@ -64,7 +64,7 @@ class EcosWrapper
 
     double getSolutionValue(const string &name, const vector<size_t> &indices)
     {
-        return ecos_solution_vector[socp.get_variable(name, indices).problem_index];
+        return ecos_solution_vector[socp.getVariable(name, indices).problem_index];
     }
 
     vector<double> getSolutionVector()

@@ -143,8 +143,8 @@ EcosWrapper::EcosWrapper(op::SecondOrderConeProgram &_socp) : socp(_socp)
     ecos_b.clear();
 
     /* ECOS size parameters */
-    ecos_solution_vector.resize(socp.get_n_variables());
-    ecos_n_variables = socp.get_n_variables();
+    ecos_solution_vector.resize(socp.getNumVariables());
+    ecos_n_variables = socp.getNumVariables();
     ecos_n_cone_constraints = socp.secondOrderConeConstraints.size();
     ecos_n_equalities = socp.equalityConstraints.size();
     ecos_n_positive_constraints = socp.postiveConstraints.size();

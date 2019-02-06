@@ -219,7 +219,7 @@ inline size_t tensor_index(const vector<size_t> &indices, const vector<size_t> &
     return index;
 }
 
-size_t GenericOptimizationProblem::allocate_variable_index()
+size_t GenericOptimizationProblem::allocateVariableIndex()
 {
     size_t i = n_variables;
     n_variables++;
@@ -231,7 +231,7 @@ void GenericOptimizationProblem::createTensorVariable(const string &name, const 
     size_t tensor_size = std::accumulate(dimensions.begin(), dimensions.end(), 1, std::multiplies<size_t>());
 
     vector<size_t> new_variable_indices(tensor_size);
-    std::generate(new_variable_indices.begin(), new_variable_indices.end(), [this]() { return allocate_variable_index(); });
+    std::generate(new_variable_indices.begin(), new_variable_indices.end(), [this]() { return allocateVariableIndex(); });
 
     tensor_variable_dimensions[name] = dimensions;
     tensor_variable_indices[name] = new_variable_indices;
@@ -249,7 +249,7 @@ size_t GenericOptimizationProblem::getTensorVariableIndex(const string &name, co
     return tensor_variable_indices[name][tensor_index(indices, dims)];
 }
 
-Variable GenericOptimizationProblem::get_variable(const string &name, const vector<size_t> &indices)
+Variable GenericOptimizationProblem::getVariable(const string &name, const vector<size_t> &indices)
 {
     Variable var;
     var.name = name;
@@ -278,7 +278,7 @@ void SecondOrderConeProgram::addMinimizationTerm(AffineExpression c)
     costFunction = costFunction + c;
 }
 
-void SecondOrderConeProgram::print_problem(std::ostream &out) const
+void SecondOrderConeProgram::printProblem(std::ostream &out) const
 {
     using std::endl;
     out << "Minimize" << endl;
