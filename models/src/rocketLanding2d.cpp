@@ -77,7 +77,7 @@ void RocketLanding2D::addApplicationConstraints(
 {
     const size_t K = X0.cols();
 
-    auto var = [&](const string &name, const vector<size_t> &indices = {}) { return socp.get_variable(name, indices); };
+    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
 
     // initial state

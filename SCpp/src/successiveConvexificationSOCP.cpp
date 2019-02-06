@@ -32,7 +32,7 @@ op::SecondOrderConeProgram buildSCSOCP(
     socp.createTensorVariable("norm2_Delta");                          // 2-norm of the Delta(k) variables
 
     // shortcuts to access solver variables and create parameters
-    auto var = [&](const string &name, const vector<size_t> &indices = {}) { return socp.get_variable(name, indices); };
+    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
