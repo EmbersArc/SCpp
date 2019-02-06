@@ -3,7 +3,7 @@ project(SCpp)
 
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O1 -std=c++17)
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O2 -std=c++17)
 
 # ECOS
 execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
@@ -14,14 +14,6 @@ link_libraries(ecos)
 
 # BOOST
 find_package(Boost REQUIRED) 
-
-# OMP
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
 
 # FILESYSTEM
 link_libraries(stdc++fs)
@@ -35,16 +27,17 @@ link_libraries(dl)
 # INCLUDES
 include_directories(models/include)
 include_directories(SCpp/include)
+include_directories(solver/include)
 
 # SOURCES
 set(SOURCES
     models/src/rocketLanding3d.cpp
     models/src/rocketLanding2d.cpp
     
-    SCpp/src/ecosWrapper.cpp
+    solver/src/ecosWrapper.cpp
+    solver/src/optimizationProblem.cpp
 
     SCpp/src/parameterServer.cpp
-    SCpp/src/optimizationProblem.cpp
     SCpp/src/discretization.cpp
     SCpp/src/successiveConvexificationSOCP.cpp
     SCpp/src/timing.cpp
