@@ -65,7 +65,7 @@ void CrewDragon::systemFlowMap(
 
     f(0) = -alpha_m_ * u.sum();
     f.segment(1, 3) << v_I;
-    Eigen::AngleAxisd Rx(0.275, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd Rx(M_PI * 1. / 12., Eigen::Vector3d::UnitX());
     Eigen::AngleAxisd Rz0(M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
     Eigen::AngleAxisd Rz1(M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
     Eigen::AngleAxisd Rz2(-M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
