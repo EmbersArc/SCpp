@@ -33,6 +33,7 @@ include_directories(solver/include)
 set(SOURCES
     models/src/rocketLanding3d.cpp
     models/src/rocketLanding2d.cpp
+    models/src/crewDragon.cpp
     
     solver/src/ecosWrapper.cpp
     solver/src/optimizationProblem.cpp
