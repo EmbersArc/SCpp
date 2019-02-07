@@ -3,7 +3,7 @@
 #include "crewDragon.hpp"
 #include "parameterServer.hpp"
 
-namespace rocket3d
+namespace crewdragon
 {
 
 CrewDragon::CrewDragon()
@@ -34,7 +34,6 @@ CrewDragon::CrewDragon()
     param.loadScalar("gamma_gs", gamma_gs);
     param.loadScalar("w_B_max", w_B_max);
 
-    deg2rad(gimbal_max);
     deg2rad(gamma_gs);
     deg2rad(w_init);
     deg2rad(w_B_max);
@@ -66,10 +65,22 @@ void CrewDragon::systemFlowMap(
 
     f(0) = -alpha_m_ * u.sum();
     f.segment(1, 3) << v_I;
-    auto u1 = Eigen::AngleAxis<T>(0.3, {0., 0., 1.}) * r_T_B;
-    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * u.sum() + g_I_; // change this
+    Eigen::AngleAxisd Rx(0.275, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd Rz0(M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
+    Eigen::AngleAxisd Rz1(M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
+    Eigen::AngleAxisd Rz2(-M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
+    Eigen::AngleAxisd Rz3(-M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
+    Eigen::Matrix<T, 3, 1> u0 = (Rz0 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(0);
+    Eigen::Matrix<T, 3, 1> u1 = (Rz1 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(1);
+    Eigen::Matrix<T, 3, 1> u2 = (Rz2 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(2);
+    Eigen::Matrix<T, 3, 1> u3 = (Rz3 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(3);
+    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * (u0 + u1 + u2 + u3) + g_I_;
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
-    f.segment(11, 3) << J_B_.inverse() * (r_T_B_.cross(u)) - w_B.cross(w_B); // and this
+    f.segment(11, 3) << J_B_.inverse() * ((Rz0.cast<T>() * r_T_B_).cross(u0) +
+                                          (Rz1.cast<T>() * r_T_B_).cross(u1) +
+                                          (Rz2.cast<T>() * r_T_B_).cross(u2) +
+                                          (Rz3.cast<T>() * r_T_B_).cross(u3)) -
+                            w_B.cross(w_B);
 }
 
 void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
@@ -112,7 +123,7 @@ void CrewDragon::addApplicationConstraints(
 
     auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     // auto param = [](double &param_value){ return op::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
+    // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     // Initial state
     for (size_t i = 0; i < STATE_DIM_; i++)
@@ -171,11 +182,6 @@ void CrewDragon::addApplicationConstraints(
             socp.addConstraint((1.0) * var("U", {i, k}) + (-T_min) >= (0.0));
             socp.addConstraint((-1.0) * var("U", {i, k}) + (T_max) >= (0.0));
         }
-
-        // Maximum Gimbal Angle
-        socp.addConstraint(
-            op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k})}) <= tan(gimbal_max) * var("U", {2, k}));
     }
 }
 
@@ -239,4 +245,4 @@ void CrewDragon::randomizeInitialState()
     x_init.segment(7, 4) << eulerToQuaternion(euler);
 }
 
-} // namespace rocket3d
+} // namespace crewdragon
