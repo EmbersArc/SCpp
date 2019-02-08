@@ -3,12 +3,15 @@
 #include "crewDragon.hpp"
 #include "parameterServer.hpp"
 
+using std::vector;
+using std::string;
+
 namespace crewdragon
 {
 
 CrewDragon::CrewDragon()
 {
-    ParameterServer param(format("../models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
 
     double I_sp;
     double m_init, m_dry;
@@ -111,7 +114,7 @@ void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
         // input
-        U.col(k) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
+        U.setConstant((T_max - T_min) / 2.);
     }
 }
 
