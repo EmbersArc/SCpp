@@ -1,7 +1,10 @@
 build/
 output/*
 old/
-*.blend*
 .vscode
 
-blender_import_multiple.py
+*.mp4
+*.blend
+*.blend1
+*.blend2
+blender_*
