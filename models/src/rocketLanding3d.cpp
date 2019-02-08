@@ -91,10 +91,10 @@ void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
         Eigen::Quaterniond q0, q1;
         q0.w() = x_init(7);
         q0.vec() = x_init.segment(8, 3);
-        q1.w() = x_final(0);
+        q1.w() = x_final(7);
         q1.vec() << x_final.segment(8, 3);
-        Eigen::Quaterniond slerpQuaternion = q0.slerp(alpha2, q1);
-        X.col(k).segment(7, 4) << slerpQuaternion.w(), slerpQuaternion.vec();
+        Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
+        X.col(k).segment(7, 4) << qs.w(), qs.vec();
 
         // angular velocity
         X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
@@ -243,11 +243,10 @@ void RocketLanding3D::randomizeInitialState()
     x_init(6) *= 1. + 0.2 * dist(eng);
 
     // orientation
-    double rx = dist(eng) * rpy_init(0);
-    double ry = dist(eng) * rpy_init(1);
-    deg2rad(rx);
-    deg2rad(ry);
-    Eigen::Vector3d euler(rx, ry, 0.);
+    double rx = dist(eng) * rpy_init.x();
+    double ry = dist(eng) * rpy_init.y();
+    double rz = rpy_init.z();
+    Eigen::Vector3d euler(rx, ry, rz);
     x_init.segment(7, 4) << eulerToQuaternion(euler);
 }
 

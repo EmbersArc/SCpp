@@ -58,7 +58,7 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_>
   private:
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
-    Eigen::Vector3d r_T_B; // more of those
+    Eigen::Vector3d r_T_B;
     double alpha_m;
     double T_min;
     double T_max;
