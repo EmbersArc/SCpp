@@ -2,13 +2,13 @@ K 30
 
 weight_trust_region_time            1e-1
 weight_trust_region_trajectory      1e-1
-weight_virtual_control              1e2
+weight_virtual_control              1e3
 
-trust_region_factor                 1.2
+trust_region_factor                 1.
 
 nu_tol                              1e-6
 delta_tol                           1e-3
 
-max_iterations                      10
+max_iterations                      15
 
 nondimensionalize                   true
