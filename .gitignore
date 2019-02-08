@@ -8,3 +8,5 @@ old/
 *.blend1
 *.blend2
 blender_*
+
+*.sh
