@@ -17,7 +17,7 @@ CrewDragon::CrewDragon()
 
     param.loadMatrix("g_I", g_I);
     param.loadMatrix("J_B", J_B);
-    param.loadMatrix("r_T_B", r_T_B); // more of those
+    param.loadMatrix("r_T_B", r_T_B);
     param.loadScalar("m_init", m_init);
     param.loadMatrix("r_init", r_init);
     param.loadMatrix("v_init", v_init);
