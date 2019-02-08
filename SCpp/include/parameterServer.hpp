@@ -9,10 +9,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
-using fmt::format;
-using fmt::print;
-using std::string;
-
 /**
  * An auxiliary function which loads an Eigen matrix or a scalar from a file.
  * The file uses property tree data structure with INFO format.
@@ -37,16 +33,16 @@ using std::string;
 class ParameterServer
 {
   public:
-    explicit ParameterServer(const string &filename);
+    explicit ParameterServer(const std::string &filename);
 
     template <typename T>
     void loadScalar(
-        const string &scalarName,
+        const std::string &scalarName,
         T &scalar);
 
     template <typename T>
     void loadMatrix(
-        const string &matrixName,
+        const std::string &matrixName,
         Eigen::MatrixBase<T> &matrix);
 
   private:
@@ -55,7 +51,7 @@ class ParameterServer
 
 template <typename T>
 void ParameterServer::loadScalar(
-    const string &scalarName,
+    const std::string &scalarName,
     T &scalar)
 {
     try
@@ -64,13 +60,13 @@ void ParameterServer::loadScalar(
     }
     catch (...)
     {
-        throw std::runtime_error(format("WARNING: Failed to load scalar type: {}!\n", scalarName));
+        throw std::runtime_error(fmt::format("WARNING: Failed to load scalar type: {}!\n", scalarName));
     }
 }
 
 template <typename T>
 void ParameterServer::loadMatrix(
-    const string &matrixName,
+    const std::string &matrixName,
     Eigen::MatrixBase<T> &matrix)
 {
     typedef typename Eigen::MatrixBase<T>::Scalar scalar_t;
@@ -90,16 +86,16 @@ void ParameterServer::loadMatrix(
             {
                 if (cols == 1)
                 {
-                    matrix(i) = pt.get<scalar_t>(format("{}.({})", matrixName, i));
+                    matrix(i) = pt.get<scalar_t>(fmt::format("{}.({})", matrixName, i));
                 }
                 else
                 {
-                    matrix(i, j) = pt.get<scalar_t>(format("{}.({},{})", matrixName, i, j));
+                    matrix(i, j) = pt.get<scalar_t>(fmt::format("{}.({},{})", matrixName, i, j));
                 }
             }
             catch (...)
             {
-                throw std::runtime_error(format("WARNING: Failed to load matrix type: {}!\n", matrixName));
+                throw std::runtime_error(fmt::format("WARNING: Failed to load matrix type: {}!\n", matrixName));
             }
         }
     }

@@ -1,12 +1,15 @@
 #include "rocketLanding2d.hpp"
 #include "parameterServer.hpp"
 
+using std::vector;
+using std::string;
+
 namespace rocket2d
 {
 
 RocketLanding2D::RocketLanding2D()
 {
-    ParameterServer param(format("../models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
 
     param.loadScalar("m", m);
     param.loadScalar("g", g);

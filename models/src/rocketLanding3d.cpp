@@ -3,12 +3,15 @@
 #include "rocketLanding3d.hpp"
 #include "parameterServer.hpp"
 
+using std::vector;
+using std::string;
+
 namespace rocket3d
 {
 
 RocketLanding3D::RocketLanding3D()
 {
-    ParameterServer param(format("../models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
 
     double I_sp;
     double m_init, m_dry;

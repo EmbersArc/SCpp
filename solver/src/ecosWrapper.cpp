@@ -9,6 +9,8 @@
 using std::make_pair;
 using std::pair;
 using std::tuple;
+using std::vector;
+using std::map;
 
 template <typename T>
 inline bool contains(const vector<T> &v, const T &x)

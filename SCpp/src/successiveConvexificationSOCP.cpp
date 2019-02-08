@@ -1,5 +1,8 @@
 #include "successiveConvexificationSOCP.hpp"
 
+using std::vector;
+using std::string;
+
 namespace sc
 {
 
@@ -47,31 +50,31 @@ op::SecondOrderConeProgram buildSCSOCP(
          * -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
          * 
          */
-        for (size_t row_index = 0; row_index < Model::state_dim_; row_index++)
+        for (size_t i = 0; i < Model::state_dim_; i++)
         {
             // -I * x(k+1)
-            op::AffineExpression eq = (-1.0) * var("X", {row_index, k + 1});
+            op::AffineExpression eq = (-1.0) * var("X", {i, k + 1});
 
             // A * x(k)
-            for (size_t col_index = 0; col_index < Model::state_dim_; ++col_index)
-                eq = eq + param(A_bar.at(k)(row_index, col_index)) * var("X", {col_index, k});
+            for (size_t j = 0; j < Model::state_dim_; j++)
+                eq = eq + param(A_bar.at(k)(i, j)) * var("X", {j, k});
 
             // B * u(k)
-            for (size_t col_index = 0; col_index < Model::input_dim_; ++col_index)
-                eq = eq + param(B_bar.at(k)(row_index, col_index)) * var("U", {col_index, k});
+            for (size_t j = 0; j < Model::input_dim_; j++)
+                eq = eq + param(B_bar.at(k)(i, j)) * var("U", {j, k});
 
             // C * u(k+1)
-            for (size_t col_index = 0; col_index < Model::input_dim_; ++col_index)
-                eq = eq + param(C_bar.at(k)(row_index, col_index)) * var("U", {col_index, k + 1});
+            for (size_t j = 0; j < Model::input_dim_; j++)
+                eq = eq + param(C_bar.at(k)(i, j)) * var("U", {j, k + 1});
 
             // Sigma sigma
-            eq = eq + param(S_bar.at(k)(row_index, 0)) * var("sigma");
+            eq = eq + param(S_bar.at(k)(i, 0)) * var("sigma");
 
             // z
-            eq = eq + param(z_bar.at(k)(row_index, 0));
+            eq = eq + param(z_bar.at(k)(i, 0));
 
             // nu
-            eq = eq + (1.0) * var("nu", {row_index, k});
+            eq = eq + (1.0) * var("nu", {i, k});
 
             socp.addConstraint(eq == 0.0);
         }
@@ -79,11 +82,11 @@ op::SecondOrderConeProgram buildSCSOCP(
 
     /*
      * Build virtual control norm
-     * 
+     *
      * minimize (weight_virtual_control * norm1_nu)
      * s.t. sum(nu_bound) <= norm1_nu
      *      -nu_bound <= nu <= nu_bound
-     * 
+     *
      */
     {
         op::AffineExpression bound_sum;
@@ -131,7 +134,6 @@ op::SecondOrderConeProgram buildSCSOCP(
          *  norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
          * 
          */
-
         vector<op::AffineExpression> norm2_args;
         for (size_t i = 0; i < Model::state_dim_; i++)
         {

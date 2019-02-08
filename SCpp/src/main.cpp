@@ -23,6 +23,8 @@
 using fmt::format;
 using fmt::print;
 using std::ofstream;
+using std::vector;
+using std::string;
 namespace fs = std::filesystem;
 
 string getOutputPath()

@@ -45,10 +45,10 @@ class SystemModel
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
 
-    typedef vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>> state_vector_v_t;
-    typedef vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>> input_vector_v_t;
-    typedef vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>> state_matrix_v_t;
-    typedef vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>> control_matrix_v_t;
+    typedef std::vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>> state_vector_v_t;
+    typedef std::vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>> input_vector_v_t;
+    typedef std::vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>> state_matrix_v_t;
+    typedef std::vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>> control_matrix_v_t;
 
     /**
      * @brief Construct a new System Model object

@@ -7,8 +7,6 @@
 
 #include "crewDragonDefinitions.hpp"
 
-using std::string;
-
 namespace crewdragon
 {
 
@@ -21,7 +19,7 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_>
   public:
     CrewDragon();
 
-    static string getModelName()
+    static std::string getModelName()
     {
         return "CrewDragon";
     }

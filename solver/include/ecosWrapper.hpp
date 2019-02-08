@@ -13,17 +13,11 @@
 
 #include "optimizationProblem.hpp"
 
-using std::map;
-using std::optional;
-using std::pair;
-using std::string;
-using std::vector;
-
 void sparse_DOK_to_CCS(
-    const map<pair<idxint, idxint>, op::Parameter> &sparse_DOK,
-    vector<op::Parameter> &data_CCS,
-    vector<idxint> &columns_CCS,
-    vector<idxint> &rows_CCS,
+    const std::map<std::pair<idxint, idxint>, op::Parameter> &sparse_DOK,
+    std::vector<op::Parameter> &data_CCS,
+    std::vector<idxint> &columns_CCS,
+    std::vector<idxint> &rows_CCS,
     size_t n_columns);
 
 class EcosWrapper
@@ -36,20 +30,20 @@ class EcosWrapper
     idxint ecos_n_equalities;
     idxint ecos_n_positive_constraints;
     idxint ecos_n_cone_constraints;
-    vector<idxint> ecos_cone_constraint_dimensions;
+    std::vector<idxint> ecos_cone_constraint_dimensions;
     idxint ecos_n_exponential_cones;
-    vector<op::Parameter> ecos_G_data_CCS;
-    vector<idxint> ecos_G_columns_CCS;
-    vector<idxint> ecos_G_rows_CCS;
-    vector<op::Parameter> ecos_A_data_CCS;
-    vector<idxint> ecos_A_columns_CCS;
-    vector<idxint> ecos_A_rows_CCS;
-    vector<op::Parameter> ecos_cost_function_weights;
-    vector<op::Parameter> ecos_h;
-    vector<op::Parameter> ecos_b;
+    std::vector<op::Parameter> ecos_G_data_CCS;
+    std::vector<idxint> ecos_G_columns_CCS;
+    std::vector<idxint> ecos_G_rows_CCS;
+    std::vector<op::Parameter> ecos_A_data_CCS;
+    std::vector<idxint> ecos_A_columns_CCS;
+    std::vector<idxint> ecos_A_rows_CCS;
+    std::vector<op::Parameter> ecos_cost_function_weights;
+    std::vector<op::Parameter> ecos_h;
+    std::vector<op::Parameter> ecos_b;
 
     /* ECOS result */
-    vector<double> ecos_solution_vector;
+    std::vector<double> ecos_solution_vector;
     idxint ecos_exitflag;
 
   public:
@@ -62,12 +56,12 @@ class EcosWrapper
         return ecos_solution_vector[problem_index];
     }
 
-    double getSolutionValue(const string &name, const vector<size_t> &indices)
+    double getSolutionValue(const std::string &name, const std::vector<size_t> &indices)
     {
         return ecos_solution_vector[socp.getVariable(name, indices).problem_index];
     }
 
-    vector<double> getSolutionVector()
+    std::vector<double> getSolutionVector()
     {
         if (ecos_n_variables > 0 && ecos_solution_vector.size() == size_t(ecos_n_variables))
         {

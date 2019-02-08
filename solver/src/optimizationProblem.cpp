@@ -1,5 +1,9 @@
 #include "optimizationProblem.hpp"
 
+using std::string;
+using std::vector;
+using fmt::print;
+
 namespace op
 {
 
@@ -10,7 +14,7 @@ string Variable::print() const
     if (tensor_indices.size() > 0)
     {
         s << "[";
-        for (size_t i = 0; i < tensor_indices.size(); ++i)
+        for (size_t i = 0; i < tensor_indices.size(); i++)
         {
             if (i)
                 s << ",";
@@ -60,7 +64,7 @@ string AffineTerm::print() const
 string AffineExpression::print() const
 {
     std::ostringstream s;
-    for (size_t i = 0; i < terms.size(); ++i)
+    for (size_t i = 0; i < terms.size(); i++)
     {
         if (i)
             s << "  + ";
@@ -120,7 +124,7 @@ string Norm2::print() const
 {
     std::ostringstream s;
     s << "norm2([ ";
-    for (size_t i = 0; i < arguments.size(); ++i)
+    for (size_t i = 0; i < arguments.size(); i++)
     {
         if (i)
             s << ", ";
@@ -240,9 +244,9 @@ void GenericOptimizationProblem::createTensorVariable(const string &name, const 
 size_t GenericOptimizationProblem::getTensorVariableIndex(const string &name, const vector<size_t> &indices)
 {
     assert(tensor_variable_indices.count(name) > 0);
-    auto dims = tensor_variable_dimensions[name];
+    vector<size_t> &dims = tensor_variable_dimensions[name];
     assert(indices.size() == dims.size());
-    for (size_t i = 0; i < indices.size(); ++i)
+    for (size_t i = 0; i < indices.size(); i++)
     {
         assert(indices[i] < dims[i]);
     }

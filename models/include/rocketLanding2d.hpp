@@ -7,8 +7,6 @@
 
 #include "rocketLanding2dDefinitions.hpp"
 
-using std::string;
-
 namespace rocket2d
 {
 
@@ -21,7 +19,7 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
   public:
     RocketLanding2D();
 
-    static string getModelName()
+    static std::string getModelName()
     {
         return "RocketLanding2D";
     }
