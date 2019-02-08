@@ -277,7 +277,7 @@ void SecondOrderConeProgram::addConstraint(EqualityConstraint c)
     equalityConstraints.push_back(c);
 }
 
-void SecondOrderConeProgram::addMinimizationTerm(AffineExpression c)
+void SecondOrderConeProgram::addMinimizationTerm(const AffineExpression &c)
 {
     costFunction = costFunction + c;
 }

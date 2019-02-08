@@ -170,7 +170,7 @@ struct SecondOrderConeProgram : public GenericOptimizationProblem
     void addConstraint(SecondOrderConeConstraint c);
     void addConstraint(PostiveConstraint c);
     void addConstraint(EqualityConstraint c);
-    void addMinimizationTerm(AffineExpression c);
+    void addMinimizationTerm(const AffineExpression &c);
     void printProblem(std::ostream &out) const;
 
     bool feasibilityCheck(const std::vector<double> &soln_values) const;

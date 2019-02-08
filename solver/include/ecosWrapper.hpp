@@ -51,25 +51,7 @@ class EcosWrapper
 
     void solveProblem(bool verbose = false);
 
-    double getSolutionValue(size_t problem_index) const
-    {
-        return ecos_solution_vector[problem_index];
-    }
-
-    double getSolutionValue(const std::string &name, const std::vector<size_t> &indices)
-    {
-        return ecos_solution_vector[socp.getVariable(name, indices).problem_index];
-    }
-
-    std::vector<double> getSolutionVector()
-    {
-        if (ecos_n_variables > 0 && ecos_solution_vector.size() == size_t(ecos_n_variables))
-        {
-            return ecos_solution_vector;
-        }
-        else
-        {
-            throw std::runtime_error("getSolutionVector(): Solution unavailable.");
-        }
-    }
+    double getSolutionValue(size_t problem_index) const;
+    double getSolutionValue(const std::string &name, const std::vector<size_t> &indices);
+    std::vector<double> getSolutionVector() const;
 };

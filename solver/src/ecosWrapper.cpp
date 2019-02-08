@@ -7,10 +7,10 @@
 #include "ecosWrapper.hpp"
 
 using std::make_pair;
+using std::map;
 using std::pair;
 using std::tuple;
 using std::vector;
-using std::map;
 
 template <typename T>
 inline bool contains(const vector<T> &v, const T &x)
@@ -297,5 +297,27 @@ void EcosWrapper::solveProblem(bool verbose)
     else
     {
         throw std::runtime_error("Could not set up problem.");
+    }
+}
+
+double EcosWrapper::getSolutionValue(size_t problem_index) const
+{
+    return ecos_solution_vector[problem_index];
+}
+
+double EcosWrapper::getSolutionValue(const std::string &name, const std::vector<size_t> &indices)
+{
+    return ecos_solution_vector[socp.getVariable(name, indices).problem_index];
+}
+
+std::vector<double> EcosWrapper::getSolutionVector() const
+{
+    if (ecos_n_variables > 0 && ecos_solution_vector.size() == size_t(ecos_n_variables))
+    {
+        return ecos_solution_vector;
+    }
+    else
+    {
+        throw std::runtime_error("getSolutionVector(): Solution unavailable.");
     }
 }
