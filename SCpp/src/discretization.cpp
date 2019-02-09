@@ -86,7 +86,7 @@ void calculateDiscretization(
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
 
-        integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 5.);
+        integrate_adaptive(stepper, discretizationODE, V, 0., dt, dt / 4.);
 
         size_t cols = 1;
 

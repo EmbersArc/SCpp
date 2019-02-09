@@ -167,7 +167,7 @@ void RocketLanding3D::addApplicationConstraints(
         // Glide Slope
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {1, k}),
-                       (1.0) * var("X", {2, k})}) <= (1.0 / tan(gamma_gs)) * var("X", {3, k}));
+                       (1.0) * var("X", {2, k})}) <= tan(gamma_gs) * var("X", {3, k}));
 
         // Max Rotation Velocity
         socp.addConstraint(
