@@ -22,13 +22,13 @@ link_libraries(stdc++fs)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
 # CPPAD
+include_directories(SYSTEM lib/external)
 link_libraries(dl)
 
 # INCLUDES
 include_directories(models/include)
 include_directories(SCpp/include)
 include_directories(solver/include)
-include_directories(SYSTEM lib/external)
 
 # SOURCES
 set(SOURCES

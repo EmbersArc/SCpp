@@ -1,6 +1,7 @@
 build/
-output/*
+output/
 old/
+
 .vscode
 
 *.mp4
