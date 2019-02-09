@@ -1,4 +1,6 @@
+#include <boost/numeric/odeint.hpp>
 
+#include "eigenIntegration.hpp"
 #include "discretization.hpp"
 
 class DiscretizationODE

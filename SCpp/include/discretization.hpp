@@ -1,10 +1,20 @@
 #pragma once
 
-#include <boost/numeric/odeint.hpp>
-
-#include "eigenIntegration.hpp"
 #include "activeModel.hpp"
 
+/**
+ * @brief Multiple-shooting discretization with first order hold on input
+ * 
+ * @param model 
+ * @param sigma 
+ * @param X 
+ * @param U 
+ * @param A_bar 
+ * @param B_bar 
+ * @param C_bar 
+ * @param S_bar 
+ * @param z_bar 
+ */
 void calculateDiscretization(
     Model &model,
     double &sigma,
