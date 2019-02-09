@@ -24,10 +24,10 @@ op::SecondOrderConeProgram buildSCSOCP(
 
     op::SecondOrderConeProgram socp;
 
-    socp.createTensorVariable("X", {Model::state_dim_, K});            // states
-    socp.createTensorVariable("U", {Model::input_dim_, K});            // inputs
-    socp.createTensorVariable("nu", {Model::state_dim_, K - 1});       // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim_, K - 1}); // virtual control
+    socp.createTensorVariable("X", {Model::state_dim, K});            // states
+    socp.createTensorVariable("U", {Model::input_dim, K});            // inputs
+    socp.createTensorVariable("nu", {Model::state_dim, K - 1});       // virtual control
+    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1}); // virtual control
     socp.createTensorVariable("norm1_nu");                             // virtual control norm upper bound
     socp.createTensorVariable("sigma");                                // total time
     socp.createTensorVariable("Delta_sigma");                          // squared change of sigma
@@ -50,21 +50,21 @@ op::SecondOrderConeProgram buildSCSOCP(
          * -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
          * 
          */
-        for (size_t i = 0; i < Model::state_dim_; i++)
+        for (size_t i = 0; i < Model::state_dim; i++)
         {
             // -I * x(k+1)
             op::AffineExpression eq = (-1.0) * var("X", {i, k + 1});
 
             // A * x(k)
-            for (size_t j = 0; j < Model::state_dim_; j++)
+            for (size_t j = 0; j < Model::state_dim; j++)
                 eq = eq + param(A_bar.at(k)(i, j)) * var("X", {j, k});
 
             // B * u(k)
-            for (size_t j = 0; j < Model::input_dim_; j++)
+            for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B_bar.at(k)(i, j)) * var("U", {j, k});
 
             // C * u(k+1)
-            for (size_t j = 0; j < Model::input_dim_; j++)
+            for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(C_bar.at(k)(i, j)) * var("U", {j, k + 1});
 
             // Sigma sigma
@@ -92,7 +92,7 @@ op::SecondOrderConeProgram buildSCSOCP(
         op::AffineExpression bound_sum;
         for (size_t k = 0; k < K - 1; k++)
         {
-            for (size_t i = 0; i < Model::state_dim_; i++)
+            for (size_t i = 0; i < Model::state_dim; i++)
             {
                 // -nu_bound <= nu
                 socp.addConstraint((1.0) * var("nu_bound", {i, k}) + (1.0) * var("nu", {i, k}) >= (0.0));
@@ -135,11 +135,11 @@ op::SecondOrderConeProgram buildSCSOCP(
          * 
          */
         vector<op::AffineExpression> norm2_args;
-        for (size_t i = 0; i < Model::state_dim_; i++)
+        for (size_t i = 0; i < Model::state_dim; i++)
         {
             norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
         }
-        for (size_t i = 0; i < Model::input_dim_; i++)
+        for (size_t i = 0; i < Model::input_dim; i++)
         {
             norm2_args.push_back(param(U(i, k)) + (-1.0) * var("U", {i, k}));
         }

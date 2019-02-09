@@ -9,7 +9,7 @@ class DiscretizationODE
     Model &model;
 
   public:
-    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim_, 1 + Model::state_dim_ + 2 * Model::input_dim_ + 2>;
+    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim, 1 + Model::state_dim + 2 * Model::input_dim + 2>;
 
     DiscretizationODE(
         const Model::input_vector_t &u_t0,
@@ -32,29 +32,29 @@ class DiscretizationODE
         A_bar *= sigma;
         B_bar *= sigma;
 
-        const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim_, Model::state_dim_>(0, 1);
+        const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim, Model::state_dim>(0, 1);
         const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
 
         size_t cols = 0;
 
-        dVdt.block<Model::state_dim_, 1>(0, cols) = sigma * f;
+        dVdt.block<Model::state_dim, 1>(0, cols) = sigma * f;
         cols += 1;
 
-        dVdt.block<Model::state_dim_, Model::state_dim_>(0, cols) = A_bar * Phi_A_xi;
-        cols += Model::state_dim_;
+        dVdt.block<Model::state_dim, Model::state_dim>(0, cols) = A_bar * Phi_A_xi;
+        cols += Model::state_dim;
 
         const double alpha = (dt - t) / dt;
-        dVdt.block<Model::state_dim_, Model::input_dim_>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
-        cols += Model::input_dim_;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
+        cols += Model::input_dim;
 
         const double beta = t / dt;
-        dVdt.block<Model::state_dim_, Model::input_dim_>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
-        cols += Model::input_dim_;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
+        cols += Model::input_dim;
 
-        dVdt.block<Model::state_dim_, 1>(0, cols) = Phi_A_xi_inverse * f;
+        dVdt.block<Model::state_dim, 1>(0, cols) = Phi_A_xi_inverse * f;
         cols += 1;
 
-        dVdt.block<Model::state_dim_, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        dVdt.block<Model::state_dim, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
     }
 };
 
@@ -80,7 +80,7 @@ void calculateDiscretization(
         DiscretizationODE::ode_matrix_t V;
         V.setZero();
         V.col(0) = X.col(k);
-        V.block<Model::state_dim_, Model::state_dim_>(0, 1).setIdentity();
+        V.block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
 
         DiscretizationODE discretizationODE(U.col(k), U.col(k + 1), sigma, dt, model);
 
@@ -88,18 +88,18 @@ void calculateDiscretization(
 
         size_t cols = 1;
 
-        A_bar[k] = V.block<Model::state_dim_, Model::state_dim_>(0, cols);
-        cols += Model::state_dim_;
+        A_bar[k] = V.block<Model::state_dim, Model::state_dim>(0, cols);
+        cols += Model::state_dim;
 
-        B_bar[k] = A_bar[k] * V.block<Model::state_dim_, Model::input_dim_>(0, cols);
-        cols += Model::input_dim_;
+        B_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        cols += Model::input_dim;
 
-        C_bar[k] = A_bar[k] * V.block<Model::state_dim_, Model::input_dim_>(0, cols);
-        cols += Model::input_dim_;
+        C_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        cols += Model::input_dim;
 
-        S_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
+        S_bar[k] = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
         cols += 1;
 
-        z_bar[k] = A_bar[k] * V.block<Model::state_dim_, 1>(0, cols);
+        z_bar[k] = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
 }

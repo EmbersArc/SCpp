@@ -77,8 +77,8 @@ int main()
     Model::state_vector_v_t z_bar(K - 1);
 
     print("Initializing trajectory.\n");
-    Eigen::MatrixXd X(size_t(Model::state_dim_), K);
-    Eigen::MatrixXd U(size_t(Model::input_dim_), K);
+    Eigen::MatrixXd X(size_t(Model::state_dim), K);
+    Eigen::MatrixXd U(size_t(Model::input_dim), K);
     model.initializeTrajectory(X, U);
     double sigma = model.getFinalTimeGuess();
     // Save first trajectory
@@ -93,15 +93,15 @@ int main()
 
     // Cache indices for performance
     const size_t sigma_index = socp.getTensorVariableIndex("sigma", {});
-    Eigen::MatrixXi X_indices(size_t(Model::state_dim_), K);
-    Eigen::MatrixXi U_indices(size_t(Model::input_dim_), K);
+    Eigen::MatrixXi X_indices(size_t(Model::state_dim), K);
+    Eigen::MatrixXi U_indices(size_t(Model::input_dim), K);
     for (size_t k = 0; k < K; k++)
     {
-        for (size_t i = 0; i < Model::state_dim_; i++)
+        for (size_t i = 0; i < Model::state_dim; i++)
         {
             X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
         }
-        for (size_t i = 0; i < Model::input_dim_; i++)
+        for (size_t i = 0; i < Model::input_dim; i++)
         {
             U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
         }
@@ -140,11 +140,11 @@ int main()
         // Read solution
         for (size_t k = 0; k < K; k++)
         {
-            for (size_t i = 0; i < Model::state_dim_; i++)
+            for (size_t i = 0; i < Model::state_dim; i++)
             {
                 X(i, k) = solver.getSolutionValue(X_indices(i, k));
             }
-            for (size_t i = 0; i < Model::input_dim_; i++)
+            for (size_t i = 0; i < Model::input_dim; i++)
             {
                 U(i, k) = solver.getSolutionValue(U_indices(i, k));
             }

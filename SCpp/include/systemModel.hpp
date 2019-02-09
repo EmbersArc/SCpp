@@ -18,8 +18,8 @@ class SystemModel
   public:
     enum : size_t
     {
-        state_dim_ = STATE_DIM,
-        input_dim_ = INPUT_DIM,
+        state_dim = STATE_DIM,
+        input_dim = INPUT_DIM,
     };
 
     typedef Eigen::Matrix<double, STATE_DIM, 1> state_vector_t;
@@ -82,6 +82,12 @@ class SystemModel
      * @param B 
      */
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+
+    // /**
+    //  * @brief Loads model parameters from a .info file.
+    //  * 
+    //  */
+    // virtual void loadParametersFromFile() = 0;
 
     /**
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
