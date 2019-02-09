@@ -28,6 +28,7 @@ link_libraries(dl)
 include_directories(models/include)
 include_directories(SCpp/include)
 include_directories(solver/include)
+include_directories(SYSTEM lib/external)
 
 # SOURCES
 set(SOURCES
