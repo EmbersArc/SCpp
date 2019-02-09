@@ -23,8 +23,8 @@
 using fmt::format;
 using fmt::print;
 using std::ofstream;
-using std::vector;
 using std::string;
+using std::vector;
 namespace fs = std::filesystem;
 
 string getOutputPath()
@@ -111,13 +111,14 @@ int main()
 
     print("Starting Successive Convexification.\n");
     const double timer_total = tic();
-    size_t it = 0;
+    ;
     bool converged = false;
-    while (it < max_iterations and not converged)
+    for (size_t it = 0; it < max_iterations; it++)
     {
         string itString = format("<Iteration {}>", it);
         print("{:=^{}}\n", itString, 60);
 
+        // Discretize
         const double timer_iteration = tic();
         double timer = tic();
         calculateDiscretization(model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
@@ -166,27 +167,25 @@ int main()
         print("\n");
         print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
         print("\n");
+
+        // check for convergence
         if (solver.getSolutionValue("norm2_Delta", {}) < delta_tol && solver.getSolutionValue("norm1_nu", {}) < nu_tol)
         {
             print("Converged after {} iterations.\n", it + 1);
             converged = true;
             break;
         }
+        // else increase trust region weight
         else if (solver.getSolutionValue("norm1_nu", {}) < nu_tol)
         {
             weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
         }
-        else if (it == max_iterations - 1)
-        {
-            print("No convergence after {} iterations.\n", max_iterations);
-        }
-        it++;
     }
 
     if (converged)
     {
-    // Write solution to files
+        // Write solution to files
         double timer = tic();
         print("Initializing output directory.\n");
         string outputDirectory = format("{}/{}", getOutputPath(), time(0));
@@ -216,6 +215,10 @@ int main()
             }
         }
         print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
+    }
+    else
+    {
+        print("No convergence after {} iterations.\n", max_iterations);
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
