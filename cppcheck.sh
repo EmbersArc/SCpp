@@ -1,1 +1,1 @@
-clear && ../cppcheck/cppcheck SCpp models -I SCpp/include -I models/include --enable=all --inconclusive --language=c++
+clear && ../cppcheck/cppcheck SCpp models solver -I SCpp/include -I models/include -I solver/include --enable=all --inconclusive --language=c++
