@@ -1,3 +1,5 @@
+#include "common.hpp"
+
 #include "rocketLanding2d.hpp"
 #include "parameterServer.hpp"
 

@@ -1,5 +1,6 @@
 #include <random>
 
+#include "common.hpp"
 #include "rocketLanding3d.hpp"
 #include "parameterServer.hpp"
 

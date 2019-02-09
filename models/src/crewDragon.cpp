@@ -1,10 +1,11 @@
 #include <random>
 
+#include "common.hpp"
 #include "crewDragon.hpp"
 #include "parameterServer.hpp"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace crewdragon
 {
@@ -57,33 +58,32 @@ void CrewDragon::systemFlowMap(
 {
     typedef scalar_ad_t T;
 
-    auto alpha_m_ = T(alpha_m);
-    auto g_I_ = g_I.cast<T>();
-    auto J_B_ = J_B.cast<T>().asDiagonal();
-    auto r_T_B_ = r_T_B.cast<T>();
+    auto J_B_inv = J_B.cast<T>().asDiagonal().inverse();
 
     auto m = x(0);
     auto v_I = x.segment<3>(4);
     auto q_B_I = x.segment<4>(7);
     auto w_B = x.segment<3>(11);
 
-    f(0) = -alpha_m_ * u.sum();
-    f.segment(1, 3) << v_I;
     Eigen::AngleAxisd Rx(M_PI * 1. / 12., Eigen::Vector3d::UnitX());
     Eigen::AngleAxisd Rz0(M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
     Eigen::AngleAxisd Rz1(M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
     Eigen::AngleAxisd Rz2(-M_PI * 5. / 6., Eigen::Vector3d::UnitZ());
     Eigen::AngleAxisd Rz3(-M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
+
     Eigen::Matrix<T, 3, 1> u0 = (Rz0 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(0);
     Eigen::Matrix<T, 3, 1> u1 = (Rz1 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(1);
     Eigen::Matrix<T, 3, 1> u2 = (Rz2 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(2);
     Eigen::Matrix<T, 3, 1> u3 = (Rz3 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(3);
-    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * (u0 + u1 + u2 + u3) + g_I_;
+
+    f(0) = -T(alpha_m) * u.sum();
+    f.segment(1, 3) << v_I;
+    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * (u0 + u1 + u2 + u3) + g_I.cast<T>();
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
-    f.segment(11, 3) << J_B_.inverse() * ((Rz0.cast<T>() * r_T_B_).cross(u0) +
-                                          (Rz1.cast<T>() * r_T_B_).cross(u1) +
-                                          (Rz2.cast<T>() * r_T_B_).cross(u2) +
-                                          (Rz3.cast<T>() * r_T_B_).cross(u3)) -
+    f.segment(11, 3) << J_B_inv * ((Rz0 * r_T_B).cast<T>().cross(u0) +
+                                   (Rz1 * r_T_B).cast<T>().cross(u1) +
+                                   (Rz2 * r_T_B).cast<T>().cross(u2) +
+                                   (Rz3 * r_T_B).cast<T>().cross(u3)) -
                             w_B.cross(w_B);
 }
 
