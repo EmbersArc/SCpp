@@ -14,6 +14,7 @@ CrewDragon::CrewDragon()
 {
     ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
 
+    bool randomInitialState;
     double I_sp;
     double m_init, m_dry;
     Eigen::Vector3d r_init, v_init, w_init;
@@ -37,6 +38,7 @@ CrewDragon::CrewDragon()
     param.loadScalar("theta_max", theta_max);
     param.loadScalar("gamma_gs", gamma_gs);
     param.loadScalar("w_B_max", w_B_max);
+    param.loadScalar("randomInitialState", randomInitialState);
 
     deg2rad(gamma_gs);
     deg2rad(theta_max);
@@ -47,7 +49,10 @@ CrewDragon::CrewDragon()
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
     x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
-    // randomizeInitialState();
+    if (randomInitialState)
+    {
+        randomizeInitialState();
+    }
     x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
 }
 

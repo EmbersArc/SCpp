@@ -82,3 +82,5 @@ gamma_gs    30.
 w_B_max     50.
 
 final_time_guess 6.
+
+randomInitialState true
