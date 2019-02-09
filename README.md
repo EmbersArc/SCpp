@@ -14,7 +14,6 @@ A C++ implementation of the Successive Convexification algorithm.
  - C++17
  - Eigen
  - Boost (odeint and ptree)
- - CppAD and CppADCodeGen
  - fmt (included as submodule)
  - ECOS (included as submodule)
  
