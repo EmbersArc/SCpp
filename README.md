@@ -27,7 +27,7 @@ A C++ implementation of the Successive Convexification algorithm.
 
 Rocket trajectory model with free-final-time:
 
-![](https://thumbs.gfycat.com/MenacingThornyGrackle-small.gif)
+![](https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-small.gif)
 
 ![](https://i.imgur.com/W6E0rgL.png)
 
