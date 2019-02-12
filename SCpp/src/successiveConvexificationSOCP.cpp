@@ -1,7 +1,7 @@
 #include "successiveConvexificationSOCP.hpp"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace sc
 {
@@ -28,11 +28,11 @@ op::SecondOrderConeProgram buildSCSOCP(
     socp.createTensorVariable("U", {Model::input_dim, K});            // inputs
     socp.createTensorVariable("nu", {Model::state_dim, K - 1});       // virtual control
     socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1}); // virtual control
-    socp.createTensorVariable("norm1_nu");                             // virtual control norm upper bound
-    socp.createTensorVariable("sigma");                                // total time
-    socp.createTensorVariable("Delta_sigma");                          // squared change of sigma
-    socp.createTensorVariable("Delta", {K});                           // squared change of the stacked [ x(k), u(k) ] vector
-    socp.createTensorVariable("norm2_Delta");                          // 2-norm of the Delta(k) variables
+    socp.createTensorVariable("norm1_nu");                            // virtual control norm upper bound
+    socp.createTensorVariable("sigma");                               // total time
+    socp.createTensorVariable("Delta_sigma");                         // squared change of sigma
+    socp.createTensorVariable("Delta", {K});                          // squared change of the stacked [ x(k), u(k) ] vector
+    socp.createTensorVariable("norm2_Delta");                         // 2-norm of the Delta(k) variables
 
     // shortcuts to access solver variables and create parameters
     auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
