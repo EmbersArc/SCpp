@@ -1,4 +1,4 @@
-#define JIT true
+#define JIT false
 
 #if JIT
 #include <cppad/cg.hpp>
@@ -29,7 +29,6 @@ class SystemDynamics
 #else
     typedef double scalar_t;
 #endif
-
     typedef CppAD::AD<scalar_t> scalar_ad_t;
 
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, 1> state_vector_ad_t;
@@ -117,14 +116,12 @@ void SystemDynamics<STATE_DIM, INPUT_DIM>::initializeModel()
     // generate source code
     CppAD::cg::ModelCSourceGen<double> cgen(f_, "model");
     cgen.setCreateJacobian(true);
-    cgen.setCreateHessian(true);
     cgen.setCreateForwardZero(true);
     CppAD::cg::ModelLibraryCSourceGen<double> libcgen(cgen);
 
     // compile source code
     CppAD::cg::GccCompiler<double> compiler;
     CppAD::cg::DynamicModelLibraryProcessor<double> processor(libcgen);
-    compiler.setCompileFlags({"-O3", "-std=c11"});
     dynamicLib_ = processor.createDynamicLibrary(compiler);
     model_ = dynamicLib_->model("model");
 #endif
@@ -169,8 +166,8 @@ void SystemDynamics<STATE_DIM, INPUT_DIM>::systemFlowMapAD(
     const dynamic_vector_ad_t &tapedInput,
     dynamic_vector_ad_t &f)
 {
-    state_vector_ad_t x = tapedInput.template segment<STATE_DIM>(0);
-    input_vector_ad_t u = tapedInput.template segment<INPUT_DIM>(STATE_DIM);
+    const state_vector_ad_t &x = tapedInput.head<STATE_DIM>();
+    const input_vector_ad_t &u = tapedInput.tail<INPUT_DIM>();
 
     state_vector_ad_t fFixed;
     systemFlowMap(x, u, fFixed);
