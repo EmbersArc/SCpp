@@ -20,7 +20,7 @@ r_T_B
     (2)   0.
 }
 
-T_min       20000.
+T_min       30000.
 T_max       50000.
 I_sp        235.
 
@@ -32,14 +32,14 @@ r_init
 {
     (0)     30.
     (1)     30.
-    (2)     100.
+    (2)     200.
 }
 ; velocity
 v_init
 {
     (0)     0.
     (1)     -10.
-    (2)     -20.
+    (2)     -50.
 } 
 ; orientation
 rpy_init
@@ -71,15 +71,15 @@ v_final
 {
     (0)     0.
     (1)     0.
-    (2)     -5.
+    (2)     -2.
 }
 
 ; maximum angle
-theta_max   60.
+theta_max   15.
 ; glideslope angle
 gamma_gs    30.
 ; maximum angluar velocity
-w_B_max     50.
+w_B_max     30.
 
 final_time_guess 6.
 
