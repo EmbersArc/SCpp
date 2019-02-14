@@ -6,7 +6,7 @@
 #include <cppad/cppad.hpp>
 #endif
 
-template <size_t STATE_DIM, size_t INPUT_DIM>
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemDynamics
 {
 
@@ -15,6 +15,7 @@ class SystemDynamics
     typedef Eigen::Matrix<double, STATE_DIM, STATE_DIM> state_matrix_t;
     typedef Eigen::Matrix<double, INPUT_DIM, 1> input_vector_t;
     typedef Eigen::Matrix<double, STATE_DIM, INPUT_DIM> control_matrix_t;
+    typedef Eigen::Matrix<double, PARAM_DIM, 1> param_vector_t;
     typedef Eigen::Matrix<double, Eigen::Dynamic, 1> dynamic_vector_t;
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> dynamic_matrix_t;
     typedef Eigen::Map<dynamic_vector_t> dynamic_vector_map_t;
@@ -37,12 +38,20 @@ class SystemDynamics
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM> control_matrix_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
     typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
+    typedef Eigen::Matrix<scalar_ad_t, PARAM_DIM, 1> param_vector_ad_t;
 
     /**
      * @brief Initialize the model by compiling the dynamics functions
      * 
      */
     void initializeModel();
+
+    /**
+     * @brief Update model parameters.
+     * 
+     * @param param 
+     */
+    void updateParameters(param_vector_t param);
 
     /**
      * @brief The state derivative function. Has to be implemented by the derived class. All types have to be scalar_ad_t.
@@ -54,6 +63,7 @@ class SystemDynamics
     virtual void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
+        const param_vector_ad_t &p,
         state_vector_ad_t &f) = 0;
 
     /**
@@ -86,23 +96,25 @@ class SystemDynamics
 #endif
 };
 
-template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM>::initializeModel()
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 {
-    domain_vector_ad_t input;
-    input.setRandom();
+    dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
+    dynamic_vector_ad_t param(PARAM_DIM);
+    x.setRandom();
+    param.setRandom();
 
     // start recording
-    CppAD::Independent(input);
+    CppAD::Independent(x, 0, false, param);
 
-    const state_vector_ad_t &x = input.template head<STATE_DIM>();
-    const input_vector_ad_t &u = input.template tail<INPUT_DIM>();
+    const state_vector_ad_t &state = x.head<STATE_DIM>();
+    const input_vector_ad_t &input = x.tail<INPUT_DIM>();
 
     state_vector_ad_t dx;
-    systemFlowMap(x, u, dx);
+    systemFlowMap(state, input, param, dx);
 
     // store operation sequence in x' = f(x) and stop recording
-    f_ = CppAD::ADFun<scalar_t>(x, dx);
+    f_ = CppAD::ADFun<scalar_t>(x, dynamic_vector_ad_t(dx));
     f_.optimize();
 
 #if JIT
@@ -120,8 +132,14 @@ void SystemDynamics<STATE_DIM, INPUT_DIM>::initializeModel()
 #endif
 }
 
-template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateParameters(param_vector_t param)
+{
+    f_.new_dynamic(param);
+}
+
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
@@ -135,8 +153,8 @@ void SystemDynamics<STATE_DIM, INPUT_DIM>::computef(const state_vector_t &x, con
 #endif
 }
 
-template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;

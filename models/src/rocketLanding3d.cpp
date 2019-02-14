@@ -61,14 +61,15 @@ RocketLanding3D::RocketLanding3D()
 void RocketLanding3D::systemFlowMap(
     const state_vector_ad_t &x,
     const input_vector_ad_t &u,
+    const param_vector_ad_t &p,
     state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
 
-    auto alpha_m_ = T(alpha_m);
-    auto g_I_ = g_I.cast<T>();
-    auto J_B_ = J_B.cast<T>().asDiagonal();
-    auto r_T_B_ = r_T_B.cast<T>();
+    auto alpha_m_ = p(0);
+    auto g_I_ = p.segment<3>(1);
+    auto J_B_ = p.segment<3>(4).asDiagonal();
+    auto r_T_B_ = p.segment<3>(7);
     // = 10 parameters
 
     // state variables
@@ -76,7 +77,7 @@ void RocketLanding3D::systemFlowMap(
     auto v = x.segment<3>(4);
     auto q = x.segment<4>(7);
     auto w = x.segment<3>(11);
-    
+
     auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
 
     f(0) = -alpha_m_ * u.norm();
@@ -101,8 +102,8 @@ void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
 
         // do SLERP for quaternion
-        Eigen::Quaterniond q0(x_init(7),x_init(8),x_init(9),x_init(10));
-        Eigen::Quaterniond q1(x_final(7),x_final(8),x_final(9),x_final(10));
+        Eigen::Quaterniond q0(x_init(7), x_init(8), x_init(9), x_init(10));
+        Eigen::Quaterniond q1(x_final(7), x_final(8), x_final(9), x_final(10));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
         X.col(k).segment(7, 4) << qs.w(), qs.vec();
 

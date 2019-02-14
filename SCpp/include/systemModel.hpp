@@ -6,28 +6,30 @@
 #include "optimizationProblem.hpp"
 #include "systemDynamics.hpp"
 
-template <size_t STATE_DIM, size_t INPUT_DIM>
-class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM>
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
   public:
-    typedef SystemDynamics<STATE_DIM, INPUT_DIM> BASE;
+    typedef SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM> BASE;
 
-    using typename BASE::state_vector_t;
-    using typename BASE::state_matrix_t;
-    using typename BASE::input_vector_t;
     using typename BASE::control_matrix_t;
-    using typename BASE::dynamic_vector_t;
+    using typename BASE::control_matrix_v_t;
     using typename BASE::dynamic_matrix_t;
     using typename BASE::dynamic_vector_map_t;
-    using typename BASE::state_vector_v_t;
+    using typename BASE::dynamic_vector_t;
+    using typename BASE::input_vector_t;
     using typename BASE::input_vector_v_t;
+    using typename BASE::param_vector_t;
+    using typename BASE::state_matrix_t;
     using typename BASE::state_matrix_v_t;
-    using typename BASE::control_matrix_v_t;
+    using typename BASE::state_vector_t;
+    using typename BASE::state_vector_v_t;
 
     using typename BASE::control_matrix_ad_t;
     using typename BASE::domain_vector_ad_t;
     using typename BASE::dynamic_vector_ad_t;
     using typename BASE::input_vector_ad_t;
+    using typename BASE::param_vector_ad_t;
     using typename BASE::state_matrix_ad_t;
     using typename BASE::state_vector_ad_t;
 
@@ -35,6 +37,7 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM>
     {
         state_dim = STATE_DIM,
         input_dim = INPUT_DIM,
+        param_dim = PARAM_DIM,
     };
 
     /**
