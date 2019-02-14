@@ -1,21 +1,21 @@
 # ifndef CPPAD_CORE_STD_MATH_98_HPP
 # define CPPAD_CORE_STD_MATH_98_HPP
-
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-17 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
-CppAD is distributed under multiple licenses. This distribution is under
-the terms of the
-                    Eclipse Public License Version 1.0.
+CppAD is distributed under the terms of the
+             Eclipse Public License Version 2.0.
 
-A copy of this license is included in the COPYING file of this distribution.
-Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
--------------------------------------------------------------------------- */
+This Source Code may also be made available under the following
+Secondary License when the conditions for such availability set forth
+in the Eclipse Public License, Version 2.0 are satisfied:
+      GNU General Public License, Version 2.0 or later.
+---------------------------------------------------------------------------- */
 /*
 -------------------------------------------------------------------------------
 $begin acos$$
 $spell
-	acos
+    acos
 $$
 
 $section Inverse Sine Function: acos$$
@@ -33,24 +33,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{acos}^{(1)} (x) & = & - (1 - x * x)^{-1/2}
+    \R{acos}^{(1)} (x) & = & - (1 - x * x)^{-1/2}
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/acos.cpp
+    example/general/acos.cpp
 %$$
 The file
 $cref acos.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin asin$$
 $spell
-	asin
+    asin
 $$
 
 $section Inverse Sine Function: asin$$
@@ -68,24 +67,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{asin}^{(1)} (x) & = & (1 - x * x)^{-1/2}
+    \R{asin}^{(1)} (x) & = & (1 - x * x)^{-1/2}
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/asin.cpp
+    example/general/asin.cpp
 %$$
 The file
 $cref asin.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin atan$$
 $spell
-	atan
+    atan
 $$
 
 $section Inverse Tangent Function: atan$$
@@ -103,24 +101,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{atan}^{(1)} (x) & = & \frac{1}{1 + x^2}
+    \R{atan}^{(1)} (x) & = & \frac{1}{1 + x^2}
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/atan.cpp
+    example/general/atan.cpp
 %$$
 The file
 $cref atan.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin cos$$
 $spell
-	cos
+    cos
 $$
 
 $section The Cosine Function: cos$$
@@ -138,24 +135,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{cos}^{(1)} (x) & = & - \sin(x)
+    \R{cos}^{(1)} (x) & = & - \sin(x)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/cos.cpp
+    example/general/cos.cpp
 %$$
 The file
 $cref cos.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin cosh$$
 $spell
-	cosh
+    cosh
 $$
 
 $section The Hyperbolic Cosine Function: cosh$$
@@ -173,24 +169,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{cosh}^{(1)} (x) & = &  \sinh(x)
+    \R{cosh}^{(1)} (x) & = &  \sinh(x)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/cosh.cpp
+    example/general/cosh.cpp
 %$$
 The file
 $cref cosh.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin exp$$
 $spell
-	exp
+    exp
 $$
 
 $section The Exponential Function: exp$$
@@ -208,18 +203,17 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{exp}^{(1)} (x) & = &  \exp(x)
+    \R{exp}^{(1)} (x) & = &  \exp(x)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/exp.cpp
+    example/general/exp.cpp
 %$$
 The file
 $cref exp.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
@@ -242,24 +236,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{log}^{(1)} (x) & = &  \frac{1}{x}
+    \R{log}^{(1)} (x) & = &  \frac{1}{x}
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/log.cpp
+    example/general/log.cpp
 %$$
 The file
 $cref log.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin log10$$
 $spell
-	CppAD
+    CppAD
 $$
 
 $section The Base 10 Logarithm Function: log10$$
@@ -275,24 +268,23 @@ $head Method$$
 CppAD uses the representation
 $latex \[
 \begin{array}{lcr}
-        {\rm log10} (x) & = & \log(x) / \log(10)
+    {\rm log10} (x) & = & \log(x) / \log(10)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/log10.cpp
+    example/general/log10.cpp
 %$$
 The file
 $cref log10.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin sin$$
 $spell
-	sin
+    sin
 $$
 
 $section The Sine Function: sin$$
@@ -310,24 +302,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{sin}^{(1)} (x) & = &  \cos(x)
+    \R{sin}^{(1)} (x) & = &  \cos(x)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/sin.cpp
+    example/general/sin.cpp
 %$$
 The file
 $cref sin.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin sinh$$
 $spell
-	sinh
+    sinh
 $$
 
 $section The Hyperbolic Sine Function: sinh$$
@@ -345,24 +336,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{sinh}^{(1)} (x) & = &  \cosh(x)
+    \R{sinh}^{(1)} (x) & = &  \cosh(x)
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/sinh.cpp
+    example/general/sinh.cpp
 %$$
 The file
 $cref sinh.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin sqrt$$
 $spell
-	sqrt
+    sqrt
 $$
 
 $section The Square Root Function: sqrt$$
@@ -380,24 +370,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{sqrt}^{(1)} (x) & = &  \frac{1}{2 \R{sqrt} (x) }
+    \R{sqrt}^{(1)} (x) & = &  \frac{1}{2 \R{sqrt} (x) }
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/sqrt.cpp
+    example/general/sqrt.cpp
 %$$
 The file
 $cref sqrt.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin tan$$
 $spell
-	tan
+    tan
 $$
 
 $section The Tangent Function: tan$$
@@ -415,24 +404,23 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{tan}^{(1)} (x) & = &  1 + \tan (x)^2
+    \R{tan}^{(1)} (x) & = &  1 + \tan (x)^2
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/tan.cpp
+    example/general/tan.cpp
 %$$
 The file
 $cref tan.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
 $begin tanh$$
 $spell
-	tanh
+    tanh
 $$
 
 $section The Hyperbolic Tangent Function: tanh$$
@@ -450,18 +438,17 @@ This is an $cref/atomic operation/glossary/Operation/Atomic/$$.
 $head Derivative$$
 $latex \[
 \begin{array}{lcr}
-	\R{tanh}^{(1)} (x) & = &  1 - \tanh (x)^2
+    \R{tanh}^{(1)} (x) & = &  1 - \tanh (x)^2
 \end{array}
 \] $$
 
 $head Example$$
 $children%
-	example/general/tanh.cpp
+    example/general/tanh.cpp
 %$$
 The file
 $cref tanh.cpp$$
 contains an example and test of this function.
-It returns true if it succeeds and false otherwise.
 
 $end
 -------------------------------------------------------------------------------
@@ -492,7 +479,8 @@ acos, asin, atan, cos, cosh, exp, fabs, log, sin, sinh, sqrt, tan, tanh.
 # define CPPAD_STANDARD_MATH_UNARY_AD(Name, Op)                   \
     template <class Base>                                         \
     inline AD<Base> Name(const AD<Base> &x)                       \
-    {   return x.Name##_me(); }                                   \
+    {   return x.Name##_me();                                     \
+    }                                                             \
     template <class Base>                                         \
     inline AD<Base> AD<Base>::Name##_me (void) const              \
     {                                                             \
@@ -500,12 +488,26 @@ acos, asin, atan, cos, cosh, exp, fabs, log, sin, sinh, sqrt, tan, tanh.
         result.value_ = CppAD::Name(value_);                      \
         CPPAD_ASSERT_UNKNOWN( Parameter(result) );                \
                                                                   \
-        if( Variable(*this) )                                     \
+        local::ADTape<Base>* tape = AD<Base>::tape_ptr();         \
+        if( tape == CPPAD_NULL )                                  \
+            return result;                                        \
+                                                                  \
+        if( tape_id_ != tape->id_ )                               \
+            return result;                                        \
+                                                                  \
+        if(ad_type_ == dynamic_enum)                        \
+        {   result.taddr_ = tape->Rec_.put_dyn_par(               \
+                result.value_, local::Name##_dyn, taddr_          \
+            );                                                    \
+            result.tape_id_ = tape_id_;                           \
+            result.ad_type_ = dynamic_enum;                 \
+        }                                                         \
+        else                                                      \
         {   CPPAD_ASSERT_UNKNOWN( NumArg(Op) == 1 );              \
-            local::ADTape<Base> *tape = tape_this();              \
             tape->Rec_.PutArg(taddr_);                            \
-            result.taddr_ = tape->Rec_.PutOp(Op);                 \
-            result.tape_id_    = tape->id_;                       \
+            result.taddr_    = tape->Rec_.PutOp(Op);              \
+            result.tape_id_  = tape->id_;                         \
+            result.ad_type_  = variable_enum;                \
         }                                                         \
         return result;                                            \
     }                                                             \
@@ -539,60 +541,82 @@ namespace CppAD {
 # endif
 
 # if CPPAD_USE_CPLUSPLUS_2011
-	// Error function is a special case
-	template <class Base>
-	inline AD<Base> erf(const AD<Base> &x)
-	{	return x.erf_me(); }
-	template <class Base>
-	inline AD<Base> AD<Base>::erf_me (void) const
-	{
-		AD<Base> result;
-		result.value_ = CppAD::erf(value_);
-		CPPAD_ASSERT_UNKNOWN( Parameter(result) );
+    // Error function is a special case
+    template <class Base>
+    inline AD<Base> erf(const AD<Base> &x)
+    {   return x.erf_me();
+    }
+    template <class Base>
+    inline AD<Base> AD<Base>::erf_me (void) const
+    {
+        AD<Base> result;
+        result.value_ = CppAD::erf(value_);
+        CPPAD_ASSERT_UNKNOWN( Parameter(result) );
 
-		if( Variable(*this) )
-		{	CPPAD_ASSERT_UNKNOWN( local::NumArg(local::ErfOp) == 3 );
-			local::ADTape<Base> *tape = tape_this();
-			// arg[0] = argument to erf function
-			tape->Rec_.PutArg(taddr_);
-			// arg[1] = zero
-			addr_t p  = tape->Rec_.PutPar( Base(0.0) );
-			tape->Rec_.PutArg(p);
-			// arg[2] = 2 / sqrt(pi)
-			p = tape->Rec_.PutPar(Base(
-				1.0 / std::sqrt( std::atan(1.0) )
-			));
-			tape->Rec_.PutArg(p);
-			//
-			result.taddr_ = tape->Rec_.PutOp(local::ErfOp);
-			result.tape_id_    = tape->id_;
-		}
-		return result;
-	}
-	template <class Base>
-	inline AD<Base> erf(const VecAD_reference<Base> &x)
-	{	return x.ADBase().erf_me(); }
+        // check if there is a recording in progress
+        local::ADTape<Base>* tape = AD<Base>::tape_ptr();
+        if( tape == CPPAD_NULL )
+            return result;
+
+        // check if operand is a constant parameter
+        if( tape_id_ != tape->id_ )
+            return result;
+
+        if(ad_type_ == dynamic_enum)
+        {   // dynamic paramter argument
+            result.taddr_   = tape->Rec_.put_dyn_par(
+                result.value_, local::erf_dyn, taddr_
+            );
+            result.tape_id_  = tape_id_;
+            result.ad_type_  = dynamic_enum;
+        }
+        else
+        {   // variable argument
+            CPPAD_ASSERT_UNKNOWN( local::NumArg(local::ErfOp) == 3 );
+
+            // arg[0] = argument to erf function
+            tape->Rec_.PutArg(taddr_);
+
+            // arg[1] = zero
+            addr_t p  = tape->Rec_.put_con_par( Base(0.0) );
+            tape->Rec_.PutArg(p);
+
+            // arg[2] = 2 / sqrt(pi)
+            p = tape->Rec_.put_con_par(Base(
+                1.0 / std::sqrt( std::atan(1.0) )
+            ));
+            tape->Rec_.PutArg(p);
+            //
+            result.taddr_   = tape->Rec_.PutOp(local::ErfOp);
+            result.tape_id_ = tape->id_;
+            result.ad_type_ = variable_enum;
+        }
+        return result;
+    }
+    template <class Base>
+    inline AD<Base> erf(const VecAD_reference<Base> &x)
+    {   return x.ADBase().erf_me(); }
 # endif
 
      /*!
-	Compute the log of base 10 of x where  has type AD<Base>
+    Compute the log of base 10 of x where  has type AD<Base>
 
-	\tparam Base
-	is the base type (different from base for log)
-	for this AD type, see base_require.
+    \tparam Base
+    is the base type (different from base for log)
+    for this AD type, see base_require.
 
-	\param x
-	is the argument for the log10 function.
+    \param x
+    is the argument for the log10 function.
 
-	\result
-	if the result is y, then \f$ x = 10^y \f$.
-	*/
+    \result
+    if the result is y, then \f$ x = 10^y \f$.
+    */
      template <class Base>
      inline AD<Base> log10(const AD<Base> &x)
-     {    return CppAD::log(x) / CppAD::log( Base(10) ); }
+    {   return CppAD::log(x) / CppAD::log( Base(10) ); }
      template <class Base>
      inline AD<Base> log10(const VecAD_reference<Base> &x)
-     {    return CppAD::log(x.ADBase()) / CppAD::log( Base(10) ); }
+    {   return CppAD::log(x.ADBase()) / CppAD::log( Base(10) ); }
 }
 
 # undef CPPAD_STANDARD_MATH_UNARY_AD

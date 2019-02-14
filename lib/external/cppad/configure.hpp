@@ -1,16 +1,16 @@
 # ifndef CPPAD_CONFIGURE_HPP
 # define CPPAD_CONFIGURE_HPP
-
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-17 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
-CppAD is distributed under multiple licenses. This distribution is under
-the terms of the
-                    Eclipse Public License Version 1.0.
+CppAD is distributed under the terms of the
+             Eclipse Public License Version 2.0.
 
-A copy of this license is included in the COPYING file of this distribution.
-Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
--------------------------------------------------------------------------- */
+This Source Code may also be made available under the following
+Secondary License when the conditions for such availability set forth
+in the Eclipse Public License, Version 2.0 are satisfied:
+      GNU General Public License, Version 2.0 or later.
+---------------------------------------------------------------------------- */
 
 /*!
  \file configure.hpp
@@ -18,10 +18,10 @@ Replacement for config.h so that all preprocessor symbols begin with CPPAD_
 */
 
 /*!
-\def CPPAD_COMPILER_IS_GNUCXX
-is the compiler a variant of g++
+\def CPPAD_COMPILER_HAS_CONVERSION_WARN
+is the compiler a variant of g++ and has conversion warnings
 */
-# define CPPAD_COMPILER_IS_GNUCXX 1
+# define CPPAD_COMPILER_HAS_CONVERSION_WARN 1
 
 /*!
 \def CPPAD_DISABLE_SOME_MICROSOFT_COMPILER_WARNINGS
@@ -60,7 +60,7 @@ determined that all the necessary features are avaiable.
 \def CPPAD_PACKAGE_STRING
 cppad-yyyymmdd as a C string where yyyy is year, mm is month, and dd is day.
 */
-# define CPPAD_PACKAGE_STRING "cppad-20180000.0"
+# define CPPAD_PACKAGE_STRING "cppad-20190200.0"
 
 /*!
 def CPPAD_HAS_ADOLC
@@ -90,7 +90,7 @@ Was a ipopt_prefix specified on the cmake command line.
 \def CPPAD_DEPRECATED
 This symbol is not currently being used.
 */
-# define CPPAD_DEPRECATED 0
+# define CPPAD_DEPRECATED 
 
 /*!
 \def CPPAD_BOOSTVECTOR
@@ -141,12 +141,12 @@ Otherwise, this smybol should be zero.
 Is the type used to store address on the tape. If not size_t, then
 <code>sizeof(CPPAD_TAPE_ADDR_TYPE) <= sizeof( size_t )</code>
 to conserve memory.
-This type must support \c std::numeric_limits,
-the \c <= operator,
-and conversion to \c size_t.
+This type must support std::numeric_limits,
+the <= operator,
+and conversion to size_t.
 Make sure that the type chosen returns true for is_pod<CPPAD_TAPE_ADDR_TYPE>
 in pod_vector.hpp.
-This type is later defined as \c addr_t in the CppAD namespace.
+This type is later defined as addr_t in the CppAD namespace.
 */
 # define CPPAD_TAPE_ADDR_TYPE unsigned int
 
@@ -155,12 +155,12 @@ This type is later defined as \c addr_t in the CppAD namespace.
 Is the type used to store tape identifiers. If not size_t, then
 <code>sizeof(CPPAD_TAPE_ID_TYPE) <= sizeof( size_t )</code>
 to conserve memory.
-This type must support \c std::numeric_limits,
-the \c <= operator,
-and conversion to \c size_t.
+This type must support std::numeric_limits,
+the <= operator,
+and conversion to size_t.
 Make sure that the type chosen returns true for is_pod<CPPAD_TAPE_ID_TYPE>
 in pod_vector.hpp.
-This type is later defined as \c tape_id_t in the CppAD namespace.
+This type is later defined as tape_id_t in the CppAD namespace.
 */
 # define CPPAD_TAPE_ID_TYPE unsigned int
 
@@ -196,7 +196,7 @@ It true, tmpnam_s works in C++ on this system.
 This preprocessor symbol is used for a null pointer.
 
 If it is not yet defined,
-it is defined when cppad/core/define.hpp is included.
+it is defined when cppad/local/define.hpp is included.
 */
 # ifndef CPPAD_NULL
 # if CPPAD_USE_CPLUSPLUS_2011
