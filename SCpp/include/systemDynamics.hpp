@@ -76,16 +76,6 @@ class SystemDynamics
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
 
   private:
-    /**
-     * @brief Calculates the state derivative for AD. Uses the systemFlowMap() of the derived class.
-     * 
-     * @param tapedInput 
-     * @param f 
-     */
-    void systemFlowMapAD(
-        const dynamic_vector_ad_t &tapedInput,
-        dynamic_vector_ad_t &f);
-
     // CppAD function
     CppAD::ADFun<scalar_t> f_;
 
@@ -99,17 +89,20 @@ class SystemDynamics
 template <size_t STATE_DIM, size_t INPUT_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM>::initializeModel()
 {
-    dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
-    x.setRandom();
+    domain_vector_ad_t input;
+    input.setRandom();
 
     // start recording
-    CppAD::Independent(x);
+    CppAD::Independent(input);
 
-    dynamic_vector_ad_t dxFixed;
-    systemFlowMapAD(x, dxFixed);
+    const state_vector_ad_t &x = input.template head<STATE_DIM>();
+    const input_vector_ad_t &u = input.template tail<INPUT_DIM>();
+
+    state_vector_ad_t dx;
+    systemFlowMap(x, u, dx);
 
     // store operation sequence in x' = f(x) and stop recording
-    f_ = CppAD::ADFun<scalar_t>(x, dxFixed);
+    f_ = CppAD::ADFun<scalar_t>(x, dx);
     f_.optimize();
 
 #if JIT
@@ -159,17 +152,4 @@ void SystemDynamics<STATE_DIM, INPUT_DIM>::computeJacobians(const state_vector_t
 
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM>::systemFlowMapAD(
-    const dynamic_vector_ad_t &tapedInput,
-    dynamic_vector_ad_t &f)
-{
-    const state_vector_ad_t &x = tapedInput.head<STATE_DIM>();
-    const input_vector_ad_t &u = tapedInput.tail<INPUT_DIM>();
-
-    state_vector_ad_t fFixed;
-    systemFlowMap(x, u, fFixed);
-    f = fFixed;
 }
