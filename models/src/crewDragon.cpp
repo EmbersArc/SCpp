@@ -65,10 +65,13 @@ void CrewDragon::systemFlowMap(
 
     auto J_B_inv = J_B.cast<T>().asDiagonal().inverse();
 
+    // state variables
     auto m = x(0);
-    auto v_I = x.segment<3>(4);
-    auto q_B_I = x.segment<4>(7);
-    auto w_B = x.segment<3>(11);
+    auto v = x.segment<3>(4);
+    auto q = x.segment<4>(7);
+    auto w = x.segment<3>(11);
+
+    auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
 
     Eigen::AngleAxisd Rx(M_PI * 1. / 12., Eigen::Vector3d::UnitX());
     Eigen::AngleAxisd Rz0(M_PI * 1. / 6., Eigen::Vector3d::UnitZ());
@@ -82,14 +85,14 @@ void CrewDragon::systemFlowMap(
     Eigen::Matrix<T, 3, 1> u3 = (Rz3 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(3);
 
     f(0) = -T(alpha_m) * u.sum();
-    f.segment(1, 3) << v_I;
-    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * (u0 + u1 + u2 + u3) + g_I.cast<T>();
-    f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
+    f.segment(1, 3) << v;
+    f.segment(4, 3) << 1. / m * R_I_B * (u0 + u1 + u2 + u3) + g_I.cast<T>();
+    f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
     f.segment(11, 3) << J_B_inv * ((Rz0 * r_T_B).cast<T>().cross(u0) +
                                    (Rz1 * r_T_B).cast<T>().cross(u1) +
                                    (Rz2 * r_T_B).cast<T>().cross(u2) +
                                    (Rz3 * r_T_B).cast<T>().cross(u3)) -
-                            w_B.cross(w_B);
+                            w.cross(w);
 }
 
 void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
@@ -107,11 +110,8 @@ void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
 
         // do SLERP for quaternion
-        Eigen::Quaterniond q0, q1;
-        q0.w() = x_init(7);
-        q0.vec() = x_init.segment(8, 3);
-        q1.w() = x_final(7);
-        q1.vec() << x_final.segment(8, 3);
+        Eigen::Quaterniond q0(x_init(7),x_init(8),x_init(9),x_init(10));
+        Eigen::Quaterniond q1(x_final(7),x_final(8),x_final(9),x_final(10));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
         X.col(k).segment(7, 4) << qs.w(), qs.vec();
 

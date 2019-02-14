@@ -21,17 +21,6 @@ Eigen::Matrix<T, 4, 1> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &rpy)
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 3> dirCosineMatrix(const Eigen::Matrix<T, 4, 1> &q)
-{
-    Eigen::Matrix<T, 3, 3> dirCosineMatrix;
-    dirCosineMatrix << 1 - 2 * (q(2) * q(2) + q(3) * q(3)), 2 * (q(1) * q(2) + q(0) * q(3)), 2 * (q(1) * q(3) - q(0) * q(2)),
-        2 * (q(1) * q(2) - q(0) * q(3)), 1 - 2 * (q(1) * q(1) + q(3) * q(3)), 2 * (q(2) * q(3) + q(0) * q(1)),
-        2 * (q(1) * q(3) + q(0) * q(2)), 2 * (q(2) * q(3) - q(0) * q(1)), 1 - 2 * (q(1) * q(1) + q(2) * q(2));
-
-    return dirCosineMatrix;
-}
-
-template <typename T>
 Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
 {
     Eigen::Matrix<T, 4, 4> omegaMatrix;
