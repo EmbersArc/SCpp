@@ -14,7 +14,7 @@ namespace rocket3d
  * @brief A 3D rocket landing model.
  * 
  */
-class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
+class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
   public:
     RocketLanding3D();
@@ -32,6 +32,7 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
+        const param_vector_ad_t &p,
         state_vector_ad_t &f) override;
 
     void initializeTrajectory(Eigen::MatrixXd &X,
