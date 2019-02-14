@@ -69,17 +69,19 @@ void RocketLanding3D::systemFlowMap(
     auto g_I_ = g_I.cast<T>();
     auto J_B_ = J_B.cast<T>().asDiagonal();
     auto r_T_B_ = r_T_B.cast<T>();
+    // = 10 parameters
 
+    // state variables
     auto m = x(0);
-    auto v_I = x.segment<3>(4);
-    auto q_B_I = x.segment<4>(7);
-    auto w_B = x.segment<3>(11);
+    auto v = x.segment<3>(4);
+    auto q = x.segment<4>(7);
+    auto w = x.segment<3>(11);
 
     f(0) = -alpha_m_ * u.norm();
-    f.segment(1, 3) << v_I;
-    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q_B_I).transpose() * u + g_I_;
-    f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w_B) * q_B_I;
-    f.segment(11, 3) << J_B_.inverse() * (r_T_B_.cross(u)) - w_B.cross(w_B);
+    f.segment(1, 3) << v;
+    f.segment(4, 3) << 1. / m * dirCosineMatrix<T>(q).transpose() * u + g_I_;
+    f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
+    f.segment(11, 3) << J_B_.inverse() * r_T_B_.cross(u) - w.cross(w);
 }
 
 void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
