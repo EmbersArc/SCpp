@@ -110,8 +110,8 @@ void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(1, 6) = alpha1 * x_init.segment(1, 6) + alpha2 * x_final.segment(1, 6);
 
         // do SLERP for quaternion
-        Eigen::Quaterniond q0(x_init(7),x_init(8),x_init(9),x_init(10));
-        Eigen::Quaterniond q1(x_final(7),x_final(8),x_final(9),x_final(10));
+        Eigen::Quaterniond q0(x_init(7), x_init(8), x_init(9), x_init(10));
+        Eigen::Quaterniond q1(x_final(7), x_final(8), x_final(9), x_final(10));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
         X.col(k).segment(7, 4) << qs.w(), qs.vec();
 
