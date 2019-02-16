@@ -235,6 +235,13 @@ void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     U *= m_scale * r_scale;
 }
 
+RocketLanding3D::param_vector_t RocketLanding3D::getNewModelParameters()
+{
+    param_vector_t new_parameters;
+    new_parameters << alpha_m, g_I, J_B, r_T_B;
+    return new_parameters;
+}
+
 void RocketLanding3D::randomizeInitialState()
 {
     std::mt19937 eng(time(0));

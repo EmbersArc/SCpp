@@ -11,34 +11,34 @@ class SystemDynamics
 {
 
   public:
-    typedef Eigen::Matrix<double, STATE_DIM, 1> state_vector_t;
-    typedef Eigen::Matrix<double, STATE_DIM, STATE_DIM> state_matrix_t;
-    typedef Eigen::Matrix<double, INPUT_DIM, 1> input_vector_t;
-    typedef Eigen::Matrix<double, STATE_DIM, INPUT_DIM> control_matrix_t;
-    typedef Eigen::Matrix<double, PARAM_DIM, 1> param_vector_t;
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 1> dynamic_vector_t;
-    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> dynamic_matrix_t;
-    typedef Eigen::Map<dynamic_vector_t> dynamic_vector_map_t;
+    using state_vector_t = Eigen::Matrix<double, STATE_DIM, 1>;
+    using state_matrix_t = Eigen::Matrix<double, STATE_DIM, STATE_DIM>;
+    using input_vector_t = Eigen::Matrix<double, INPUT_DIM, 1>;
+    using control_matrix_t = Eigen::Matrix<double, STATE_DIM, INPUT_DIM>;
+    using param_vector_t = Eigen::Matrix<double, PARAM_DIM, 1>;
+    using dynamic_vector_t = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+    using dynamic_matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+    using dynamic_vector_map_t = Eigen::Map<dynamic_vector_t>;
 
-    typedef std::vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>> state_vector_v_t;
-    typedef std::vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>> input_vector_v_t;
-    typedef std::vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>> state_matrix_v_t;
-    typedef std::vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>> control_matrix_v_t;
+    using state_vector_v_t = std::vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>>;
+    using input_vector_v_t = std::vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>>;
+    using state_matrix_v_t = std::vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>>;
+    using control_matrix_v_t = std::vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>>;
 
 #if JIT
-    typedef CppAD::cg::CG<double> scalar_t;
+    using scalar_t = CppAD::cg::CG<double>;
 #else
-    typedef double scalar_t;
+    using scalar_t = double;
 #endif
-    typedef CppAD::AD<scalar_t> scalar_ad_t;
+    using scalar_ad_t = CppAD::AD<scalar_t>;
 
-    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, 1> state_vector_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM> state_matrix_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1> input_vector_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM> control_matrix_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1> dynamic_vector_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1> domain_vector_ad_t;
-    typedef Eigen::Matrix<scalar_ad_t, PARAM_DIM, 1> param_vector_ad_t;
+    using state_vector_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM, 1>;
+    using state_matrix_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM, STATE_DIM>;
+    using input_vector_ad_t = Eigen::Matrix<scalar_ad_t, INPUT_DIM, 1>;
+    using control_matrix_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM, INPUT_DIM>;
+    using dynamic_vector_ad_t = Eigen::Matrix<scalar_ad_t, Eigen::Dynamic, 1>;
+    using domain_vector_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM + INPUT_DIM, 1>;
+    using param_vector_ad_t = Eigen::Matrix<scalar_ad_t, PARAM_DIM, 1>;
 
     /**
      * @brief Initialize the model by compiling the dynamics functions
@@ -135,7 +135,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateParameters(param_vector_t param)
 {
-    f_.new_dynamic(param);
+    f_.new_dynamic(dynamic_vector_t(param));
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -143,10 +143,10 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vecto
 {
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
-    dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
 #if JIT
+    dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
     model_->ForwardZero(input_map, f_map);
 #else
     f_map = f_.Forward(0, input);
@@ -159,10 +159,10 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
-    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
 #if JIT
+    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
     model_->Jacobian(input_map, J_map);
 #else
     J_map = f_.Jacobian(input);

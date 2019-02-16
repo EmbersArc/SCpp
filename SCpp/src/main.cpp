@@ -81,6 +81,7 @@ int main()
     Eigen::MatrixXd U(size_t(Model::input_dim), K);
     model.initializeTrajectory(X, U);
     double sigma = model.getFinalTimeGuess();
+    model.updateParameters(model.getNewModelParameters());
     // Save first trajectory
     all_X.push_back(X);
     all_U.push_back(U);
@@ -111,7 +112,7 @@ int main()
 
     print("Starting Successive Convexification.\n");
     const double timer_total = tic();
-    ;
+    
     bool converged = false;
     for (size_t it = 0; it < max_iterations; it++)
     {
