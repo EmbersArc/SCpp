@@ -14,7 +14,7 @@ namespace crewdragon
  * @brief A SpaceX Crew Dragon model.
  * 
  */
-class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_>
+class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
   public:
     CrewDragon();
@@ -32,6 +32,7 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
+        const param_vector_ad_t &p,
         state_vector_ad_t &f) override;
 
     void initializeTrajectory(Eigen::MatrixXd &X,
@@ -46,6 +47,8 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_>
 
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
+
+    param_vector_t getNewModelParameters();
 
     /**
      * @brief Varies the initial state randomly.

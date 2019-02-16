@@ -59,11 +59,16 @@ CrewDragon::CrewDragon()
 void CrewDragon::systemFlowMap(
     const state_vector_ad_t &x,
     const input_vector_ad_t &u,
+    const param_vector_ad_t &p,
     state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
 
-    auto J_B_inv = J_B.cast<T>().asDiagonal().inverse();
+    auto alpha_m_ = p(0);
+    auto g_I_ = p.segment<3>(1);
+    auto J_B_inv = p.segment<3>(4).asDiagonal().inverse();
+    auto r_T_B_ = p.segment<3>(7);
+    // = 10 parameters
 
     // state variables
     auto m = x(0);
@@ -84,14 +89,14 @@ void CrewDragon::systemFlowMap(
     Eigen::Matrix<T, 3, 1> u2 = (Rz2 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(2);
     Eigen::Matrix<T, 3, 1> u3 = (Rz3 * Rx * Eigen::Vector3d::UnitZ()).cast<T>() * u(3);
 
-    f(0) = -T(alpha_m) * u.sum();
+    f(0) = -T(alpha_m_) * u.sum();
     f.segment(1, 3) << v;
-    f.segment(4, 3) << 1. / m * R_I_B * (u0 + u1 + u2 + u3) + g_I.cast<T>();
+    f.segment(4, 3) << 1. / m * R_I_B * (u0 + u1 + u2 + u3) + g_I_;
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(11, 3) << J_B_inv * ((Rz0 * r_T_B).cast<T>().cross(u0) +
-                                   (Rz1 * r_T_B).cast<T>().cross(u1) +
-                                   (Rz2 * r_T_B).cast<T>().cross(u2) +
-                                   (Rz3 * r_T_B).cast<T>().cross(u3)) -
+    f.segment(11, 3) << J_B_inv * ((Rz0.cast<T>() * r_T_B_).cross(u0) +
+                                   (Rz1.cast<T>() * r_T_B_).cross(u1) +
+                                   (Rz2.cast<T>() * r_T_B_).cross(u2) +
+                                   (Rz3.cast<T>() * r_T_B_).cross(u3)) -
                             w.cross(w);
 }
 
@@ -225,6 +230,13 @@ void CrewDragon::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     X.block(1, 0, 6, K) *= r_scale;
 
     U *= m_scale * r_scale;
+}
+
+CrewDragon::param_vector_t CrewDragon::getNewModelParameters()
+{
+    param_vector_t new_parameters;
+    new_parameters << alpha_m, g_I, J_B, r_T_B;
+    return new_parameters;
 }
 
 void CrewDragon::randomizeInitialState()
