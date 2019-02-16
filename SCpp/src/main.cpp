@@ -81,7 +81,11 @@ int main()
     Eigen::MatrixXd U(size_t(Model::input_dim), K);
     model.initializeTrajectory(X, U);
     double sigma = model.getFinalTimeGuess();
-    model.updateParameters(model.getNewModelParameters());
+    
+    Model::param_vector_t model_params;
+    model.getNewModelParameters(model_params);
+    model.updateParameters(model_params);
+    
     // Save first trajectory
     all_X.push_back(X);
     all_U.push_back(U);

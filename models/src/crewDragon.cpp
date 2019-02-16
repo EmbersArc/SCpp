@@ -232,11 +232,9 @@ void CrewDragon::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     U *= m_scale * r_scale;
 }
 
-CrewDragon::param_vector_t CrewDragon::getNewModelParameters()
+void CrewDragon::getNewModelParameters(param_vector_t &p)
 {
-    param_vector_t new_parameters;
-    new_parameters << alpha_m, g_I, J_B, r_T_B;
-    return new_parameters;
+    p << alpha_m, g_I, J_B, r_T_B;
 }
 
 void CrewDragon::randomizeInitialState()
