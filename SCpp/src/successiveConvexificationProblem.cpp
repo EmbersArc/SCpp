@@ -1,4 +1,4 @@
-#include "successiveConvexificationSOCP.hpp"
+#include "successiveConvexificationProblem.hpp"
 
 using std::string;
 using std::vector;
