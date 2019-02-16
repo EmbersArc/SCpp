@@ -10,5 +10,3 @@ nu_tol                              1e-6
 delta_tol                           1e-3
 
 max_iterations                      30
-
-nondimensionalize                   true
