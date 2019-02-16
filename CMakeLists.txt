@@ -34,16 +34,18 @@ include_directories(solver/include)
 set(SOURCES
     models/src/rocketLanding3d.cpp
     # models/src/rocketLanding2d.cpp
-    # models/src/crewDragon.cpp
+    models/src/crewDragon.cpp
     
     solver/src/ecosWrapper.cpp
     solver/src/optimizationProblem.cpp
 
     SCpp/src/parameterServer.cpp
     SCpp/src/discretization.cpp
-    SCpp/src/successiveConvexificationSOCP.cpp
+    SCpp/src/successiveConvexificationProblem.cpp
     SCpp/src/timing.cpp
 
+    SCpp/src/freeFinalTimeAlgorithm.cpp
+    
     SCpp/src/main.cpp
 )
 
