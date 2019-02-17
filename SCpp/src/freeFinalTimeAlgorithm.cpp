@@ -62,6 +62,14 @@ bool freeFinalTimeAlgorithm::iterate()
 
     readSolution();
 
+    // check feasibility
+    timer = tic();
+    if (!socp.feasibilityCheck(solver->getSolutionVector()))
+    {
+        throw std::runtime_error("ERROR: Solver produced an invalid solution.\n");
+    }
+    print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
+
     // print iteration summary
     print("\n");
     print("{:<{}}{: .4f}\n", "Trajectory Time", 50, sigma);
