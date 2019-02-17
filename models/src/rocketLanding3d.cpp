@@ -68,7 +68,7 @@ void RocketLanding3D::systemFlowMap(
 
     auto alpha_m_ = p(0);
     auto g_I_ = p.segment<3>(1);
-    auto J_B_ = p.segment<3>(4).asDiagonal();
+    auto J_B_inv = p.segment<3>(4).asDiagonal().inverse();
     auto r_T_B_ = p.segment<3>(7);
     // = 10 parameters
 
@@ -84,7 +84,7 @@ void RocketLanding3D::systemFlowMap(
     f.segment(1, 3) << v;
     f.segment(4, 3) << 1. / m * R_I_B * u + g_I_;
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(11, 3) << J_B_.inverse() * r_T_B_.cross(u) - w.cross(w);
+    f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
 void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
@@ -111,7 +111,7 @@ void RocketLanding3D::initializeTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(11, 3) = alpha1 * x_init.segment(11, 3) + alpha2 * x_final.segment(11, 3);
 
         // input
-        U.col(k) = (alpha1 * x_init(0) + alpha2 * x_final(0)) * -g_I;
+        U.setConstant((T_max - T_min) / 2.);
     }
 }
 
