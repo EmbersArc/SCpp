@@ -14,7 +14,7 @@ class freeFinalTimeAlgorithm
   public:
     explicit freeFinalTimeAlgorithm(std::shared_ptr<Model> model);
     void initialize();
-    void solve();
+    void solve(bool warm_start = false);
     void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t);
 
   private:

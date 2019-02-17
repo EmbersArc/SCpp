@@ -3,7 +3,6 @@
 
 using fmt::format;
 using fmt::print;
-using std::ofstream;
 using std::string;
 using std::vector;
 
@@ -19,6 +18,7 @@ void freeFinalTimeAlgorithm::loadParameters()
     param.loadScalar("delta_tol", delta_tol);
     param.loadScalar("max_iterations", max_iterations);
     param.loadScalar("nu_tol", nu_tol);
+    
     param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
@@ -28,6 +28,8 @@ void freeFinalTimeAlgorithm::loadParameters()
 void freeFinalTimeAlgorithm::initialize()
 {
     loadParameters();
+
+    model->initializeModel();
 
     A_bar.resize(K - 1);
     B_bar.resize(K - 1);
@@ -66,7 +68,7 @@ bool freeFinalTimeAlgorithm::iterate()
     timer = tic();
     if (!socp.feasibilityCheck(solver->getSolutionVector()))
     {
-        throw std::runtime_error("ERROR: Solver produced an invalid solution.\n");
+        throw std::runtime_error("Solver produced an invalid solution.\n");
     }
     print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
@@ -83,13 +85,15 @@ bool freeFinalTimeAlgorithm::iterate()
     return solver->getSolutionValue("norm2_Delta", {}) < delta_tol && solver->getSolutionValue("norm1_nu", {}) < nu_tol;
 }
 
-void freeFinalTimeAlgorithm::solve()
+void freeFinalTimeAlgorithm::solve(bool warm_start)
 {
     model->nondimensionalize();
-    model->initializeModel();
 
-    model->initializeTrajectory(X, U);
-    sigma = model->getFinalTimeGuess();
+    if (not warm_start)
+    {
+        model->initializeTrajectory(X, U);
+        sigma = model->getFinalTimeGuess();
+    }
 
     Model::param_vector_t model_params;
     model->getNewModelParameters(model_params);
@@ -105,6 +109,7 @@ void freeFinalTimeAlgorithm::solve()
         print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
 
         converged = iterate();
+
         if (converged)
         {
             print("Converged after {} iterations.\n\n", iteration);
