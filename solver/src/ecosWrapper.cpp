@@ -292,7 +292,7 @@ void EcosWrapper::solveProblem(bool verbose)
             ecos_solution_vector[i] = mywork->x[i];
         }
 
-        ECOS_cleanup(mywork, 0); // TODO maybe this does not need to be allocated and freed for every call? Reuse the pwork?
+        ECOS_cleanup(mywork, 0);
     }
     else
     {
