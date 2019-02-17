@@ -16,21 +16,18 @@ void freeFinalTimeAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
 
+    param.loadScalar("delta_tol", delta_tol);
+    param.loadScalar("max_iterations", max_iterations);
+    param.loadScalar("nu_tol", nu_tol);
+    param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
-    param.loadScalar("trust_region_factor", trust_region_factor);
-    param.loadScalar("nu_tol", nu_tol);
-    param.loadScalar("delta_tol", delta_tol);
-    param.loadScalar("max_iterations", max_iterations);
 }
 
 void freeFinalTimeAlgorithm::initialize()
 {
     loadParameters();
-
-    model->nondimensionalize();
-    model->initializeModel();
 
     A_bar.resize(K - 1);
     B_bar.resize(K - 1);
@@ -40,12 +37,6 @@ void freeFinalTimeAlgorithm::initialize()
 
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K);
-    model->initializeTrajectory(X, U);
-    sigma = model->getFinalTimeGuess();
-
-    Model::param_vector_t model_params;
-    model->getNewModelParameters(model_params);
-    model->updateParameters(model_params);
 
     socp = sc::buildSCOP(*model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
@@ -73,13 +64,12 @@ bool freeFinalTimeAlgorithm::iterate()
 
     // print iteration summary
     print("\n");
-    print("{:<{}}{: .4f}\n", "sigma", 50, sigma);
-    print("{:<{}}{: .4f}\n", "norm1_nu", 50, solver->getSolutionValue("norm1_nu", {}));
-    print("{:<{}}{: .4f}\n", "Delta_sigma", 50, solver->getSolutionValue("Delta_sigma", {}));
-    print("{:<{}}{: .4f}\n", "norm2_Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
-    print("\n");
-    print("{:<{}}{:.2f}ms\n", "Time, iteration:", 50, toc(timer_iteration));
-    print("\n");
+    print("{:<{}}{: .4f}\n", "Trajectory Time", 50, sigma);
+    print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, solver->getSolutionValue("norm1_nu", {}));
+    print("{:<{}}{: .4f}\n", "State Input Delta", 50, solver->getSolutionValue("Delta_sigma", {}));
+    print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
+
+    print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
     // check for convergence
     return solver->getSolutionValue("norm2_Delta", {}) < delta_tol && solver->getSolutionValue("norm1_nu", {}) < nu_tol;
@@ -87,6 +77,16 @@ bool freeFinalTimeAlgorithm::iterate()
 
 void freeFinalTimeAlgorithm::solve()
 {
+    model->nondimensionalize();
+    model->initializeModel();
+
+    model->initializeTrajectory(X, U);
+    sigma = model->getFinalTimeGuess();
+
+    Model::param_vector_t model_params;
+    model->getNewModelParameters(model_params);
+    model->updateParameters(model_params);
+
     const double timer_total = tic();
 
     size_t iteration = 0;
@@ -94,8 +94,7 @@ void freeFinalTimeAlgorithm::solve()
     while (iteration <= max_iterations)
     {
         iteration++;
-        string itString = format("<Iteration {}>", iteration);
-        print("{:=^{}}\n", itString, 60);
+        print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
 
         converged = iterate();
         if (converged)
@@ -117,6 +116,8 @@ void freeFinalTimeAlgorithm::solve()
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
+
+    model->redimensionalize();
 }
 
 void freeFinalTimeAlgorithm::cacheIndices()

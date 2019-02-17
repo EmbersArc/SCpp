@@ -224,6 +224,25 @@ void RocketLanding3D::nondimensionalize()
     T_max /= m_scale * r_scale;
 }
 
+void RocketLanding3D::redimensionalize()
+{
+    alpha_m /= r_scale;
+    r_T_B *= r_scale;
+    g_I *= r_scale;
+    J_B *= (m_scale * r_scale * r_scale);
+
+    x_init(0) *= m_scale;
+    x_init.segment(1, 3) *= r_scale;
+    x_init.segment(4, 3) *= r_scale;
+
+    x_final(0) *= m_scale;
+    x_final.segment(1, 3) *= r_scale;
+    x_final.segment(4, 3) *= r_scale;
+
+    T_min *= m_scale * r_scale;
+    T_max *= m_scale * r_scale;
+}
+
 void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                                  Eigen::MatrixXd &U)
 {
