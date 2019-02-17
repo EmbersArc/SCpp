@@ -8,7 +8,8 @@ using std::vector;
 
 namespace fs = std::filesystem;
 
-freeFinalTimeAlgorithm::freeFinalTimeAlgorithm() : param("../SCpp/config/SCParameters.info")
+freeFinalTimeAlgorithm::freeFinalTimeAlgorithm(std::shared_ptr<Model> model)
+    : param("../SCpp/config/SCParameters.info"), model(model)
 {
 }
 
@@ -29,8 +30,8 @@ void freeFinalTimeAlgorithm::initialize()
 {
     loadParameters();
 
-    model.nondimensionalize();
-    model.initializeModel();
+    model->nondimensionalize();
+    model->initializeModel();
 
     A_bar.resize(K - 1);
     B_bar.resize(K - 1);
@@ -40,74 +41,38 @@ void freeFinalTimeAlgorithm::initialize()
 
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K);
-    print("{}  {}", X.rows(), X.cols());
-    model.initializeTrajectory(X, U);
-    sigma = model.getFinalTimeGuess();
+    model->initializeTrajectory(X, U);
+    sigma = model->getFinalTimeGuess();
 
     Model::param_vector_t model_params;
-    model.getNewModelParameters(model_params);
-    model.updateParameters(model_params);
+    model->getNewModelParameters(model_params);
+    model->updateParameters(model_params);
 
-    socp = sc::buildSCSOCP(model,
-                           weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                           X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
+    socp = sc::buildSCOP(*model,
+                         weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
+                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
 
-    // Cache indices for performance
-    sigma_index = socp.getTensorVariableIndex("sigma", {});
-    X_indices.resizeLike(X);
-    U_indices.resizeLike(U);
-    for (size_t k = 0; k < K; k++)
-    {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
-        }
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
-        }
-    }
+    cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
 bool freeFinalTimeAlgorithm::iterate()
 {
-    // Discretize
+    // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    calculateDiscretization(model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+    calculateDiscretization(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
-    // Solve the problem
+    // solve the problem
     timer = tic();
     solver->solveProblem();
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
 
-    // Check feasibility
-    timer = tic();
-    if (!socp.feasibilityCheck(solver->getSolutionVector()))
-    {
-        print("ERROR: Solver produced an invalid solution.\n");
-        return EXIT_FAILURE;
-    }
-    print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
+    getSolution();
 
-    // Read solution
-    for (size_t k = 0; k < K; k++)
-    {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            X(i, k) = solver->getSolutionValue(X_indices(i, k));
-        }
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            U(i, k) = solver->getSolutionValue(U_indices(i, k));
-        }
-    }
-    sigma = solver->getSolutionValue(sigma_index);
-
-    // Print iteration summary
+    // print iteration summary
     print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
     print("\n");
     print("{:<{}}{: .4f}\n", "sigma", 50, sigma);
@@ -140,7 +105,7 @@ void freeFinalTimeAlgorithm::solve()
             print("Converged after {} iterations.\n\n", iteration);
             break;
         }
-        else
+        else if (iteration > 2)
         {
             // else increase trust region weight
             weight_trust_region_time *= trust_region_factor;
@@ -154,7 +119,7 @@ void freeFinalTimeAlgorithm::solve()
     }
     else
     {
-        // Write solution to files
+        // write solution to files
         double timer = tic();
         string outputDirectory = format("{}/{}", getOutputPath(), time(0));
 
@@ -163,7 +128,7 @@ void freeFinalTimeAlgorithm::solve()
             throw std::runtime_error("Could not create output directory!");
         }
 
-        model.redimensionalizeTrajectory(X, U);
+        model->redimensionalizeTrajectory(X, U);
         {
             ofstream f(outputDirectory + "/X.txt");
             f << X;
@@ -184,4 +149,39 @@ void freeFinalTimeAlgorithm::solve()
 string freeFinalTimeAlgorithm::getOutputPath()
 {
     return format("../output/{}", Model::getModelName());
+}
+
+void freeFinalTimeAlgorithm::cacheIndices()
+{
+    // cache indices for performance
+    sigma_index = socp.getTensorVariableIndex("sigma", {});
+    X_indices.resizeLike(X);
+    U_indices.resizeLike(U);
+    for (size_t k = 0; k < K; k++)
+    {
+        for (size_t i = 0; i < Model::state_dim; i++)
+        {
+            X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
+        }
+        for (size_t i = 0; i < Model::input_dim; i++)
+        {
+            U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
+        }
+    }
+}
+
+void freeFinalTimeAlgorithm::getSolution()
+{
+    for (size_t k = 0; k < K; k++)
+    {
+        for (size_t i = 0; i < Model::state_dim; i++)
+        {
+            X(i, k) = solver->getSolutionValue(X_indices(i, k));
+        }
+        for (size_t i = 0; i < Model::input_dim; i++)
+        {
+            U(i, k) = solver->getSolutionValue(U_indices(i, k));
+        }
+    }
+    sigma = solver->getSolutionValue(sigma_index);
 }

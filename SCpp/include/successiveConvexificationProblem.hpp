@@ -5,7 +5,7 @@
 
 namespace sc
 {
-op::SecondOrderConeProgram buildSCSOCP(
+op::SecondOrderConeProgram buildSCOP(
     Model &model,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,

@@ -9,7 +9,6 @@
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemDynamics
 {
-
   public:
     using state_vector_t = Eigen::Matrix<double, STATE_DIM, 1>;
     using state_matrix_t = Eigen::Matrix<double, STATE_DIM, STATE_DIM>;

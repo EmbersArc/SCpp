@@ -13,12 +13,14 @@
 class freeFinalTimeAlgorithm
 {
   public:
-    freeFinalTimeAlgorithm();
+    explicit freeFinalTimeAlgorithm(std::shared_ptr<Model> model);
     void initialize();
     void solve();
 
   private:
-    std::string getOutputPath();
+    static std::string getOutputPath();
+    void cacheIndices();
+    void getSolution();
     void loadParameters();
     bool iterate();
 
@@ -26,7 +28,7 @@ class freeFinalTimeAlgorithm
 
     size_t K;
 
-    Model model;
+    std::shared_ptr<Model> model;
 
     double weight_trust_region_time;
     double weight_trust_region_trajectory;

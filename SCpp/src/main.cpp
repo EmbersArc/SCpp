@@ -2,7 +2,8 @@
 
 int main()
 {
-    freeFinalTimeAlgorithm fftSolver;
-    fftSolver.initialize();
-    fftSolver.solve();
+    auto model = std::make_shared<Model>();
+    freeFinalTimeAlgorithm scSolver(model);
+    scSolver.initialize();
+    scSolver.solve();
 }

@@ -123,7 +123,7 @@ void RocketLanding3D::addApplicationConstraints(
     const size_t K = X0.cols();
 
     auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
-    // auto param = [](double &param_value){ return op::Parameter(&param_value); };
+    auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     // Initial state
@@ -134,20 +134,20 @@ void RocketLanding3D::addApplicationConstraints(
 
     // Final State
     // mass and roll are free
-    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + (x_final(0)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + (x_final(1)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + (x_final(2)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + (x_final(3)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + (x_final(4)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + (x_final(5)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {6, K - 1}) + (x_final(6)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + (x_final(7)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {8, K - 1}) + (x_final(8)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {9, K - 1}) + (x_final(9)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + (x_final(10)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {11, K - 1}) + (x_final(11)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {12, K - 1}) + (x_final(12)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + (x_final(13)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + (param(x_final(0))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + (param(x_final(1))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + (param(x_final(2))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + (param(x_final(3))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + (param(x_final(4))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + (param(x_final(5))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {6, K - 1}) + (param(x_final(6))) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + (param(x_final(7))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {8, K - 1}) + (param(x_final(8))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {9, K - 1}) + (param(x_final(9))) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + (param(x_final(10))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {11, K - 1}) + (param(x_final(11))) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {12, K - 1}) + (param(x_final(12))) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + (param(x_final(13))) == 0.0);
 
     // Final Input
     socp.addConstraint((1.0) * var("U", {0, K - 1}) == (0.0));
@@ -159,23 +159,23 @@ void RocketLanding3D::addApplicationConstraints(
         // Mass
         //     x(0) >= m_dry
         //     for all k
-        socp.addConstraint((1.0) * var("X", {0, k}) + (-x_final(0)) >= (0.0));
+        socp.addConstraint((1.0) * var("X", {0, k}) + param_fn([this]() { return -x_final(0); }) >= (0.0));
 
         // Max Tilt Angle
         // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {8, k}),
-                                      (1.0) * var("X", {9, k})}) <= sqrt((1.0 - cos(theta_max)) / 2.));
+                                      (1.0) * var("X", {9, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(theta_max)) / 2.); }));
 
         // Glide Slope
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {1, k}),
-                       (1.0) * var("X", {2, k})}) <= tan(gamma_gs) * var("X", {3, k}));
+                       (1.0) * var("X", {2, k})}) <= param_fn([this]() { return tan(gamma_gs); }) * var("X", {3, k}));
 
         // Max Rotation Velocity
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {11, k}),
                        (1.0) * var("X", {12, k}),
-                       (1.0) * var("X", {13, k})}) <= (w_B_max));
+                       (1.0) * var("X", {13, k})}) <= param(w_B_max));
     }
 
     // Control Constraints
@@ -187,18 +187,18 @@ void RocketLanding3D::addApplicationConstraints(
         {
             lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
         }
-        socp.addConstraint(lhs + (-T_min) >= (0.0));
+        socp.addConstraint(lhs + param_fn([this]() { return -T_min; }) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint(
             op::norm2({(1.0) * var("U", {0, k}),
                        (1.0) * var("U", {1, k}),
-                       (1.0) * var("U", {2, k})}) <= (T_max));
+                       (1.0) * var("U", {2, k})}) <= param(T_max));
 
         // Maximum Gimbal Angle
         socp.addConstraint(
             op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k})}) <= tan(gimbal_max) * var("U", {2, k}));
+                       (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(gimbal_max); }) * var("U", {2, k}));
     }
 }
 
