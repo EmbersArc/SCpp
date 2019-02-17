@@ -1,12 +1,11 @@
 #include "freeFinalTimeAlgorithm.hpp"
+#include "timing.hpp"
 
 using fmt::format;
 using fmt::print;
 using std::ofstream;
 using std::string;
 using std::vector;
-
-namespace fs = std::filesystem;
 
 freeFinalTimeAlgorithm::freeFinalTimeAlgorithm(std::shared_ptr<Model> model)
     : param("../SCpp/config/SCParameters.info"), model(model)
@@ -70,10 +69,9 @@ bool freeFinalTimeAlgorithm::iterate()
     solver->solveProblem();
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
 
-    getSolution();
+    readSolution();
 
     // print iteration summary
-    print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
     print("\n");
     print("{:<{}}{: .4f}\n", "sigma", 50, sigma);
     print("{:<{}}{: .4f}\n", "norm1_nu", 50, solver->getSolutionValue("norm1_nu", {}));
@@ -117,38 +115,8 @@ void freeFinalTimeAlgorithm::solve()
     {
         print("No convergence after {} iterations.\n\n", max_iterations);
     }
-    else
-    {
-        // write solution to files
-        double timer = tic();
-        string outputDirectory = format("{}/{}", getOutputPath(), time(0));
 
-        if (not fs::exists(outputDirectory) and not fs::create_directories(outputDirectory))
-        {
-            throw std::runtime_error("Could not create output directory!");
-        }
-
-        model->redimensionalizeTrajectory(X, U);
-        {
-            ofstream f(outputDirectory + "/X.txt");
-            f << X;
-        }
-        {
-            ofstream f(outputDirectory + "/U.txt");
-            f << U;
-        }
-        {
-            ofstream f(outputDirectory + "/t.txt");
-            f << sigma;
-        }
-        print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
-    }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
-}
-
-string freeFinalTimeAlgorithm::getOutputPath()
-{
-    return format("../output/{}", Model::getModelName());
 }
 
 void freeFinalTimeAlgorithm::cacheIndices()
@@ -170,7 +138,7 @@ void freeFinalTimeAlgorithm::cacheIndices()
     }
 }
 
-void freeFinalTimeAlgorithm::getSolution()
+void freeFinalTimeAlgorithm::readSolution()
 {
     for (size_t k = 0; k < K; k++)
     {
@@ -184,4 +152,13 @@ void freeFinalTimeAlgorithm::getSolution()
         }
     }
     sigma = solver->getSolutionValue(sigma_index);
+}
+
+void freeFinalTimeAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
+{
+    X = this->X;
+    U = this->U;
+    t = this->sigma;
+
+    model->redimensionalizeTrajectory(X, U);
 }

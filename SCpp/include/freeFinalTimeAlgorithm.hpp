@@ -7,7 +7,6 @@
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
 #include "successiveConvexificationProblem.hpp"
-#include "timing.hpp"
 #include "parameterServer.hpp"
 
 class freeFinalTimeAlgorithm
@@ -16,11 +15,11 @@ class freeFinalTimeAlgorithm
     explicit freeFinalTimeAlgorithm(std::shared_ptr<Model> model);
     void initialize();
     void solve();
+    void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t);
 
   private:
-    static std::string getOutputPath();
     void cacheIndices();
-    void getSolution();
+    void readSolution();
     void loadParameters();
     bool iterate();
 
