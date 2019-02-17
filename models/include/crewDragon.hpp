@@ -43,8 +43,9 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         Eigen::MatrixXd &X0,
         Eigen::MatrixXd &U0) override;
 
-    void nondimensionalize();
-    void redimensionalize();
+    void nondimensionalize() override;
+    
+    void redimensionalize() override;
 
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;

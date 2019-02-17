@@ -74,6 +74,12 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
     virtual void nondimensionalize(){};
 
     /**
+     * @brief Function to add mass and length dimensions to all function parameters.
+     * 
+     */
+    virtual void redimensionalize(){};
+
+    /**
      * @brief Get the final time guess
      * 
      * @return double The flight time guess
@@ -90,7 +96,4 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
                                             Eigen::MatrixXd &U){};
     double r_scale = 1;
     double m_scale = 1;
-
-    state_vector_t x_init;
-    state_vector_t x_final;
 };
