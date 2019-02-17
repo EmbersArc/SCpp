@@ -129,25 +129,25 @@ void RocketLanding3D::addApplicationConstraints(
     // Initial state
     for (size_t i = 0; i < STATE_DIM_; i++)
     {
-        socp.addConstraint((-1.0) * var("X", {i, 0}) + (x_init(i)) == 0.0);
+        socp.addConstraint((-1.0) * var("X", {i, 0}) + param(x_init(i)) == 0.0);
     }
 
     // Final State
     // mass and roll are free
-    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + (param(x_final(0))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + (param(x_final(1))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + (param(x_final(2))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + (param(x_final(3))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + (param(x_final(4))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + (param(x_final(5))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {6, K - 1}) + (param(x_final(6))) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + (param(x_final(7))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {8, K - 1}) + (param(x_final(8))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {9, K - 1}) + (param(x_final(9))) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + (param(x_final(10))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {11, K - 1}) + (param(x_final(11))) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {12, K - 1}) + (param(x_final(12))) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + (param(x_final(13))) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + param(x_final(0)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + param(x_final(1)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + param(x_final(2)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + param(x_final(3)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + param(x_final(4)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + param(x_final(5)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {6, K - 1}) + param(x_final(6)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + param(x_final(7)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {8, K - 1}) + param(x_final(8)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {9, K - 1}) + param(x_final(9)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + param(x_final(10)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {11, K - 1}) + param(x_final(11)) == 0.0);
+    socp.addConstraint((-1.0) * var("X", {12, K - 1}) + param(x_final(12)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + param(x_final(13)) == 0.0);
 
     // Final Input
     socp.addConstraint((1.0) * var("U", {0, K - 1}) == (0.0));
