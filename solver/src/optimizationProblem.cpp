@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include "optimizationProblem.hpp"
 
 using std::string;

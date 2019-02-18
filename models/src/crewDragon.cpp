@@ -100,7 +100,7 @@ void CrewDragon::systemFlowMap(
                             w.cross(w);
 }
 
-void CrewDragon::initializeTrajectory(Eigen::MatrixXd &X,
+void CrewDragon::getInitializedTrajectory(Eigen::MatrixXd &X,
                                       Eigen::MatrixXd &U)
 {
     const size_t K = X.cols();
@@ -251,9 +251,9 @@ void CrewDragon::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     U *= m_scale * r_scale;
 }
 
-void CrewDragon::getNewModelParameters(param_vector_t &p)
+void CrewDragon::getNewModelParameters(param_vector_t &param)
 {
-    p << alpha_m, g_I, J_B, r_T_B;
+    param << alpha_m, g_I, J_B, r_T_B;
 }
 
 void CrewDragon::randomizeInitialState()

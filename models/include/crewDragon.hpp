@@ -24,9 +24,9 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         return "CrewDragon";
     }
 
-    double getFinalTimeGuess() override
+    void getFinalTimeGuess(double &sigma) override
     {
-        return final_time_guess;
+        sigma = final_time_guess;
     }
 
     void systemFlowMap(
@@ -35,7 +35,7 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         const param_vector_ad_t &p,
         state_vector_ad_t &f) override;
 
-    void initializeTrajectory(Eigen::MatrixXd &X,
+    void getInitializedTrajectory(Eigen::MatrixXd &X,
                               Eigen::MatrixXd &U) override;
 
     void addApplicationConstraints(
@@ -44,13 +44,13 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         Eigen::MatrixXd &U0) override;
 
     void nondimensionalize() override;
-    
+
     void redimensionalize() override;
 
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
-    void getNewModelParameters(param_vector_t &p);
+    void getNewModelParameters(param_vector_t &param);
 
     /**
      * @brief Varies the initial state randomly.
@@ -59,6 +59,8 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
     void randomizeInitialState();
 
   private:
+    double m_scale, r_scale;
+
     Eigen::Vector3d g_I;
     Eigen::Vector3d J_B;
     Eigen::Vector3d r_T_B;

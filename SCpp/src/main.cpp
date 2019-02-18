@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "freeFinalTimeAlgorithm.hpp"
 #include "timing.hpp"
 
@@ -12,6 +14,7 @@ int main()
 {
     auto model = std::make_shared<Model>();
     freeFinalTimeAlgorithm scSolver(model);
+
     scSolver.initialize();
     scSolver.solve();
 

@@ -49,23 +49,22 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
     /**
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
      * 
-     * @param X 
-     * @param U 
+     * @param X     State trajectory.
+     * @param U     Input trajectory.
      */
-    virtual void initializeTrajectory(Eigen::MatrixXd &X,
-                                      Eigen::MatrixXd &U) = 0;
+    virtual void getInitializedTrajectory(Eigen::MatrixXd &X,
+                                          Eigen::MatrixXd &U) = 0;
 
     /**
-     * @brief Function to add constraints of a derived model. Has to be implemented by the derived class.
+     * @brief Function to add constraints of a model. Has to be implemented by the derived class.
      * 
-     * @param socp 
-     * @param X0 
-     * @param U0 
+     * @param socp  The SOCP.
+     * @param X     Last state trajectory.
+     * @param U     Last input trajectory.
      */
-    virtual void addApplicationConstraints(
-        op::SecondOrderConeProgram &socp,
-        Eigen::MatrixXd &X0,
-        Eigen::MatrixXd &U0) = 0;
+    virtual void addApplicationConstraints(op::SecondOrderConeProgram &socp,
+                                           Eigen::MatrixXd &X0,
+                                           Eigen::MatrixXd &U0) = 0;
 
     /**
      * @brief Function to remove mass and length dimensions from all function parameters.
@@ -84,16 +83,14 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
      * 
      * @return double The flight time guess
      */
-    virtual double getFinalTimeGuess() = 0;
+    virtual void getFinalTimeGuess(double &sigma) = 0;
 
     /**
      * @brief Function to add mass and length dimensions to state and input trajectory.
      * 
-     * @param X 
-     * @param U 
+     * @param X     State trajectory.
+     * @param U     Input trajectory.
      */
     virtual void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                             Eigen::MatrixXd &U){};
-    double r_scale = 1;
-    double m_scale = 1;
 };

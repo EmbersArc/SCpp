@@ -91,12 +91,13 @@ void freeFinalTimeAlgorithm::solve(bool warm_start)
 
     if (not warm_start)
     {
-        model->initializeTrajectory(X, U);
-        sigma = model->getFinalTimeGuess();
+        model->getInitializedTrajectory(X, U);
+        model->getFinalTimeGuess(sigma);
     }
 
     Model::param_vector_t model_params;
     model->getNewModelParameters(model_params);
+    std::cout << model_params << std::endl;
     model->updateParameters(model_params);
 
     const double timer_total = tic();

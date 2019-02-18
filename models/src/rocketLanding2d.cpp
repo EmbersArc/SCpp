@@ -51,7 +51,7 @@ void RocketLanding2D::systemFlowMap(
     f(5) = 1. / T(I) * (-sin(u(1)) * u(0) * T(r_T));
 }
 
-void RocketLanding2D::initializeTrajectory(Eigen::MatrixXd &X,
+void RocketLanding2D::getInitializedTrajectory(Eigen::MatrixXd &X,
                                            Eigen::MatrixXd &U)
 {
     const size_t K = X.cols();

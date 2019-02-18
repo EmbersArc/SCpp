@@ -1,8 +1,3 @@
-#include <fstream>
-#include <filesystem>
-
-#include <fmt/format.h>
-
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
@@ -12,15 +7,60 @@
 class freeFinalTimeAlgorithm
 {
   public:
+    /**
+     * @brief Construct a new free Final Time Algorithm solver.
+     * 
+     * @param model     The system model.
+     */
     explicit freeFinalTimeAlgorithm(std::shared_ptr<Model> model);
+
+    /**
+     * @brief Initializes the algorithm. Has to be called before solving the problem.
+     * 
+     */
     void initialize();
+
+    /**
+     * @brief Solves the system.
+     * 
+     * @param warm_start    Whether to reuse the last computed trajectory.
+     */
     void solve(bool warm_start = false);
+
+    /**
+     * @brief Get the solution variables object.
+     * 
+     * @param X     The state trajectory.
+     * @param U     The input trajectory.
+     * @param t     The final time.
+     */
     void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t);
 
   private:
+    /**
+     * @brief Saves solution indices for performance.
+     * 
+     */
     void cacheIndices();
+
+    /**
+     * @brief Reads the solution variables X, U and sigma.
+     * 
+     */
     void readSolution();
+
+    /**
+     * @brief Loads the parameters from the configuration file.
+     * 
+     */
     void loadParameters();
+
+    /**
+     * @brief Performs a Successive Convexification iteration.
+     * 
+     * @return true     If converged.
+     * @return false    If not converged.
+     */
     bool iterate();
 
     ParameterServer param;

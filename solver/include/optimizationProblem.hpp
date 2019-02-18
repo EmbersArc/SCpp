@@ -10,8 +10,6 @@
 #include <functional>
 #include <numeric>
 
-#include <fmt/format.h>
-
 namespace op
 {
 // represents an optimization variable x_i

@@ -24,9 +24,9 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
         return "RocketLanding2D";
     }
 
-    double getFinalTimeGuess() override
+    void getFinalTimeGuess(double &sigma) override
     {
-        return final_time_guess;
+        sigma = final_time_guess;
     }
 
     void systemFlowMap(
@@ -34,8 +34,8 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
         const input_vector_ad_t &u,
         state_vector_ad_t &f) override;
 
-    void initializeTrajectory(Eigen::MatrixXd &X,
-                              Eigen::MatrixXd &U) override;
+    void getInitializedTrajectory(Eigen::MatrixXd &X,
+                                  Eigen::MatrixXd &U) override;
 
     void addApplicationConstraints(
         op::SecondOrderConeProgram &socp,
