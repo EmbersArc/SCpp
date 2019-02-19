@@ -5,9 +5,9 @@
 
 namespace fs = std::filesystem;
 
-std::string getOutputPath()
+fs::path getOutputPath()
 {
-    return fmt::format("../output/{}", Model::getModelName());
+    return fs::path("..") / "output" / Model::getModelName();
 }
 
 int main()
@@ -25,24 +25,24 @@ int main()
 
     // write solution to files
     double timer = tic();
-    std::string outputDirectory = fmt::format("{}/{}", getOutputPath(), time(0));
-
-    if (not fs::exists(outputDirectory) and not fs::create_directories(outputDirectory))
+    fs::path outputPath = getOutputPath() / std::to_string(time(0));
+    if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");
     }
 
     {
-        std::ofstream f(outputDirectory + "/X.txt");
+        std::ofstream f(outputPath / "X.txt");
         f << X;
     }
     {
-        std::ofstream f(outputDirectory + "/U.txt");
+        std::ofstream f(outputPath / "U.txt");
         f << U;
     }
     {
-        std::ofstream f(outputDirectory + "/t.txt");
+        std::ofstream f(outputPath / "t.txt");
         f << t;
     }
+
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
 }
