@@ -18,7 +18,7 @@ void freeFinalTimeAlgorithm::loadParameters()
     param.loadScalar("delta_tol", delta_tol);
     param.loadScalar("max_iterations", max_iterations);
     param.loadScalar("nu_tol", nu_tol);
-    
+
     param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
@@ -87,6 +87,8 @@ bool freeFinalTimeAlgorithm::iterate()
 
 void freeFinalTimeAlgorithm::solve(bool warm_start)
 {
+    print("Solving model {}\n", Model::getModelName());
+
     model->nondimensionalize();
 
     if (not warm_start)
@@ -97,7 +99,6 @@ void freeFinalTimeAlgorithm::solve(bool warm_start)
 
     Model::param_vector_t model_params;
     model->getNewModelParameters(model_params);
-    std::cout << model_params << std::endl;
     model->updateParameters(model_params);
 
     const double timer_total = tic();
