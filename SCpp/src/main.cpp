@@ -13,7 +13,7 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    freeFinalTimeAlgorithm scSolver(model);
+    FreeFinalTimeAlgorithm scSolver(model);
 
     scSolver.initialize();
     scSolver.solve();
