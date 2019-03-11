@@ -48,6 +48,9 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 
     void redimensionalize() override;
 
+    void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                     Eigen::MatrixXd &U) override;
+
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
@@ -83,7 +86,9 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 
         void redimensionalize();
 
-        void redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U);
+        void nondimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const;
+
+        void redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const;
     } p;
 };
 

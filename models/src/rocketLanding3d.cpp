@@ -113,15 +113,15 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
         //     for all k
         socp.addConstraint((1.0) * var("X", {0, k}) + param_fn([this]() { return -p.x_final(0); }) >= (0.0));
 
-        // Max Tilt Angle
-        // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::norm2({(1.0) * var("X", {8, k}),
-                                      (1.0) * var("X", {9, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
-
         // Glide Slope
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {1, k}),
                        (1.0) * var("X", {2, k})}) <= param_fn([this]() { return tan(p.gamma_gs); }) * var("X", {3, k}));
+
+        // Max Tilt Angle
+        // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
+        socp.addConstraint(op::norm2({(1.0) * var("X", {8, k}),
+                                      (1.0) * var("X", {9, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
 
         // Max Rotation Velocity
         socp.addConstraint(
@@ -133,13 +133,17 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
     // Control Constraints
     for (size_t k = 0; k < K; k++)
     {
+
         // // Linearized Minimum Thrust
-        op::AffineExpression lhs;
-        for (size_t i = 0; i < INPUT_DIM_; i++)
-        {
-            lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
-        }
-        socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        // op::AffineExpression lhs;
+        // for (size_t i = 0; i < INPUT_DIM_; i++)
+        // {
+        //     lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
+        // }
+        // socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
+
+        // Simplified Minimum Thrust
+        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint(
@@ -162,6 +166,12 @@ void RocketLanding3D::nondimensionalize()
 void RocketLanding3D::redimensionalize()
 {
     p.redimensionalize();
+}
+
+void RocketLanding3D::nondimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                                  Eigen::MatrixXd &U)
+{
+    p.nondimensionalizeTrajectory(X, U);
 }
 
 void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
@@ -290,7 +300,17 @@ void RocketLanding3D::Parameters::redimensionalize()
     T_max *= m_scale * r_scale;
 }
 
-void RocketLanding3D::Parameters::redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U)
+void RocketLanding3D::Parameters::nondimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
+{
+    const size_t K = X.cols();
+
+    X.row(0) /= m_scale;
+    X.block(1, 0, 6, K) /= r_scale;
+
+    U /= m_scale * r_scale;
+}
+
+void RocketLanding3D::Parameters::redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
 {
     const size_t K = X.cols();
 
