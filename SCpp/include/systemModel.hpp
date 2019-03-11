@@ -86,6 +86,15 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
     virtual void getFinalTimeGuess(double &sigma) = 0;
 
     /**
+     * @brief Function to remove mass and length dimensions from state and input trajectory.
+     * 
+     * @param X     State trajectory.
+     * @param U     Input trajectory.
+     */
+    virtual void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                             Eigen::MatrixXd &U){};
+
+    /**
      * @brief Function to add mass and length dimensions to state and input trajectory.
      * 
      * @param X     State trajectory.
