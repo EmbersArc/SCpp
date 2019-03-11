@@ -6,12 +6,13 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-freeFinalTimeAlgorithm::freeFinalTimeAlgorithm(std::shared_ptr<Model> model)
+FreeFinalTimeAlgorithm::FreeFinalTimeAlgorithm(std::shared_ptr<Model> model)
     : param("../SCpp/config/SCParameters.info"), model(model)
 {
+    loadParameters();
 }
 
-void freeFinalTimeAlgorithm::loadParameters()
+void FreeFinalTimeAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
 
@@ -25,10 +26,8 @@ void freeFinalTimeAlgorithm::loadParameters()
     param.loadScalar("weight_virtual_control", weight_virtual_control);
 }
 
-void freeFinalTimeAlgorithm::initialize()
+void FreeFinalTimeAlgorithm::initialize()
 {
-    loadParameters();
-
     model->initializeModel();
 
     A_bar.resize(K - 1);
@@ -49,7 +48,7 @@ void freeFinalTimeAlgorithm::initialize()
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-bool freeFinalTimeAlgorithm::iterate()
+bool FreeFinalTimeAlgorithm::iterate()
 {
     // discretize
     const double timer_iteration = tic();
@@ -64,7 +63,7 @@ bool freeFinalTimeAlgorithm::iterate()
 
     readSolution();
 
-    // check feasibility
+    // // check feasibility
     timer = tic();
     if (!socp.feasibilityCheck(solver->getSolutionVector()))
     {
@@ -85,14 +84,19 @@ bool freeFinalTimeAlgorithm::iterate()
     return solver->getSolutionValue("norm2_Delta", {}) < delta_tol && solver->getSolutionValue("norm1_nu", {}) < nu_tol;
 }
 
-void freeFinalTimeAlgorithm::solve(bool warm_start)
+void FreeFinalTimeAlgorithm::solve(bool warm_start)
 {
     print("Solving model {}\n", Model::getModelName());
 
     model->nondimensionalize();
 
-    if (not warm_start)
+    if (warm_start)
     {
+        model->nondimensionalizeTrajectory(X, U);
+    }
+    else
+    {
+        loadParameters();
         model->getInitializedTrajectory(X, U);
         model->getFinalTimeGuess(sigma);
     }
@@ -117,7 +121,7 @@ void freeFinalTimeAlgorithm::solve(bool warm_start)
             print("Converged after {} iterations.\n\n", iteration);
             break;
         }
-        else if (iteration > 2)
+        else if (iteration > 5)
         {
             // else increase trust region weight
             weight_trust_region_time *= trust_region_factor;
@@ -130,12 +134,13 @@ void freeFinalTimeAlgorithm::solve(bool warm_start)
         print("No convergence after {} iterations.\n\n", max_iterations);
     }
 
-    print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
-
     model->redimensionalize();
+    model->redimensionalizeTrajectory(X, U);
+
+    print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
 
-void freeFinalTimeAlgorithm::cacheIndices()
+void FreeFinalTimeAlgorithm::cacheIndices()
 {
     // cache indices for performance
     sigma_index = socp.getTensorVariableIndex("sigma", {});
@@ -154,7 +159,7 @@ void freeFinalTimeAlgorithm::cacheIndices()
     }
 }
 
-void freeFinalTimeAlgorithm::readSolution()
+void FreeFinalTimeAlgorithm::readSolution()
 {
     for (size_t k = 0; k < K; k++)
     {
@@ -170,11 +175,9 @@ void freeFinalTimeAlgorithm::readSolution()
     sigma = solver->getSolutionValue(sigma_index);
 }
 
-void freeFinalTimeAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
+void FreeFinalTimeAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
 {
     X = this->X;
     U = this->U;
     t = this->sigma;
-
-    model->redimensionalizeTrajectory(X, U);
 }

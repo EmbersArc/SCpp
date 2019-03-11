@@ -4,7 +4,7 @@
 #include "successiveConvexificationProblem.hpp"
 #include "parameterServer.hpp"
 
-class freeFinalTimeAlgorithm
+class FreeFinalTimeAlgorithm
 {
   public:
     /**
@@ -12,7 +12,7 @@ class freeFinalTimeAlgorithm
      * 
      * @param model     The system model.
      */
-    explicit freeFinalTimeAlgorithm(std::shared_ptr<Model> model);
+    explicit FreeFinalTimeAlgorithm(std::shared_ptr<Model> model);
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
