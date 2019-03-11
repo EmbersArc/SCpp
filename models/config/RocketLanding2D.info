@@ -29,3 +29,5 @@ T_max           500.
 gimbal_max      15
 theta_max       60
 gamma_gs        60
+
+final_time_guess 10.
