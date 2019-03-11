@@ -14,7 +14,7 @@ namespace rocket2d
  * @brief A 2D rocket landing model.
  * 
  */
-class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
+class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
   public:
     RocketLanding2D();
@@ -32,6 +32,7 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
+        const param_vector_ad_t &p,
         state_vector_ad_t &f) override;
 
     void getInitializedTrajectory(Eigen::MatrixXd &X,
@@ -47,6 +48,8 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
+    void getNewModelParameters(param_vector_t &param);
+
   private:
     double m;
     double g;
@@ -57,6 +60,8 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_>
     double gimbal_max;
     double theta_max;
     double gamma_gs;
+
+    double m_scale, r_scale;
 
     state_vector_t x_init;
     state_vector_t x_final;

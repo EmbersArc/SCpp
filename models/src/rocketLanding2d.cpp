@@ -3,8 +3,8 @@
 #include "rocketLanding2d.hpp"
 #include "parameterServer.hpp"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace rocket2d
 {
@@ -39,6 +39,7 @@ RocketLanding2D::RocketLanding2D()
 void RocketLanding2D::systemFlowMap(
     const state_vector_ad_t &x,
     const input_vector_ad_t &u,
+    const param_vector_ad_t &p,
     state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
@@ -52,7 +53,7 @@ void RocketLanding2D::systemFlowMap(
 }
 
 void RocketLanding2D::getInitializedTrajectory(Eigen::MatrixXd &X,
-                                           Eigen::MatrixXd &U)
+                                               Eigen::MatrixXd &U)
 {
     const size_t K = X.cols();
 
@@ -144,6 +145,10 @@ void RocketLanding2D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     X.row(3) *= r_scale;
 
     U *= m_scale * r_scale;
+}
+
+void RocketLanding2D::getNewModelParameters(param_vector_t &param)
+{
 }
 
 } // namespace rocket2d
