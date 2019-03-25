@@ -3,7 +3,7 @@ project(SCpp)
 
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O2 -std=c++17)
+
 
 # ECOS
 execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
@@ -23,7 +23,13 @@ add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
 # CPPAD
 include_directories(SYSTEM lib/external)
-link_libraries(dl)
+
+# KSP
+# link_libraries(krpc)
+# link_libraries(:libprotobuf.so.17)
+
+# THREAD
+link_libraries(pthread)
 
 # INCLUDES
 include_directories(models/include)
@@ -31,9 +37,10 @@ include_directories(SCpp/include)
 include_directories(solver/include)
 
 # SOURCES
-set(SOURCES
+set(SOURCES_COMMON
+    models/src/cartpole.cpp
     models/src/rocketLanding3d.cpp
-    # models/src/rocketLanding2d.cpp
+    models/src/rocketLanding2d.cpp
     models/src/crewDragon.cpp
     
     solver/src/ecosWrapper.cpp
@@ -45,9 +52,17 @@ set(SOURCES
     SCpp/src/timing.cpp
 
     SCpp/src/freeFinalTimeAlgorithm.cpp
-    
-    SCpp/src/main.cpp
 )
 
-add_executable(SCpp ${SOURCES})
-target_link_libraries(SCpp PRIVATE fmt)
+add_definitions(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O2 -march=native)
+
+add_library(SCppLib ${SOURCES_COMMON})
+
+add_executable(SCpp SCpp/src/main.cpp)
+# add_executable(SCppKSP SCpp/src/mainKsp.cpp SCpp/src/rocketGuidance.cpp)
+
+target_link_libraries(SCppLib fmt)
+
+target_link_libraries(SCpp SCppLib)
+# target_link_libraries(SCppKSP SCppLib)
+
