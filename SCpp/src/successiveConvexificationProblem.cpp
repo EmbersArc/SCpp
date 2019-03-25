@@ -110,11 +110,11 @@ op::SecondOrderConeProgram buildSCOP(
         socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    /* 
+    /*
      * Build sigma trust region
-     * 
+     *
      *  norm2( sigma0 - sigma ) <= Delta_sigma;
-     * 
+     *
      */
     {
         vector<op::AffineExpression> norm2_args;
@@ -128,11 +128,11 @@ op::SecondOrderConeProgram buildSCOP(
 
     for (size_t k = 0; k < K; k++)
     {
-        /* 
+        /*
          * Build state and input trust-region:
-         * 
+         *
          *  norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
-         * 
+         *
          */
         vector<op::AffineExpression> norm2_args;
         for (size_t i = 0; i < Model::state_dim; i++)
@@ -145,6 +145,57 @@ op::SecondOrderConeProgram buildSCOP(
         }
         socp.addConstraint(op::norm2(norm2_args) <= (1.0) * var("Delta", {k}));
     }
+
+    // /* Build sigma trust region
+    // * (sigma - sigma0) * (sigma - sigma0) <= Delta_sigma
+    // *          is equivalent to
+    // * norm2(
+    // *        0.5 - 0.5 * Delta_sigma
+    // *        sigma0 - sigma
+    // *      )
+    // *      <= 0.5 + 0.5 * Delta_sigma;
+    // */
+    // {
+    //     vector<op::AffineExpression> norm2_args;
+    //     norm2_args = {(0.5) + (-0.5) * var("Delta_sigma"),
+    //                   param(sigma) + (-1.0) * var("sigma")};
+
+    //     socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta_sigma"));
+
+    //     // Minimize Delta_sigma
+    //     socp.addMinimizationTerm(param(weight_trust_region_time) * var("Delta_sigma"));
+    // }
+
+    // for (size_t k = 0; k < K; k++)
+    // {
+    //     /*
+    //      * Build state and input trust-region:
+    //      *     (x - x0)^T * (x - x0)  +  (u - u0)^T * (u - u0)  <=  Delta
+    //      * 
+    //      * The constraint is equivalent to the SOCP form:
+    //      * 
+    //      * norm2(
+    //      *        0.5 - 0.5 * Delta
+    //      *        [(x - x0)^T | (u - u0)^T]^T
+    //      *      )
+    //      *     <= 0.5 + 0.5 * Delta;
+    //      * 
+    //      */
+
+    //     vector<op::AffineExpression> norm2_args;
+
+    //     norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
+
+    //     for (size_t i = 0; i < Model::state_dim; i++)
+    //     {
+    //         norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
+    //     }
+    //     for (size_t i = 0; i < Model::input_dim; i++)
+    //     {
+    //         norm2_args.push_back(param(U(i, k)) + (-1.0) * var("U", {i, k}));
+    //     }
+    //     socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
+    // }
 
     /*
      * Build combined state/input trust region over all K:
