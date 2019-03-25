@@ -63,7 +63,7 @@ bool FreeFinalTimeAlgorithm::iterate()
 
     readSolution();
 
-    // // check feasibility
+    // check feasibility
     timer = tic();
     if (!socp.feasibilityCheck(solver->getSolutionVector()))
     {
@@ -121,7 +121,7 @@ void FreeFinalTimeAlgorithm::solve(bool warm_start)
             print("Converged after {} iterations.\n\n", iteration);
             break;
         }
-        else if (iteration > 5)
+        else if (iteration > 2)
         {
             // else increase trust region weight
             weight_trust_region_time *= trust_region_factor;
