@@ -64,7 +64,8 @@ void RocketLanding3D::getInitializedTrajectory(Eigen::MatrixXd &X,
         X.col(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
 
         // input
-        U.setConstant((p.T_max - p.T_min) / 2.);
+        U.setZero();
+        U.row(2).setConstant((p.T_max - p.T_min) / 2.);
     }
 }
 
@@ -134,16 +135,16 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
     for (size_t k = 0; k < K; k++)
     {
 
-        // // Linearized Minimum Thrust
-        // op::AffineExpression lhs;
-        // for (size_t i = 0; i < INPUT_DIM_; i++)
-        // {
-        //     lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
-        // }
-        // socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        // Linearized Minimum Thrust
+        op::AffineExpression lhs;
+        for (size_t i = 0; i < INPUT_DIM_; i++)
+        {
+            lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
+        }
+        socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
         // Simplified Minimum Thrust
-        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        // socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint(
@@ -267,7 +268,7 @@ void RocketLanding3D::Parameters::nondimensionalize()
     alpha_m *= r_scale;
     r_T_B /= r_scale;
     g_I /= r_scale;
-    J_B /= (m_scale * r_scale * r_scale);
+    J_B /= m_scale * r_scale * r_scale;
 
     x_init(0) /= m_scale;
     x_init.segment(1, 3) /= r_scale;
@@ -286,7 +287,7 @@ void RocketLanding3D::Parameters::redimensionalize()
     alpha_m /= r_scale;
     r_T_B *= r_scale;
     g_I *= r_scale;
-    J_B *= (m_scale * r_scale * r_scale);
+    J_B *= m_scale * r_scale * r_scale;
 
     x_init(0) *= m_scale;
     x_init.segment(1, 3) *= r_scale;
