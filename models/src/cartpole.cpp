@@ -31,9 +31,16 @@ void Cartpole::systemFlowMap(const state_vector_ad_t &x,
     T ddtheta = num / denum;
 
     f(0) = x(1);
-    f(1) = ddtheta;
+    f(1) = (u(0) + m_p * l * (x(3) * x(3) * sin(x(2)) - ddtheta * cos(x(2)))) / (m_c + m_p);
     f(2) = x(3);
-    f(3) = (u(0) + m_p * l * (x(3) * x(3) * sin(x(2)) - ddtheta * cos(x(2)))) / (m_c + m_p);
+    f(3) = ddtheta;
+
+    // f(0) = x(1);
+    // f(1) = 1. / (m_c + m_p * sin(x(2)) * sin(x(2))) *
+    //        (u(0) + m_p * sin(x(2)) * (l * x(3) * x(3) + g * cos(x(2))));
+    // f(2) = x(3);
+    // f(3) = 1. / (l * (m_c + m_p * sin(x(2)) * sin(x(2)))) *
+    //        (-u(0) * cos(x(2)) - m_p * l * x(3) * x(3) * cos(x(2)) * sin(x(2)) - (m_c + m_p) * g * sin(x(2)));
 }
 
 void Cartpole::getInitializedTrajectory(Eigen::MatrixXd &X,
@@ -47,9 +54,8 @@ void Cartpole::getInitializedTrajectory(Eigen::MatrixXd &X,
         const double alpha2 = double(k) / K;
 
         X.col(k) = alpha1 * p.x_init + alpha2 * p.x_final;
+        U(k) = p.F_max / 5;
     }
-
-    U.setZero();
 }
 
 void Cartpole::addApplicationConstraints(op::SecondOrderConeProgram &socp,
