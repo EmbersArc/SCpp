@@ -45,6 +45,11 @@ class RocketLanding2D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 
     void nondimensionalize() override;
 
+    void redimensionalize() override;
+
+    void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
+                                     Eigen::MatrixXd &U) override;
+
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
