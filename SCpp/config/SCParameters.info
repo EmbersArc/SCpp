@@ -1,7 +1,7 @@
 K 20
 
-weight_trust_region_time            1e-1
-weight_trust_region_trajectory      1e-1
+weight_trust_region_time            1e1
+weight_trust_region_trajectory      1e1
 weight_virtual_control              1e4
 
 trust_region_factor                 1.2
@@ -9,4 +9,4 @@ trust_region_factor                 1.2
 nu_tol                              1e-5
 delta_tol                           1e-2
 
-max_iterations                      20
+max_iterations                      15
