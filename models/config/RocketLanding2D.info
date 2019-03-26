@@ -1,10 +1,10 @@
 ; initial values
 x_init
 {
-    (0)   40.   ; x
+    (0)   -40.  ; x
     (1)   100.  ; y
-    (2)   -30.  ; vx
-    (3)   0.    ; vy
+    (2)   30.   ; vx
+    (3)   -10.  ; vy
     (4)   0.    ; theta
     (5)   0.    ; dtheta
 }
@@ -15,7 +15,7 @@ x_final
     (0)   0.
     (1)   0.
     (2)   0.
-    (3)   0.
+    (3)   -5.
     (4)   0.
     (5)   0.
 }
@@ -24,10 +24,10 @@ m               20.
 g               10.
 r_T             1.
 I               15.
-T_min           100.
+T_min           1.
 T_max           500.
-gimbal_max      15
-theta_max       60
-gamma_gs        60
+gimbal_max      15.
+theta_max       45.
+gamma_gs        60.
 
 final_time_guess 10.
