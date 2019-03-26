@@ -109,7 +109,7 @@ void FreeFinalTimeAlgorithm::solve(bool warm_start)
 
     size_t iteration = 0;
     bool converged = false;
-    while (iteration <= max_iterations)
+    while (iteration < max_iterations)
     {
         iteration++;
         print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
