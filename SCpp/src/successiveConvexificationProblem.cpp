@@ -1,7 +1,5 @@
 #include "successiveConvexificationProblem.hpp"
 
-using std::string;
-using std::vector;
 
 namespace sc
 {
@@ -35,7 +33,7 @@ op::SecondOrderConeProgram buildSCOP(
     socp.createTensorVariable("norm2_Delta");                         // 2-norm of the Delta(k) variables
 
     // shortcuts to access solver variables and create parameters
-    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
+    auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
@@ -117,7 +115,7 @@ op::SecondOrderConeProgram buildSCOP(
     //  *
     //  */
     // {
-    //     vector<op::AffineExpression> norm2_args;
+    //     std::vector<op::AffineExpression> norm2_args;
     //     norm2_args = {param(sigma) + (-1.0) * var("sigma")};
 
     //     socp.addConstraint(op::norm2(norm2_args) <= (1.0) * var("Delta_sigma"));
@@ -134,7 +132,7 @@ op::SecondOrderConeProgram buildSCOP(
     //      *  norm2( [(x - x0)^T | (u - u0)^T]^T ) <= Delta;
     //      *
     //      */
-    //     vector<op::AffineExpression> norm2_args;
+    //     std::vector<op::AffineExpression> norm2_args;
     //     for (size_t i = 0; i < Model::state_dim; i++)
     //     {
     //         norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
@@ -156,7 +154,7 @@ op::SecondOrderConeProgram buildSCOP(
     *      <= 0.5 + 0.5 * Delta_sigma;
     */
     {
-        vector<op::AffineExpression> norm2_args;
+        std::vector<op::AffineExpression> norm2_args;
         norm2_args = {(0.5) + (-0.5) * var("Delta_sigma"),
                       param(sigma) + (-1.0) * var("sigma")};
 
@@ -182,7 +180,7 @@ op::SecondOrderConeProgram buildSCOP(
          *
          */
 
-        vector<op::AffineExpression> norm2_args;
+        std::vector<op::AffineExpression> norm2_args;
 
         norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
 
@@ -204,7 +202,7 @@ op::SecondOrderConeProgram buildSCOP(
      * 
      */
     {
-        vector<op::AffineExpression> norm2_args;
+        std::vector<op::AffineExpression> norm2_args;
         for (size_t k = 0; k < K; k++)
         {
             norm2_args.push_back((1.0) * var("Delta", {k}));
