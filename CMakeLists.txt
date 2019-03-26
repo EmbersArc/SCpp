@@ -4,7 +4,6 @@ project(SCpp)
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
 
-
 # ECOS
 execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
 include_directories(lib/ecos/include)
@@ -37,7 +36,7 @@ include_directories(SCpp/include)
 include_directories(solver/include)
 
 # SOURCES
-set(SOURCES_COMMON
+set(SOURCES_LIBSC
     models/src/cartpole.cpp
     models/src/rocketLanding3d.cpp
     models/src/rocketLanding2d.cpp
@@ -54,15 +53,14 @@ set(SOURCES_COMMON
     SCpp/src/freeFinalTimeAlgorithm.cpp
 )
 
-add_definitions(-Wall -Wextra -Wpedantic -Wno-unused-parameter -Werror=return-type -O2 -march=native)
-
-add_library(SCppLib ${SOURCES_COMMON})
+add_library(libSC STATIC ${SOURCES_LIBSC})
+target_compile_options(libSC PUBLIC -O2 -Wall -Wextra -Wpedantic -Wno-unused-parameter)
 
 add_executable(SCpp SCpp/src/main.cpp)
 # add_executable(SCppKSP SCpp/src/mainKsp.cpp SCpp/src/rocketGuidance.cpp)
 
-target_link_libraries(SCppLib fmt)
+target_link_libraries(libSC fmt)
 
-target_link_libraries(SCpp SCppLib)
-# target_link_libraries(SCppKSP SCppLib)
+target_link_libraries(SCpp libSC)
+# target_link_libraries(SCppKSP libSC)
 
