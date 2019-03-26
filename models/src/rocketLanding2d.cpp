@@ -3,9 +3,6 @@
 #include "rocketLanding2d.hpp"
 #include "parameterServer.hpp"
 
-using std::string;
-using std::vector;
-
 namespace rocket2d
 {
 
@@ -47,10 +44,10 @@ void RocketLanding2D::systemFlowMap(const state_vector_ad_t &x,
 
     f(0) = x(2);
     f(1) = x(3);
-    f(2) = 1. / T(m) * sin(x(4) + u(1)) * u(0);
-    f(3) = 1. / T(m) * (cos(x(4) + u(1)) * u(0) - T(m) * T(g));
+    f(2) = 1. / T(m) * -sin(x(4) + u(1)) * u(0);
+    f(3) = 1. / T(m) * cos(x(4) + u(1)) * u(0) - T(g);
     f(4) = x(5);
-    f(5) = 1. / T(I) * (-sin(u(1)) * u(0) * T(r_T));
+    f(5) = 1. / T(I) * -sin(u(1)) * u(0) * T(r_T);
 }
 
 void RocketLanding2D::getInitializedTrajectory(Eigen::MatrixXd &X,
@@ -80,7 +77,7 @@ void RocketLanding2D::addApplicationConstraints(
 {
     const size_t K = X0.cols();
 
-    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
+    auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
@@ -121,47 +118,47 @@ void RocketLanding2D::addApplicationConstraints(
 
 void RocketLanding2D::nondimensionalize()
 {
-    r_scale = x_init.segment(0, 2).norm();
-    m_scale = m;
+    // r_scale = x_init.segment(0, 2).norm();
+    // m_scale = m;
 
-    r_T /= r_scale;
-    g /= r_scale;
-    I /= m_scale * r_scale * r_scale;
-    m /= m_scale;
-    T_min /= m_scale * r_scale;
-    T_max /= m_scale * r_scale;
+    // m /= m_scale;
+    // r_T /= r_scale;
+    // g /= r_scale;
+    // I /= m_scale * r_scale * r_scale;
+    // T_min /= m_scale * r_scale;
+    // T_max /= m_scale * r_scale;
 
-    x_init.segment(0, 4) /= r_scale;
-    x_final.segment(0, 4) /= r_scale;
+    // x_init.segment(0, 4) /= r_scale;
+    // x_final.segment(0, 4) /= r_scale;
 }
 
 void RocketLanding2D::redimensionalize()
 {
-    r_T *= r_scale;
-    g *= r_scale;
-    I *= m_scale * r_scale * r_scale;
-    m *= m_scale;
-    T_min *= m_scale * r_scale;
-    T_max *= m_scale * r_scale;
+    // m *= m_scale;
+    // r_T *= r_scale;
+    // g *= r_scale;
+    // I *= m_scale * r_scale * r_scale;
+    // T_min *= m_scale * r_scale;
+    // T_max *= m_scale * r_scale;
 
-    x_init.segment(0, 4) *= r_scale;
-    x_final.segment(0, 4) *= r_scale;
+    // x_init.segment(0, 4) *= r_scale;
+    // x_final.segment(0, 4) *= r_scale;
 }
 
 void RocketLanding2D::nondimensionalizeTrajectory(Eigen::MatrixXd &X,
                                                   Eigen::MatrixXd &U)
 {
-    X.topRows(4) /= r_scale;
+    // X.topRows(4) /= r_scale;
 
-    U /= m_scale * r_scale;
+    // U /= m_scale * r_scale;
 }
 
 void RocketLanding2D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                                  Eigen::MatrixXd &U)
 {
-    X.topRows(4) *= r_scale;
+    // X.topRows(4) *= r_scale;
 
-    U *= m_scale * r_scale;
+    // U *= m_scale * r_scale;
 }
 
 void RocketLanding2D::getNewModelParameters(param_vector_t &param)
