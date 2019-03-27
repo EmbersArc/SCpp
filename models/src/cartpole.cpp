@@ -25,22 +25,14 @@ void Cartpole::systemFlowMap(const state_vector_ad_t &x,
     T m_c = T(this->p.m_c);
     T m_p = T(this->p.m_p);
 
-    T num = g * sin(x(2)) + cos(x(2)) * (-u(0) - m_p * l * x(3) * x(3) * sin(x(2))) / (m_c + m_p);
-    T denum = l * (T(4. / 3) - (m_p * cos(x(2)) * cos(x(2))) / (m_c + m_p));
-
+    T num = -g * sin(x(2)) + cos(x(2)) * (-u(0) - m_p * l * x(3) * x(3) * sin(x(2))) / (m_c + m_p);
+    T denum = l * (T(4. / 3.) - (m_p * cos(x(2)) * cos(x(2))) / (m_c + m_p));
     T ddtheta = num / denum;
 
     f(0) = x(1);
     f(1) = (u(0) + m_p * l * (x(3) * x(3) * sin(x(2)) - ddtheta * cos(x(2)))) / (m_c + m_p);
     f(2) = x(3);
     f(3) = ddtheta;
-
-    // f(0) = x(1);
-    // f(1) = 1. / (m_c + m_p * sin(x(2)) * sin(x(2))) *
-    //        (u(0) + m_p * sin(x(2)) * (l * x(3) * x(3) + g * cos(x(2))));
-    // f(2) = x(3);
-    // f(3) = 1. / (l * (m_c + m_p * sin(x(2)) * sin(x(2)))) *
-    //        (-u(0) * cos(x(2)) - m_p * l * x(3) * x(3) * cos(x(2)) * sin(x(2)) - (m_c + m_p) * g * sin(x(2)));
 }
 
 void Cartpole::getInitializedTrajectory(Eigen::MatrixXd &X,
@@ -54,7 +46,7 @@ void Cartpole::getInitializedTrajectory(Eigen::MatrixXd &X,
         const double alpha2 = double(k) / K;
 
         X.col(k) = alpha1 * p.x_init + alpha2 * p.x_final;
-        U(k) = p.F_max / 5;
+        U(k) = sin(2. * M_PI * alpha2) * p.F_max / 4;
     }
 }
 
