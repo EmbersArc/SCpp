@@ -37,4 +37,5 @@ Rocket trajectory model with free-final-time:
 [Feed-forward input tested in a box2d physics simulation](https://gfycat.com/DaringPortlyBlacklab)
 
 - Cartpole
+
 ![](https://thumbs.gfycat.com/KnobbyFlatCanvasback-small.gif)
