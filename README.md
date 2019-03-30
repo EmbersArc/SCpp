@@ -35,3 +35,6 @@ Rocket trajectory model with free-final-time:
 
 - 2D rocket landing problem
 [Feed-forward input tested in a box2d physics simulation](https://gfycat.com/DaringPortlyBlacklab)
+
+- Cartpole
+![](https://thumbs.gfycat.com/ImmaterialDefenselessAsiandamselfly-small.gif)
