@@ -72,6 +72,8 @@ void Cartpole::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     socp.addConstraint((-1.0) * var("X", {2, K - 1}) + param(p.x_final(2)) == 0.0);
     socp.addConstraint((-1.0) * var("X", {3, K - 1}) + param(p.x_final(3)) == 0.0);
 
+    socp.addConstraint((1.0) * var("U", {0, K - 1}) == 0.0);
+
     // Input
     for (size_t k = 0; k < K; k++)
     {

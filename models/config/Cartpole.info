@@ -11,7 +11,7 @@ g           -9.81
 ; ----- initial values -----
 x_init
 {
-    (0)     -1.
+    (0)     -2.
     (1)     0.
     (2)     0.
     (3)     0.
@@ -19,10 +19,10 @@ x_init
 ; ----- final values -----
 x_final
 {
-    (0)     1.
+    (0)     2.
     (1)     0.
     (2)     0.
     (3)     0.
 }
 
-final_time_guess 20.
+final_time_guess 5.
