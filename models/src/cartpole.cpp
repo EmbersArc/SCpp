@@ -46,6 +46,7 @@ void Cartpole::getInitializedTrajectory(Eigen::MatrixXd &X,
         const double alpha2 = double(k) / K;
 
         X.col(k) = alpha1 * p.x_init + alpha2 * p.x_final;
+        X(1, k) = sin(M_PI * alpha2);
         U(k) = sin(2. * M_PI * alpha2) * p.F_max / 4;
     }
 }
