@@ -7,7 +7,11 @@ A C++ implementation of the Successive Convexification algorithm.
  - Efficient Successive Convexification algorithm
  - JIT derivative code generation with CppAD
  - Intuitive interface to implement custom models
+ 
+ **Current Models:**
  - Rocket landing models in 2D and 3D
+ - SpaceX Crew Dragon model
+ - Cartpole model
  
 **Dependencies:**
 
