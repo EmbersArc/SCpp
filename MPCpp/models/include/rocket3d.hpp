@@ -32,6 +32,8 @@ public:
         const param_vector_ad_t &p,
         state_vector_ad_t &f) override;
 
+    void getOperatingPoint(state_vector_t &x, input_vector_t &u);
+
     void addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                    Eigen::MatrixXd &X0,
                                    Eigen::MatrixXd &U0) override;

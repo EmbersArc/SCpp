@@ -31,8 +31,7 @@ void MPCAlgorithm::initialize()
 
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
-    x_eq << 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    u_eq << 0, 0, -model->par.g_I.z() * model->par.m;
+    model->getOperatingPoint(x_eq, u_eq);
 
     exactLinearDiscretization(*model, ts, x_eq, u_eq, A, B);
 

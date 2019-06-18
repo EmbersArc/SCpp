@@ -31,3 +31,15 @@ Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
 
     return omegaMatrix;
 }
+
+template <typename T>
+Eigen::Matrix<T, 3, 3> omegaMatrixReduced(const Eigen::Matrix<T, 3, 1> &q)
+{
+    Eigen::Matrix<T, 3, 3> omegaMatrix;
+    const T qw = sqrt(1. - q.squaredNorm());
+    omegaMatrix << qw, -q(2), q(1),
+        q(2), qw, -q(0),
+        -q(1), q(0), qw;
+
+    return omegaMatrix;
+}

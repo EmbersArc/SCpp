@@ -21,18 +21,24 @@ void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
 
     // state variables
     auto v = x.segment<3>(3);
-    auto q = x.segment<4>(6);
-    auto w = x.segment<3>(10);
+    auto q = x.segment<3>(6);
+    auto w = x.segment<3>(9);
 
-    auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
+    auto R_I_B = Eigen::Quaternion<T>(sqrt(1. - q.squaredNorm()), q(0), q(1), q(2)).toRotationMatrix();
     auto J_B_inv = par.J_B.cast<T>().asDiagonal().inverse();
     auto g_I_ = par.g_I.cast<T>();
     auto r_T_B_ = par.r_T_B.cast<T>();
 
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / T(par.m) * R_I_B * u + g_I_;
-    f.segment<4>(6) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment<3>(10) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+    f.segment<3>(3) << 1. / T(par.m) * (R_I_B * u) + g_I_;
+    f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
+    f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+}
+
+void Rocket3D::getOperatingPoint(state_vector_t &x, input_vector_t &u)
+{
+    x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    u << 0, 0, -par.g_I.z() * par.m;
 }
 
 void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -50,8 +56,8 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     {
         // Max Tilt Angle
         // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::norm2({(1.0) * var("X", {7, k}),
-                                      (1.0) * var("X", {8, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
+        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
+                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
 
         // Max Velocity
         socp.addConstraint(
@@ -61,9 +67,9 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
         // Max Rotation Velocity
         socp.addConstraint(
-            op::norm2({(1.0) * var("X", {10, k}),
-                       (1.0) * var("X", {11, k}),
-                       (1.0) * var("X", {12, k})}) <= param(par.w_B_max));
+            op::norm2({(1.0) * var("X", {9, k}),
+                       (1.0) * var("X", {10, k}),
+                       (1.0) * var("X", {11, k})}) <= param(par.w_B_max));
     }
 
     // Control Constraints
@@ -132,8 +138,8 @@ void Rocket3D::Parameters::loadFromFile()
     deg2rad(rpy_init);
     deg2rad(rpy_final);
 
-    x_init << r_init, v_init, eulerToQuaternion(rpy_init), w_init;
-    x_final << r_final, v_final, eulerToQuaternion(rpy_final), w_final;
+    x_init << r_init, v_init, eulerToQuaternion(rpy_init).tail<3>(), w_init;
+    x_final << r_final, v_final, eulerToQuaternion(rpy_final).tail<3>(), w_final;
 }
 
 void Rocket3D::Parameters::nondimensionalize()
