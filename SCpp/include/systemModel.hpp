@@ -53,7 +53,7 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
      * @param U     Input trajectory.
      */
     virtual void getInitializedTrajectory(Eigen::MatrixXd &X,
-                                          Eigen::MatrixXd &U) = 0;
+                                          Eigen::MatrixXd &U) {};
 
     /**
      * @brief Function to add constraints of a model. Has to be implemented by the derived class.
@@ -64,7 +64,7 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
      */
     virtual void addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                            Eigen::MatrixXd &X0,
-                                           Eigen::MatrixXd &U0) = 0;
+                                           Eigen::MatrixXd &U0) {};
 
     /**
      * @brief Function to remove mass and length dimensions from all function parameters.
@@ -83,7 +83,7 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
      * 
      * @return double The flight time guess
      */
-    virtual void getFinalTimeGuess(double &sigma) = 0;
+    virtual void getFinalTimeGuess(double &sigma) {};
 
     /**
      * @brief Function to remove mass and length dimensions from state and input trajectory.

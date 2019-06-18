@@ -1,0 +1,174 @@
+#include "common.hpp"
+#include "rocket3d.hpp"
+
+using std::string;
+using std::vector;
+
+namespace rocket3d
+{
+
+Rocket3D::Rocket3D()
+{
+    par.loadFromFile();
+}
+
+void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
+                             const input_vector_ad_t &u,
+                             const param_vector_ad_t &p,
+                             state_vector_ad_t &f)
+{
+    typedef scalar_ad_t T;
+
+    // state variables
+    auto v = x.segment<3>(3);
+    auto q = x.segment<4>(6);
+    auto w = x.segment<3>(10);
+
+    auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
+    auto J_B_inv = par.J_B.cast<T>().asDiagonal().inverse();
+    auto g_I_ = par.g_I.cast<T>();
+    auto r_T_B_ = par.r_T_B.cast<T>();
+
+    f.segment<3>(0) << v;
+    f.segment<3>(3) << 1. / T(par.m) * R_I_B * u + g_I_;
+    f.segment<4>(6) << T(0.5) * omegaMatrix<T>(w) * q;
+    f.segment<3>(10) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+}
+
+void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+                                         Eigen::MatrixXd &X0,
+                                         Eigen::MatrixXd &U0)
+{
+    const size_t K = X0.cols();
+
+    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
+    auto param = [](double &param_value) { return op::Parameter(&param_value); };
+    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
+
+    // State Constraints:
+    for (size_t k = 0; k < K; k++)
+    {
+        // Max Tilt Angle
+        // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
+        socp.addConstraint(op::norm2({(1.0) * var("X", {7, k}),
+                                      (1.0) * var("X", {8, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
+
+        // Max Velocity
+        socp.addConstraint(
+            op::norm2({(1.0) * var("X", {3, k}),
+                       (1.0) * var("X", {4, k}),
+                       (1.0) * var("X", {5, k})}) <= param(par.v_I_max));
+
+        // Max Rotation Velocity
+        socp.addConstraint(
+            op::norm2({(1.0) * var("X", {10, k}),
+                       (1.0) * var("X", {11, k}),
+                       (1.0) * var("X", {12, k})}) <= param(par.w_B_max));
+    }
+
+    // Control Constraints
+    for (size_t k = 0; k < K - 1; k++)
+    {
+        // Simplified Minimum Thrust
+        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -par.T_min; }) >= (0.0));
+
+        // Maximum Thrust
+        socp.addConstraint(
+            op::norm2({(1.0) * var("U", {0, k}),
+                       (1.0) * var("U", {1, k}),
+                       (1.0) * var("U", {2, k})}) <= param(par.T_max));
+
+        // Maximum Gimbal Angle
+        socp.addConstraint(
+            op::norm2({(1.0) * var("U", {0, k}),
+                       (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(par.gimbal_max); }) * var("U", {2, k}));
+    }
+}
+
+void Rocket3D::nondimensionalize()
+{
+    // par.nondimensionalize();
+}
+
+void Rocket3D::redimensionalize()
+{
+    // par.redimensionalize();
+}
+
+void Rocket3D::Parameters::loadFromFile()
+{
+    ParameterServer param(fmt::format("../MPCpp/models/config/{}.info", getModelName()));
+
+    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
+    Eigen::Vector3d r_final, v_final, rpy_final, w_final;
+
+    param.loadMatrix("g_I", g_I);
+    param.loadMatrix("J_B", J_B);
+    param.loadMatrix("r_T_B", r_T_B);
+
+    param.loadMatrix("r_init", r_init);
+    param.loadMatrix("v_init", v_init);
+    param.loadMatrix("rpy_init", rpy_init);
+    param.loadMatrix("w_init", w_init);
+
+    param.loadMatrix("r_final", r_final);
+    param.loadMatrix("v_final", v_final);
+    param.loadMatrix("rpy_final", rpy_final);
+    param.loadMatrix("w_final", w_final);
+
+    param.loadScalar("m", m);
+    param.loadScalar("T_min", T_min);
+    param.loadScalar("T_max", T_max);
+    param.loadScalar("gimbal_max", gimbal_max);
+    param.loadScalar("theta_max", theta_max);
+    param.loadScalar("v_I_max", v_I_max);
+    param.loadScalar("w_B_max", w_B_max);
+
+    deg2rad(gimbal_max);
+    deg2rad(theta_max);
+    deg2rad(w_B_max);
+    deg2rad(w_init);
+    deg2rad(w_final);
+    deg2rad(rpy_init);
+    deg2rad(rpy_final);
+
+    x_init << r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+    x_final << r_final, v_final, eulerToQuaternion(rpy_final), w_final;
+}
+
+void Rocket3D::Parameters::nondimensionalize()
+{
+    // m_scale = x_init(0);
+    // r_scale = x_init.segment(0, 3).norm();
+
+    // r_T_B /= r_scale;
+    // g_I /= r_scale;
+    // J_B /= m_scale * r_scale * r_scale;
+
+    // x_init.segment(0, 3) /= r_scale;
+    // x_init.segment(3, 3) /= r_scale;
+
+    // x_final.segment(0, 3) /= r_scale;
+    // x_final.segment(3, 3) /= r_scale;
+
+    // T_min /= m_scale * r_scale;
+    // T_max /= m_scale * r_scale;
+}
+
+void Rocket3D::Parameters::redimensionalize()
+{
+    // r_T_B *= r_scale;
+    // g_I *= r_scale;
+    // J_B *= m_scale * r_scale * r_scale;
+
+    // x_init.segment(0, 3) *= r_scale;
+    // x_init.segment(3, 3) *= r_scale;
+
+    // x_final.segment(0, 3) *= r_scale;
+    // x_final.segment(3, 3) *= r_scale;
+
+    // T_min *= m_scale * r_scale;
+    // T_max *= m_scale * r_scale;
+}
+
+} // namespace rocket3d

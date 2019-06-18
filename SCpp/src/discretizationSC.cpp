@@ -1,16 +1,16 @@
 #include <boost/numeric/odeint.hpp>
 
 #include "eigenIntegration.hpp"
-#include "discretization.hpp"
+#include "discretizationSC.hpp"
 
 class DiscretizationODE
 {
-  private:
+private:
     Model::input_vector_t u_t0, u_t1;
     double sigma, dt;
     Model &model;
 
-  public:
+public:
     using ode_matrix_t = Eigen::Matrix<double, Model::state_dim, 1 + Model::state_dim + 2 * Model::input_dim + 2>;
 
     DiscretizationODE(

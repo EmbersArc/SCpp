@@ -85,7 +85,7 @@ void TemplateModel::getNewModelParameters(param_vector_t &param)
 
 void TemplateModel::Parameters::loadFromFile()
 {
-    ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../SCpp/models/config/{}.info", getModelName()));
 
     Eigen::Vector3d r_init;
     Eigen::Vector3d r_final;

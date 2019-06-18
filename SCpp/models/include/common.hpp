@@ -24,10 +24,10 @@ template <typename T>
 Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
 {
     Eigen::Matrix<T, 4, 4> omegaMatrix;
-    omegaMatrix << T(0), -w(0), -w(1), -w(2),
-        w(0), T(0), w(2), -w(1),
-        w(1), -w(2), T(0), w(0),
-        w(2), w(1), -w(0), T(0);
+    omegaMatrix << T(0.), -w(0), -w(1), -w(2),
+        w(0), T(0.), w(2), -w(1),
+        w(1), -w(2), T(0.), w(0),
+        w(2), w(1), -w(0), T(0.);
 
     return omegaMatrix;
 }

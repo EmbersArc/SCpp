@@ -4,7 +4,7 @@
 using std::string;
 using std::vector;
 
-namespace rocket3d
+namespace rocketlanding3d
 {
 
 RocketLanding3D::RocketLanding3D()
@@ -214,7 +214,7 @@ void RocketLanding3D::Parameters::randomizeInitialState()
 
 void RocketLanding3D::Parameters::loadFromFile()
 {
-    ParameterServer param(fmt::format("../models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../SCpp/models/config/{}.info", getModelName()));
 
     bool randomInitialState;
     double I_sp;
@@ -321,4 +321,4 @@ void RocketLanding3D::Parameters::redimensionalizeTrajectory(Eigen::MatrixXd &X,
     U *= m_scale * r_scale;
 }
 
-} // namespace rocket3d
+} // namespace rocketlanding3d

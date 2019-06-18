@@ -1,7 +1,7 @@
 #pragma once
 
 #include "optimizationProblem.hpp"
-#include "activeModel.hpp"
+#include "activeModelSC.hpp"
 
 namespace sc
 {

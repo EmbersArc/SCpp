@@ -1,7 +1,13 @@
 #pragma once
 
-#include "activeModel.hpp"
+#include "activeModelSC.hpp"
 
+// void exactLinearDiscretization(Model &model,
+//                                double &ts,
+//                                const Model::state_vector_t &x_eq,
+//                                const Model::input_vector_t &u_eq,
+//                                Model::state_matrix_t &A,
+//                                Model::control_matrix_t &B);
 /**
  * @brief Multiple-shooting discretization with first order hold on input
  * 

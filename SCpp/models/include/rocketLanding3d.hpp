@@ -9,7 +9,7 @@
 
 #include "rocketLanding3dDefinitions.hpp"
 
-namespace rocket3d
+namespace rocketlanding3d
 {
 
 /**
@@ -18,7 +18,7 @@ namespace rocket3d
  */
 class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
-  public:
+public:
     RocketLanding3D();
 
     static std::string getModelName()
@@ -92,4 +92,4 @@ class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
     } p;
 };
 
-} // namespace rocket3d
+} // namespace rocketlanding3d

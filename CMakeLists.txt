@@ -11,6 +11,9 @@ include_directories(lib/ecos/external/SuiteSparse_config)
 link_directories(lib/ecos)
 link_libraries(ecos)
 
+# Eigen
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+
 # BOOST
 find_package(Boost REQUIRED) 
 
@@ -23,44 +26,68 @@ add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 # CPPAD
 include_directories(SYSTEM lib/external)
 
-# KSP
-# link_libraries(krpc)
-# link_libraries(:libprotobuf.so.17)
-
 # THREAD
 link_libraries(pthread)
 
 # INCLUDES
-include_directories(models/include)
+include_directories(utils/include)
+include_directories(MPCpp/include)
 include_directories(SCpp/include)
+include_directories(MPCpp/models/include)
+include_directories(SCpp/models/include)
 include_directories(solver/include)
 
 # SOURCES
-set(SOURCES_SC
-    models/src/cartpole.cpp
-    models/src/rocketLanding3d.cpp
-    models/src/rocketLanding2d.cpp
-    models/src/crewDragon.cpp
-    
+# common utilities
+set(UTILS_SOURCES
+    utils/src/timing.cpp
+    utils/src/parameterServer.cpp
+)
+# second order cone programming
+set(SCOP_SOURCES
     solver/src/ecosWrapper.cpp
     solver/src/optimizationProblem.cpp
-
-    SCpp/src/parameterServer.cpp
-    SCpp/src/discretization.cpp
+)
+# MPC algorithm
+set(MPC_SOURCES
+    MPCpp/src/discretizationMPC.cpp
+    MPCpp/src/MPCProblem.cpp
+    MPCpp/src/MPCAlgorithm.cpp
+)
+# SCvx algorithm
+set(SCVX_SOURCES
+    SCpp/src/discretizationSC.cpp
     SCpp/src/successiveConvexificationProblem.cpp
-    SCpp/src/timing.cpp
-
     SCpp/src/freeFinalTimeAlgorithm.cpp
 )
+# MPC models
+set(MPC_MODELS_SOURCES
+MPCpp/models/src/rocket3d.cpp
+)
+# SCvx models
+set(SCVX_MODELS_SOURCES
+    SCpp/models/src/cartpole.cpp
+    SCpp/models/src/rocketLanding3d.cpp
+    SCpp/models/src/rocketLanding2d.cpp
+    SCpp/models/src/crewDragon.cpp   
+)
 
-add_library(SC STATIC ${SOURCES_SC})
-target_compile_options(SC PUBLIC -O2 -Wall -Wextra -Wpedantic -Wno-unused-parameter)
+add_library(utils_lib STATIC ${UTILS_SOURCES})
+add_library(scop_lib STATIC ${SCOP_SOURCES})
+add_library(mpc_lib STATIC ${MPC_SOURCES})
+add_library(scvx_lib STATIC ${SCVX_SOURCES})
+add_library(mpc_models_lib STATIC ${MPC_MODELS_SOURCES})
+add_library(scvx_models_lib STATIC ${SCVX_MODELS_SOURCES})
 
-add_executable(SCpp SCpp/src/main.cpp)
-# add_executable(SCppKSP SCpp/src/mainKsp.cpp SCpp/src/rocketGuidance.cpp)
+target_link_libraries(utils_lib fmt)
+target_link_libraries(scop_lib fmt)
+target_link_libraries(mpc_lib scop_lib fmt)
+target_link_libraries(scvx_lib scop_lib fmt)
+target_link_libraries(mpc_models_lib fmt)
+target_link_libraries(scvx_models_lib fmt)
 
-target_link_libraries(SC fmt)
+add_executable(MPCpp MPCpp/src/mainMPC.cpp)
+add_executable(SCpp SCpp/src/mainSC.cpp)
 
-target_link_libraries(SCpp SC)
-# target_link_libraries(SCppKSP SC)
-
+target_link_libraries(MPCpp scop_lib mpc_lib mpc_models_lib utils_lib)
+target_link_libraries(SCpp scop_lib scvx_lib scvx_models_lib utils_lib)
