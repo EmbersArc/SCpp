@@ -15,7 +15,7 @@ int main()
     auto model = std::make_shared<Model>();
     MPCAlgorithm mpcSolver(model);
 
-    const size_t sim_steps = 2;
+    const size_t sim_steps = 1;
 
     mpcSolver.initialize();
     Model::dynamic_matrix_t X;

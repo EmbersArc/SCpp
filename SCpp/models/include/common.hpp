@@ -43,3 +43,35 @@ Eigen::Matrix<T, 3, 3> omegaMatrixReduced(const Eigen::Matrix<T, 3, 1> &q)
 
     return omegaMatrix;
 }
+
+template <typename T>
+Eigen::Matrix<T, 3, 3> EulerRotationMatrix(const Eigen::Matrix<T, 3, 1> &eta)
+{
+    const T phi = eta(0);
+    const T theta = eta(1);
+    const T psi = eta(2);
+
+    Eigen::Matrix<T, 3, 3> R;
+    R.row(0) << cos(theta) * cos(psi), -cos(theta) * sin(psi), sin(theta);
+    R.row(1) << sin(phi) * sin(theta) * cos(psi) + cos(phi) * sin(psi),
+        cos(phi) * cos(psi) - sin(phi) * sin(theta) * sin(psi), -sin(phi) * cos(theta);
+    R.row(2) << -cos(phi) * sin(theta) * cos(psi) + sin(phi) * sin(psi),
+        sin(phi) * cos(psi) + cos(phi) * sin(theta) * sin(psi), cos(phi) * cos(theta);
+
+    return R;
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 3> EulerRotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
+{
+    const T phi = eta(0);
+    const T theta = eta(1);
+    const T psi = eta(2);
+
+    Eigen::Matrix<T, 3, 3> J;
+    J.row(0) << cos(psi), -sin(psi), 0.;
+    J.row(1) << cos(theta) * sin(psi), cos(theta) * cos(psi), 0;
+    J.row(2) << -sin(theta) * cos(psi), sin(theta) * sin(psi), cos(theta);
+
+    return 1. / cos(theta) * J;
+}

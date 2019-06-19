@@ -11,8 +11,8 @@ op::SecondOrderConeProgram buildSCOP(
     Model::input_vector_t &input_weights,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_des,
-    const Model::state_matrix_t &A,
-    const Model::control_matrix_t &B)
+    Model::state_matrix_t &A,
+    Model::control_matrix_t &B)
 {
     const size_t K = X.cols();
 
@@ -49,11 +49,11 @@ op::SecondOrderConeProgram buildSCOP(
 
             // A * x(k)
             for (size_t j = 0; j < Model::state_dim; j++)
-                eq = eq + A(i, j) * var("X", {j, k});
+                eq = eq + param(A(i, j)) * var("X", {j, k});
 
             // B * u(k)
             for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + B(i, j) * var("U", {j, k});
+                eq = eq + param(B(i, j)) * var("U", {j, k});
 
             socp.addConstraint(eq == 0.0);
         }

@@ -13,6 +13,6 @@ op::SecondOrderConeProgram buildSCOP(
     Model::input_vector_t &input_weights,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_des,
-    const Model::state_matrix_t &A,
-    const Model::control_matrix_t &B);
+    Model::state_matrix_t &A,
+    Model::control_matrix_t &B);
 }

@@ -33,6 +33,21 @@ void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
     f.segment<3>(3) << 1. / T(par.m) * (R_I_B * u) + g_I_;
     f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
     f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+
+    // // state variables
+    // auto v = x.segment<3>(3);
+    // auto eta = x.segment<3>(6);
+    // auto w = x.segment<3>(9);
+
+    // auto R_I_B = EulerRotationMatrix<T>(eta);
+    // auto J_B_inv = par.J_B.cast<T>().asDiagonal().inverse();
+    // auto g_I_ = par.g_I.cast<T>();
+    // auto r_T_B_ = par.r_T_B.cast<T>();
+
+    // f.segment<3>(0) << v;
+    // f.segment<3>(3) << 1. / T(par.m) * (R_I_B * u) + g_I_;
+    // f.segment<3>(6) << EulerRotationJacobian<T>(eta) * w;
+    // f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
 void Rocket3D::getOperatingPoint(state_vector_t &x, input_vector_t &u)
@@ -54,16 +69,21 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     // State Constraints:
     for (size_t k = 0; k < K; k++)
     {
-        // Max Tilt Angle
-        // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
-                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
-
         // Max Velocity
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {3, k}),
                        (1.0) * var("X", {4, k}),
                        (1.0) * var("X", {5, k})}) <= param(par.v_I_max));
+
+        // Max Tilt Angle
+        // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
+        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
+                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
+
+        // // Max Tilt Angle
+        // // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
+        // socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
+        //                               (1.0) * var("X", {7, k})}) <= param(par.theta_max));
 
         // Max Rotation Velocity
         socp.addConstraint(
