@@ -9,7 +9,7 @@
 //                                Model::state_matrix_t &A,
 //                                Model::control_matrix_t &B);
 /**
- * @brief Multiple-shooting discretization with first order hold on input
+ * @brief Multiple-shooting discretization with linear interpolation on input
  * 
  * @param model 
  * @param sigma 
