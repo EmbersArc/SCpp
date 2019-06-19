@@ -42,6 +42,7 @@ include_directories(solver/include)
 set(UTILS_SOURCES
     utils/src/timing.cpp
     utils/src/parameterServer.cpp
+    utils/src/discretization.cpp
 )
 # second order cone programming
 set(SCOP_SOURCES
@@ -50,13 +51,11 @@ set(SCOP_SOURCES
 )
 # MPC algorithm
 set(MPC_SOURCES
-    MPCpp/src/discretizationMPC.cpp
     MPCpp/src/MPCProblem.cpp
     MPCpp/src/MPCAlgorithm.cpp
 )
 # SCvx algorithm
 set(SCVX_SOURCES
-    SCpp/src/discretizationSC.cpp
     SCpp/src/successiveConvexificationProblem.cpp
     SCpp/src/freeFinalTimeAlgorithm.cpp
 )

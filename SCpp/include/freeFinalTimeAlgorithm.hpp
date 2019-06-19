@@ -1,6 +1,6 @@
-#include "activeModelSC.hpp"
+#include "activeModel.hpp"
 #include "ecosWrapper.hpp"
-#include "discretizationSC.hpp"
+#include "discretization.hpp"
 #include "successiveConvexificationProblem.hpp"
 #include "parameterServer.hpp"
 

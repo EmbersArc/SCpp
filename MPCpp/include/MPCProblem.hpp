@@ -1,7 +1,7 @@
 #pragma once
 
 #include "optimizationProblem.hpp"
-#include "activeModelMPC.hpp"
+#include "activeModel.hpp"
 
 namespace mpc
 {
@@ -14,5 +14,7 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_des,
     Model::state_matrix_t &A,
-    Model::control_matrix_t &B);
+    Model::control_matrix_t &B,
+    Model::control_matrix_t &C,
+    Model::state_vector_t &z);
 }

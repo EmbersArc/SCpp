@@ -1,6 +1,6 @@
-#include "activeModelMPC.hpp"
+#include "activeModel.hpp"
 #include "MPCProblem.hpp"
-#include "discretizationMPC.hpp"
+#include "discretization.hpp"
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 
@@ -71,6 +71,8 @@ private:
 
    Model::state_matrix_t A;
    Model::control_matrix_t B;
+   Model::control_matrix_t C;
+   Model::state_vector_t z;
 
    Model::state_vector_t state_weights;
    Model::input_vector_t input_weights;

@@ -22,7 +22,7 @@ r_T_B
 
 m           1.6
 
-T_min       0.
+T_min       5.
 T_max       20.
 
 ; ----- initial values -----

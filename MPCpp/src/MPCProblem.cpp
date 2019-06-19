@@ -12,16 +12,18 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_des,
     Model::state_matrix_t &A,
-    Model::control_matrix_t &B)
+    Model::control_matrix_t &B,
+    Model::control_matrix_t &C,
+    Model::state_vector_t &z)
 {
     const size_t K = X.cols();
 
     op::SecondOrderConeProgram socp;
 
-    socp.createTensorVariable("X", {Model::state_dim, K});     // states
-    socp.createTensorVariable("U", {Model::input_dim, K - 1}); // inputs
-    socp.createTensorVariable("error_cost");                   // error minimization term
-    socp.createTensorVariable("input_cost");                   // input minimization term
+    socp.createTensorVariable("X", {Model::state_dim, K}); // states
+    socp.createTensorVariable("U", {Model::input_dim, K}); // inputs
+    socp.createTensorVariable("error_cost");               // error minimization term
+    socp.createTensorVariable("input_cost");               // input minimization term
 
     // shortcuts to access solver variables and create parameters
     auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
@@ -55,6 +57,13 @@ op::SecondOrderConeProgram buildSCOP(
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B(i, j)) * var("U", {j, k});
 
+            // C * u(k)
+            for (size_t j = 0; j < Model::input_dim; j++)
+                eq = eq + param(C(i, j)) * var("U", {j, k + 1});
+
+            // z
+            eq = eq + param(z(i));
+
             socp.addConstraint(eq == 0.0);
         }
     }
@@ -75,21 +84,21 @@ op::SecondOrderConeProgram buildSCOP(
     socp.addConstraint(op::norm2(error_norm2_args) <= (1.0) * var("error_cost"));
     socp.addMinimizationTerm(1.0 * var("error_cost"));
 
-    /**
-     * Build input cost
-     * 
-     */
-    std::vector<op::AffineExpression> input_norm2_args;
-    for (size_t k = 0; k < K - 1; k++)
-    {
-        for (size_t i = 0; i < Model::input_dim - 1; i++)
-        {
-            op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
-            input_norm2_args.push_back(ex);
-        }
-    }
-    socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
-    socp.addMinimizationTerm(1.0 * var("input_cost"));
+    // /**
+    //  * Build input cost
+    //  * 
+    //  */
+    // std::vector<op::AffineExpression> input_norm2_args;
+    // for (size_t k = 0; k < K; k++)
+    // {
+    //     for (size_t i = 0; i < Model::input_dim; i++)
+    //     {
+    //         op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
+    //         input_norm2_args.push_back(ex);
+    //     }
+    // }
+    // socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
+    // socp.addMinimizationTerm(1.0 * var("input_cost"));
 
     model.addApplicationConstraints(socp, X, U);
     return socp;

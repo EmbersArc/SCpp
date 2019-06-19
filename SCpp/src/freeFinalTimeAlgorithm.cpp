@@ -53,7 +53,7 @@ bool FreeFinalTimeAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    calculateDiscretization(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+    multipleShootingVariableTime(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
     // solve the problem
@@ -76,7 +76,7 @@ bool FreeFinalTimeAlgorithm::iterate()
     print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, solver->getSolutionValue("norm1_nu", {}));
     print("{:<{}}{: .4f}\n", "State Input Delta", 50, solver->getSolutionValue("Delta_sigma", {}));
     print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
-    
+
     print("{:<{}}{: .4f}\n\n", "Trajectory Time", 50, sigma);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
