@@ -84,21 +84,21 @@ op::SecondOrderConeProgram buildSCOP(
     socp.addConstraint(op::norm2(error_norm2_args) <= (1.0) * var("error_cost"));
     socp.addMinimizationTerm(1.0 * var("error_cost"));
 
-    // /**
-    //  * Build input cost
-    //  * 
-    //  */
-    // std::vector<op::AffineExpression> input_norm2_args;
-    // for (size_t k = 0; k < K; k++)
-    // {
-    //     for (size_t i = 0; i < Model::input_dim; i++)
-    //     {
-    //         op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
-    //         input_norm2_args.push_back(ex);
-    //     }
-    // }
-    // socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
-    // socp.addMinimizationTerm(1.0 * var("input_cost"));
+    /**
+     * Build input cost
+     * 
+     */
+    std::vector<op::AffineExpression> input_norm2_args;
+    for (size_t k = 0; k < K; k++)
+    {
+        for (size_t i = 0; i < Model::input_dim; i++)
+        {
+            op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
+            input_norm2_args.push_back(ex);
+        }
+    }
+    socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
+    socp.addMinimizationTerm(1.0 * var("input_cost"));
 
     model.addApplicationConstraints(socp, X, U);
     return socp;

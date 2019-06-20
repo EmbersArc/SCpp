@@ -57,11 +57,11 @@ set(MPC_SOURCES
 # SCvx algorithm
 set(SCVX_SOURCES
     SCpp/src/successiveConvexificationProblem.cpp
-    SCpp/src/freeFinalTimeAlgorithm.cpp
+    SCpp/src/SCAlgorithm.cpp
 )
 # MPC models
 set(MPC_MODELS_SOURCES
-MPCpp/models/src/rocket3d.cpp
+MPCpp/models/src/rocketHover.cpp
 )
 # SCvx models
 set(SCVX_MODELS_SOURCES

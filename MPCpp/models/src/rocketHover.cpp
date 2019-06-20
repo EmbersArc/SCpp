@@ -1,18 +1,18 @@
 #include "common.hpp"
-#include "rocket3d.hpp"
+#include "rocketHover.hpp"
 
 using std::string;
 using std::vector;
 
-namespace rocket3d
+namespace rocketHover
 {
 
-Rocket3D::Rocket3D()
+RocketHover::RocketHover()
 {
     par.loadFromFile();
 }
 
-void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
+void RocketHover::systemFlowMap(const state_vector_ad_t &x,
                              const input_vector_ad_t &u,
                              const param_vector_ad_t &p,
                              state_vector_ad_t &f)
@@ -50,13 +50,13 @@ void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
     // f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
-void Rocket3D::getOperatingPoint(state_vector_t &x, input_vector_t &u)
+void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     u << 0, 0, -par.g_I.z() * par.m;
 }
 
-void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                          Eigen::MatrixXd &X0,
                                          Eigen::MatrixXd &U0)
 {
@@ -111,17 +111,17 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 }
 
-void Rocket3D::nondimensionalize()
+void RocketHover::nondimensionalize()
 {
     // par.nondimensionalize();
 }
 
-void Rocket3D::redimensionalize()
+void RocketHover::redimensionalize()
 {
     // par.redimensionalize();
 }
 
-void Rocket3D::Parameters::loadFromFile()
+void RocketHover::Parameters::loadFromFile()
 {
     ParameterServer param(fmt::format("../MPCpp/models/config/{}.info", getModelName()));
 
@@ -162,7 +162,7 @@ void Rocket3D::Parameters::loadFromFile()
     x_final << r_final, v_final, eulerToQuaternion(rpy_final).tail<3>(), w_final;
 }
 
-void Rocket3D::Parameters::nondimensionalize()
+void RocketHover::Parameters::nondimensionalize()
 {
     // m_scale = x_init(0);
     // r_scale = x_init.segment(0, 3).norm();
@@ -181,7 +181,7 @@ void Rocket3D::Parameters::nondimensionalize()
     // T_max /= m_scale * r_scale;
 }
 
-void Rocket3D::Parameters::redimensionalize()
+void RocketHover::Parameters::redimensionalize()
 {
     // r_T_B *= r_scale;
     // g_I *= r_scale;
@@ -197,4 +197,4 @@ void Rocket3D::Parameters::redimensionalize()
     // T_max *= m_scale * r_scale;
 }
 
-} // namespace rocket3d
+} // namespace rocketHover

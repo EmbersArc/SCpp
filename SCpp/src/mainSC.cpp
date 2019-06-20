@@ -1,6 +1,6 @@
 #include <experimental/filesystem>
 
-#include "freeFinalTimeAlgorithm.hpp"
+#include "SCAlgorithm.hpp"
 #include "timing.hpp"
 
 namespace fs = std::experimental::filesystem;
@@ -13,7 +13,7 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    FreeFinalTimeAlgorithm scSolver(model);
+    SCAlgorithm scSolver(model);
 
     scSolver.initialize();
     scSolver.solve();
@@ -44,5 +44,5 @@ int main()
         f << t;
     }
 
-    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution file:", 50, toc(timer));
+    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }

@@ -7,23 +7,23 @@
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 
-#include "rocket3dDefinitions.hpp"
+#include "rocketHoverDefinitions.hpp"
 
-namespace rocket3d
+namespace rocketHover
 {
 
 /**
  * @brief A 3D rocket model.
  * 
  */
-class Rocket3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class RocketHover : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
 public:
-    Rocket3D();
+    RocketHover();
 
     static std::string getModelName()
     {
-        return "Rocket3D";
+        return "RocketHover";
     }
 
     void systemFlowMap(
@@ -69,4 +69,4 @@ public:
     } par;
 };
 
-} // namespace rocket3d
+} // namespace rocketHover

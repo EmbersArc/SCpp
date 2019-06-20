@@ -1,4 +1,4 @@
-#include "freeFinalTimeAlgorithm.hpp"
+#include "SCAlgorithm.hpp"
 #include "timing.hpp"
 
 using fmt::format;
@@ -6,13 +6,13 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-FreeFinalTimeAlgorithm::FreeFinalTimeAlgorithm(std::shared_ptr<Model> model)
+SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model)
     : param("../SCpp/config/SCParameters.info"), model(model)
 {
     loadParameters();
 }
 
-void FreeFinalTimeAlgorithm::loadParameters()
+void SCAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
 
@@ -26,7 +26,7 @@ void FreeFinalTimeAlgorithm::loadParameters()
     param.loadScalar("weight_virtual_control", weight_virtual_control);
 }
 
-void FreeFinalTimeAlgorithm::initialize()
+void SCAlgorithm::initialize()
 {
     model->initializeModel();
 
@@ -41,14 +41,14 @@ void FreeFinalTimeAlgorithm::initialize()
 
     socp = sc::buildSCOP(*model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
+                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar, true);
 
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-bool FreeFinalTimeAlgorithm::iterate()
+bool SCAlgorithm::iterate()
 {
     // discretize
     const double timer_iteration = tic();
@@ -85,9 +85,9 @@ bool FreeFinalTimeAlgorithm::iterate()
     return solver->getSolutionValue("norm2_Delta", {}) < delta_tol && solver->getSolutionValue("norm1_nu", {}) < nu_tol;
 }
 
-void FreeFinalTimeAlgorithm::solve(bool warm_start)
+void SCAlgorithm::solve(bool warm_start)
 {
-    print("Solving model {}\n", Model::getModelName());
+    // print("Solving model {}\n", Model::getModelName());
 
     model->nondimensionalize();
 
@@ -141,7 +141,7 @@ void FreeFinalTimeAlgorithm::solve(bool warm_start)
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
 
-void FreeFinalTimeAlgorithm::cacheIndices()
+void SCAlgorithm::cacheIndices()
 {
     // cache indices for performance
     sigma_index = socp.getTensorVariableIndex("sigma", {});
@@ -160,7 +160,7 @@ void FreeFinalTimeAlgorithm::cacheIndices()
     }
 }
 
-void FreeFinalTimeAlgorithm::readSolution()
+void SCAlgorithm::readSolution()
 {
     for (size_t k = 0; k < K; k++)
     {
@@ -176,7 +176,7 @@ void FreeFinalTimeAlgorithm::readSolution()
     sigma = solver->getSolutionValue(sigma_index);
 }
 
-void FreeFinalTimeAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
+void SCAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
 {
     X = this->X;
     U = this->U;

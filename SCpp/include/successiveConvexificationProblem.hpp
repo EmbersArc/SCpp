@@ -17,6 +17,6 @@ op::SecondOrderConeProgram buildSCOP(
     Model::control_matrix_v_t &B_bar,
     Model::control_matrix_v_t &C_bar,
     Model::state_vector_v_t &S_bar,
-    Model::state_vector_v_t &z_bar);
+    Model::state_vector_v_t &z_bar,
+    bool free_final_time);
 }
-
