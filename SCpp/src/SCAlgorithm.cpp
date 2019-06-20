@@ -6,8 +6,8 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model)
-    : param("../SCpp/config/SCParameters.info"), model(model)
+SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model, bool free_final_time)
+    : param("../SCpp/config/SCParameters.info"), model(model), free_final_time(free_final_time)
 {
     loadParameters();
 }
@@ -20,10 +20,13 @@ void SCAlgorithm::loadParameters()
     param.loadScalar("max_iterations", max_iterations);
     param.loadScalar("nu_tol", nu_tol);
 
-    param.loadScalar("trust_region_factor", trust_region_factor);
-    param.loadScalar("weight_trust_region_time", weight_trust_region_time);
-    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
+    param.loadScalar("trust_region_factor", trust_region_factor);
+    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
+    if (free_final_time)
+    {
+        param.loadScalar("weight_trust_region_time", weight_trust_region_time);
+    }
 }
 
 void SCAlgorithm::initialize()
@@ -41,7 +44,7 @@ void SCAlgorithm::initialize()
 
     socp = sc::buildSCOP(*model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar, true);
+                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar, free_final_time);
 
     cacheIndices();
 
@@ -53,7 +56,14 @@ bool SCAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    multipleShootingVariableTime(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+    if (free_final_time)
+    {
+        multipleShootingVariableTime(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+    }
+    else
+    {
+        multipleShooting(*model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+    }
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
     // solve the problem
@@ -99,7 +109,11 @@ void SCAlgorithm::solve(bool warm_start)
     {
         loadParameters();
         model->getInitializedTrajectory(X, U);
-        model->getFinalTimeGuess(sigma);
+
+        if (free_final_time)
+        {
+            model->getFinalTimeGuess(sigma);
+        }
     }
 
     Model::param_vector_t model_params;
@@ -144,7 +158,10 @@ void SCAlgorithm::solve(bool warm_start)
 void SCAlgorithm::cacheIndices()
 {
     // cache indices for performance
-    sigma_index = socp.getTensorVariableIndex("sigma", {});
+    if (free_final_time)
+    {
+        sigma_index = socp.getTensorVariableIndex("sigma", {});
+    }
     X_indices.resizeLike(X);
     U_indices.resizeLike(U);
     for (size_t k = 0; k < K; k++)
@@ -162,6 +179,10 @@ void SCAlgorithm::cacheIndices()
 
 void SCAlgorithm::readSolution()
 {
+    if (free_final_time)
+    {
+        sigma = solver->getSolutionValue(sigma_index);
+    }
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
@@ -173,7 +194,6 @@ void SCAlgorithm::readSolution()
             U(i, k) = solver->getSolutionValue(U_indices(i, k));
         }
     }
-    sigma = solver->getSolutionValue(sigma_index);
 }
 
 void SCAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)

@@ -1,0 +1,95 @@
+; ----- model definitions -----
+g_I
+{
+    (0)   0.0
+    (1)   0.0
+    (2)   -9.81
+}
+
+J_B
+{
+    (0)   0.80294
+    (1)   0.80294
+    (2)   0.000163333
+}
+
+r_T_B
+{
+    (0)   0
+    (1)   0
+    (2)   -0.4
+}
+
+m           1.6
+
+T_min       5.
+T_max       20.
+
+; ----- initial values -----
+; position
+r_init
+{
+    (0)     3.
+    (1)     3.
+    (2)     5.
+}
+; velocity
+v_init
+{
+    (0)     0.
+    (1)     0.
+    (2)     0.
+}
+; orientation
+rpy_init
+{
+    (0)     0.
+    (1)     0.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_init
+{
+    (0)    0.
+    (1)    0.
+    (2)    0. ; not controllable
+}
+
+; ----- final values -----
+; position
+r_final
+{
+    (0)     5.
+    (1)     5.
+    (2)     3.
+}
+; velocity
+v_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     0.
+}
+; orientation
+rpy_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_final
+{
+    (0)    0.
+    (1)    0.
+    (2)    0. ; not controllable
+}
+
+; maximum gimbal
+gimbal_max  15.
+; maximum angle
+theta_max   20.
+; maximum velocity
+v_I_max     1.
+; maximum angluar velocity
+w_B_max     15.

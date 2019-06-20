@@ -13,7 +13,7 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    SCAlgorithm scSolver(model);
+    SCAlgorithm scSolver(model, true);
 
     scSolver.initialize();
     scSolver.solve();
@@ -25,7 +25,7 @@ int main()
 
     // write solution to files
     double timer = tic();
-    fs::path outputPath = getOutputPath() / std::to_string(time(0));
+    fs::path outputPath = getOutputPath() / std::to_string(0);
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");

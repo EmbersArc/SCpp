@@ -1,4 +1,4 @@
-#include "successiveConvexificationProblem.hpp"
+#include "SCProblem.hpp"
 
 namespace sc
 {

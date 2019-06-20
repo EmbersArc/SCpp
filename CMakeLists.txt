@@ -56,7 +56,7 @@ set(MPC_SOURCES
 )
 # SCvx algorithm
 set(SCVX_SOURCES
-    SCpp/src/successiveConvexificationProblem.cpp
+    SCpp/src/SCProblem.cpp
     SCpp/src/SCAlgorithm.cpp
 )
 # MPC models
@@ -69,6 +69,7 @@ set(SCVX_MODELS_SOURCES
     SCpp/models/src/rocketLanding3d.cpp
     SCpp/models/src/rocketLanding2d.cpp
     SCpp/models/src/crewDragon.cpp   
+    SCpp/models/src/rocket3d.cpp   
 )
 
 add_library(utils_lib STATIC ${UTILS_SOURCES})

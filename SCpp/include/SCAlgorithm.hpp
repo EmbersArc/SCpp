@@ -1,7 +1,7 @@
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
-#include "successiveConvexificationProblem.hpp"
+#include "SCProblem.hpp"
 #include "parameterServer.hpp"
 
 class SCAlgorithm
@@ -12,7 +12,7 @@ public:
      * 
      * @param model     The system model.
      */
-  explicit SCAlgorithm(std::shared_ptr<Model> model);
+  explicit SCAlgorithm(std::shared_ptr<Model> model, bool free_final_time);
 
   /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
@@ -68,6 +68,8 @@ private:
   size_t K;
 
   std::shared_ptr<Model> model;
+
+  bool free_final_time;
 
   double weight_trust_region_time;
   double weight_trust_region_trajectory;
