@@ -1,4 +1,5 @@
 K 10
+T 16.
 
 weight_trust_region_time            1e1
 weight_trust_region_trajectory      1e1

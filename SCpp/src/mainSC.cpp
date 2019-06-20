@@ -13,7 +13,7 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    SCAlgorithm scSolver(model, true);
+    SCAlgorithm scSolver(model, false);
 
     scSolver.initialize();
     scSolver.solve();

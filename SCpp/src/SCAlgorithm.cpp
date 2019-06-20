@@ -27,6 +27,10 @@ void SCAlgorithm::loadParameters()
     {
         param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     }
+    else
+    {
+        param.loadScalar("T", sigma);
+    }
 }
 
 void SCAlgorithm::initialize()
@@ -84,7 +88,10 @@ bool SCAlgorithm::iterate()
     // print iteration summary
     print("\n");
     print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, solver->getSolutionValue("norm1_nu", {}));
-    print("{:<{}}{: .4f}\n", "State Input Delta", 50, solver->getSolutionValue("Delta_sigma", {}));
+    if (free_final_time)
+    {
+        print("{:<{}}{: .4f}\n", "State Input Delta", 50, solver->getSolutionValue("Delta_sigma", {}));
+    }
     print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
 
     print("{:<{}}{: .4f}\n\n", "Trajectory Time", 50, sigma);

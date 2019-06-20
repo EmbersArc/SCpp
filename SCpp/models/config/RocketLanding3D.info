@@ -83,6 +83,6 @@ gamma_gs    25.
 ; maximum angluar velocity
 w_B_max     15.
 
-final_time_guess 10.
+final_time_guess 17.
 
 randomInitialState false
