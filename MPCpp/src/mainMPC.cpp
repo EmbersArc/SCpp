@@ -1,9 +1,9 @@
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include "MPCAlgorithm.hpp"
 #include "timing.hpp"
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 fs::path getOutputPath()
 {
@@ -15,6 +15,8 @@ int main()
     auto model = std::make_shared<Model>();
     MPCAlgorithm solver(model);
 
+    double T;
+    model->getTimeHorizon(T);
     const size_t sim_steps = 100;
 
     solver.initialize();
@@ -24,6 +26,7 @@ int main()
     Model::dynamic_matrix_t U_sim(size_t(Model::input_dim), sim_steps);
 
     solver.setDesiredState(model->par.x_final);
+
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
@@ -62,7 +65,7 @@ int main()
     }
     {
         std::ofstream f(outputPath / "t_sim.txt");
-        f << solver.T / (X.cols() - 1) * sim_steps;
+        f << T / (X.cols() - 1) * sim_steps;
     }
     {
         std::ofstream f(outputPath / "X.txt");
@@ -74,7 +77,7 @@ int main()
     }
     {
         std::ofstream f(outputPath / "t.txt");
-        f << solver.T;
+        f << T;
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }

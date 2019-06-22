@@ -44,7 +44,6 @@ public:
      */
     void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U);
 
-    double T;
 
 private:
     /**
@@ -67,6 +66,7 @@ private:
 
     ParameterServer param;
 
+    double T;
     size_t K;
 
     std::shared_ptr<Model> model;

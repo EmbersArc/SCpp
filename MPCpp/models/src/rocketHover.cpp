@@ -9,12 +9,12 @@ namespace rocketHover
 
 RocketHover::RocketHover()
 {
-    par.loadFromFile();
+    p.loadFromFile();
 }
 
 void RocketHover::systemFlowMap(const state_vector_ad_t &x,
                                 const input_vector_ad_t &u,
-                                const param_vector_ad_t &p,
+                                const param_vector_ad_t &par,
                                 state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
@@ -25,14 +25,15 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     auto w = x.segment<3>(9);
 
     auto R_I_B = Eigen::Quaternion<T>(sqrt(1. - q.squaredNorm()), q(0), q(1), q(2)).toRotationMatrix();
-    auto J_B_inv = par.J_B.cast<T>().asDiagonal().inverse();
-    auto g_I_ = par.g_I.cast<T>();
-    auto r_T_B_ = par.r_T_B.cast<T>();
+    auto J_B_inv = p.J_B.cast<T>().asDiagonal().inverse();
+    auto g_I_ = p.g_I.cast<T>();
+    auto r_T_B_ = p.r_T_B.cast<T>();
 
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / T(par.m) * (R_I_B * u) + g_I_;
+    f.segment<3>(3) << 1. / T(p.m) * (R_I_B * u) + g_I_;
     f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
     f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+
 
     // // state variables
     // auto v = x.segment<3>(3);
@@ -40,12 +41,12 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     // auto w = x.segment<3>(9);
 
     // auto R_I_B = EulerRotationMatrix<T>(eta);
-    // auto J_B_inv = par.J_B.cast<T>().asDiagonal().inverse();
-    // auto g_I_ = par.g_I.cast<T>();
-    // auto r_T_B_ = par.r_T_B.cast<T>();
+    // auto J_B_inv = p.J_B.cast<T>().asDiagonal().inverse();
+    // auto g_I_ = p.g_I.cast<T>();
+    // auto r_T_B_ = p.r_T_B.cast<T>();
 
     // f.segment<3>(0) << v;
-    // f.segment<3>(3) << 1. / T(par.m) * (R_I_B * u) + g_I_;
+    // f.segment<3>(3) << 1. / T(p.m) * (R_I_B * u) + g_I_;
     // f.segment<3>(6) << EulerRotationJacobian<T>(eta) * w;
     // f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
@@ -53,7 +54,7 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    u << 0, 0, -par.g_I.z() * par.m;
+    u << 0, 0, -p.g_I.z() * p.m;
 }
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -73,47 +74,47 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {3, k}),
                        (1.0) * var("X", {4, k}),
-                       (1.0) * var("X", {5, k})}) <= param(par.v_I_max));
+                       (1.0) * var("X", {5, k})}) <= param(p.v_I_max));
 
         // Max Tilt Angle
         // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
-                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
+                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
 
         // Max Rotation Velocity
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {9, k}),
                        (1.0) * var("X", {10, k}),
-                       (1.0) * var("X", {11, k})}) <= param(par.w_B_max));
+                       (1.0) * var("X", {11, k})}) <= param(p.w_B_max));
     }
 
     // Control Constraints
     for (size_t k = 0; k < K - 1; k++)
     {
         // Simplified Minimum Thrust
-        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -par.T_min; }) >= (0.0));
+        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint(
             op::norm2({(1.0) * var("U", {0, k}),
                        (1.0) * var("U", {1, k}),
-                       (1.0) * var("U", {2, k})}) <= param(par.T_max));
+                       (1.0) * var("U", {2, k})}) <= param(p.T_max));
 
         // Maximum Gimbal Angle
         socp.addConstraint(
             op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(par.gimbal_max); }) * var("U", {2, k}));
+                       (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
     }
 }
 
 void RocketHover::nondimensionalize()
 {
-    // par.nondimensionalize();
+    // p.nondimensionalize();
 }
 
 void RocketHover::redimensionalize()
 {
-    // par.redimensionalize();
+    // p.redimensionalize();
 }
 
 void RocketHover::Parameters::loadFromFile()

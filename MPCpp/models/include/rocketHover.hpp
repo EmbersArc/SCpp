@@ -29,7 +29,7 @@ public:
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
-        const param_vector_ad_t &p,
+        const param_vector_ad_t &par,
         state_vector_ad_t &f) override;
 
     void getOperatingPoint(state_vector_t &x, input_vector_t &u);
@@ -66,7 +66,7 @@ public:
         void nondimensionalize();
 
         void redimensionalize();
-    } par;
+    } p;
 };
 
 } // namespace rocketHover

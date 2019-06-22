@@ -12,7 +12,7 @@ public:
      * 
      * @param model     The system model.
      */
-  explicit SCAlgorithm(std::shared_ptr<Model> model, bool free_final_time);
+  explicit SCAlgorithm(std::shared_ptr<Model> model);
 
   /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.

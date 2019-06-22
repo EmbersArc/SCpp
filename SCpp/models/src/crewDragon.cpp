@@ -59,15 +59,15 @@ CrewDragon::CrewDragon()
 void CrewDragon::systemFlowMap(
     const state_vector_ad_t &x,
     const input_vector_ad_t &u,
-    const param_vector_ad_t &p,
+    const param_vector_ad_t &par,
     state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
 
-    auto alpha_m_ = p(0);
-    auto g_I_ = p.segment<3>(1);
-    auto J_B_inv = p.segment<3>(4).asDiagonal().inverse();
-    auto r_T_B_ = p.segment<3>(7);
+    auto alpha_m_ = par(0);
+    auto g_I_ = par.segment<3>(1);
+    auto J_B_inv = par.segment<3>(4).asDiagonal().inverse();
+    auto r_T_B_ = par.segment<3>(7);
     // = 10 parameters
 
     // state variables

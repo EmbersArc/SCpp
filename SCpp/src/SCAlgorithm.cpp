@@ -6,8 +6,8 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model, bool free_final_time)
-    : param("../SCpp/config/SCParameters.info"), model(model), free_final_time(free_final_time)
+SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model)
+    : param("../SCpp/config/SCParameters.info"), model(model)
 {
     loadParameters();
 }
@@ -15,6 +15,8 @@ SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model, bool free_final_time)
 void SCAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
+
+    param.loadScalar("free_final_time", free_final_time);
 
     param.loadScalar("nondimensionalize", nondimensionalize);
 

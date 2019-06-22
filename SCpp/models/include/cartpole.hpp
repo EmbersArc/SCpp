@@ -26,7 +26,7 @@ class Cartpole : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         return "Cartpole";
     }
 
-    void getFinalTimeGuess(double &sigma) override
+    void getTimeHorizon(double &sigma) override
     {
         sigma = p.final_time_guess;
     }
@@ -34,7 +34,7 @@ class Cartpole : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,
-        const param_vector_ad_t &p,
+        const param_vector_ad_t &par,
         state_vector_ad_t &f) override;
 
     void getInitializedTrajectory(Eigen::MatrixXd &X,

@@ -1,9 +1,9 @@
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include "SCAlgorithm.hpp"
 #include "timing.hpp"
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 fs::path getOutputPath()
 {
@@ -13,7 +13,7 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    SCAlgorithm solver(model, false);
+    SCAlgorithm solver(model);
 
     solver.initialize();
 
@@ -36,7 +36,7 @@ int main()
         X_sim.col(i) = X.col(0);
         U_sim.col(i) = U.col(0);
 
-        model->par.x_init = X.col(1);
+        model->p.x_init = X.col(1);
     }
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));

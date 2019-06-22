@@ -1,6 +1,8 @@
 K 15
 T 4.
 
+free_final_time                     true
+
 nondimensionalize                   true
 
 weight_trust_region_time            1e1
