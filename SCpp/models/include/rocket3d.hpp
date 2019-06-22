@@ -70,6 +70,8 @@ public:
 
         double m_scale, r_scale;
 
+        state_vector_t state_weights;
+
         void randomizeInitialState();
 
         void loadFromFile();

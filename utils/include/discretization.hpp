@@ -17,7 +17,7 @@
  */
 void multipleShootingVariableTime(
     Model &model,
-    double &sigma,
+    double sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -41,7 +41,7 @@ void multipleShootingVariableTime(
  */
 void multipleShooting(
     Model &model,
-    double &sigma,
+    double sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -51,14 +51,14 @@ void multipleShooting(
 
 
 void eulerLinearDiscretization(Model &model,
-                               double &ts,
+                               double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
                                Model::control_matrix_t &B);
 
 void exactLinearDiscretization(Model &model,
-                               double &ts,
+                               double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,

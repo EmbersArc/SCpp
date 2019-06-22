@@ -13,31 +13,30 @@ fs::path getOutputPath()
 int main()
 {
     auto model = std::make_shared<Model>();
-    MPCAlgorithm mpcSolver(model);
+    MPCAlgorithm solver(model);
 
-    const size_t sim_steps = 200;
+    const size_t sim_steps = 100;
 
-    mpcSolver.initialize();
+    solver.initialize();
     Model::dynamic_matrix_t X;
-    Model::dynamic_matrix_t X_full(size_t(Model::state_dim), sim_steps);
-    Model::dynamic_matrix_t U_full(size_t(Model::input_dim), sim_steps);
     Model::dynamic_matrix_t U;
+    Model::dynamic_matrix_t X_sim(size_t(Model::state_dim), sim_steps);
+    Model::dynamic_matrix_t U_sim(size_t(Model::input_dim), sim_steps);
 
-    Model::state_vector_t x_init = model->par.x_init;
-
-    mpcSolver.setDesiredState(model->par.x_final);
+    solver.setDesiredState(model->par.x_final);
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
     {
-        fmt::print("Step {}:\n", i);
-        X_full.col(i) = x_init;
-        mpcSolver.setInitialState(x_init);
-        mpcSolver.solve();
-        mpcSolver.getSolution(X, U);
+        fmt::print("\nSIMULATION STEP {}:\n", i);
+        solver.solve();
+        solver.getSolution(X, U);
 
-        x_init = X.col(1);
-        U_full.col(i) = U.col(0);
+        X_sim.col(i) = X.col(0);
+        U_sim.col(i) = U.col(0);
+
+        model->par.x_init = X.col(1);
+        solver.setInitialState(model->par.x_init);
     }
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));
@@ -54,12 +53,16 @@ int main()
     }
 
     {
-        std::ofstream f(outputPath / "X_full.txt");
-        f << X_full;
+        std::ofstream f(outputPath / "X_sim.txt");
+        f << X_sim;
     }
     {
-        std::ofstream f(outputPath / "U_full.txt");
-        f << U_full;
+        std::ofstream f(outputPath / "U_sim.txt");
+        f << U_sim;
+    }
+    {
+        std::ofstream f(outputPath / "t_sim.txt");
+        f << solver.T / (X.cols() - 1) * sim_steps;
     }
     {
         std::ofstream f(outputPath / "X.txt");
@@ -68,6 +71,10 @@ int main()
     {
         std::ofstream f(outputPath / "U.txt");
         f << U;
+    }
+    {
+        std::ofstream f(outputPath / "t.txt");
+        f << solver.T;
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }

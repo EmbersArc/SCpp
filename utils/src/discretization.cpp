@@ -6,7 +6,7 @@
 #include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
 void eulerLinearDiscretization(Model &model,
-                               double &ts,
+                               double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
@@ -42,7 +42,7 @@ public:
 };
 
 void exactLinearDiscretization(Model &model,
-                               double &ts,
+                               double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
@@ -128,7 +128,7 @@ public:
 
 void multipleShootingVariableTime(
     Model &model,
-    double &sigma,
+    double sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -232,7 +232,7 @@ public:
 
 void multipleShooting(
     Model &model,
-    double &sigma,
+    double sigma,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,

@@ -16,6 +16,8 @@ void SCAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
 
+    param.loadScalar("nondimensionalize", nondimensionalize);
+
     param.loadScalar("delta_tol", delta_tol);
     param.loadScalar("max_iterations", max_iterations);
     param.loadScalar("nu_tol", nu_tol);
@@ -23,14 +25,12 @@ void SCAlgorithm::loadParameters()
     param.loadScalar("weight_virtual_control", weight_virtual_control);
     param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
+
     if (free_final_time)
     {
         param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     }
-    else
-    {
-        param.loadScalar("T", sigma);
-    }
+    param.loadScalar("T", sigma);
 }
 
 void SCAlgorithm::initialize()
@@ -72,7 +72,7 @@ bool SCAlgorithm::iterate()
 
     // solve the problem
     timer = tic();
-    solver->solveProblem();
+    solver->solveProblem(false);
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
 
     readSolution();
@@ -104,23 +104,20 @@ bool SCAlgorithm::iterate()
 
 void SCAlgorithm::solve(bool warm_start)
 {
-    // print("Solving model {}\n", Model::getModelName());
+    print("Solving model {}\n", Model::getModelName());
 
-    model->nondimensionalize();
+    if (nondimensionalize)
+        model->nondimensionalize();
 
     if (warm_start)
     {
-        model->nondimensionalizeTrajectory(X, U);
+        if (nondimensionalize)
+            model->nondimensionalizeTrajectory(X, U);
     }
     else
     {
         loadParameters();
         model->getInitializedTrajectory(X, U);
-
-        if (free_final_time)
-        {
-            model->getFinalTimeGuess(sigma);
-        }
     }
 
     Model::param_vector_t model_params;
@@ -156,9 +153,11 @@ void SCAlgorithm::solve(bool warm_start)
         print("No convergence after {} iterations.\n\n", max_iterations);
     }
 
-    model->redimensionalize();
-    model->redimensionalizeTrajectory(X, U);
-
+    if (nondimensionalize)
+    {
+        model->redimensionalize();
+        model->redimensionalizeTrajectory(X, U);
+    }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
 

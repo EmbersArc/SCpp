@@ -49,12 +49,12 @@ op::SecondOrderConeProgram buildSCOP(
         /**
          * Build linearized model equality constraint
          *    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
-         * -I x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
+         *   -x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
          * 
          */
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            // -I * x(k+1)
+            // - x(k+1)
             op::AffineExpression eq = (-1.0) * var("X", {i, k + 1});
 
             // A * x(k)

@@ -57,12 +57,22 @@ op::SecondOrderConeProgram buildSCOP(
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B(i, j)) * var("U", {j, k});
 
-            // C * u(k)
+            // C * u(k+1)
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(C(i, j)) * var("U", {j, k + 1});
 
             // z
-            eq = eq + param(z(i));
+            eq = eq + param(z(i, 0));
+
+            // // -(A * x_eq(k) + B * u_eq(k))
+            // op::Parameter c = param_fn([&A, &B, &x_eq, &u_eq, i]() {
+            //     double f = 0.;
+            //     for (size_t j = 0; j < Model::state_dim; j++)
+            //         f += A(i, j) * x_eq(j);
+            //     for (size_t j = 0; j < Model::input_dim; j++)
+            //         f += B(i, j) * u_eq(j);
+            //     return -f; });
+            // eq = eq + c;
 
             socp.addConstraint(eq == 0.0);
         }

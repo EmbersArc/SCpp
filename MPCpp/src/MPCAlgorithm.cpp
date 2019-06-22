@@ -15,9 +15,7 @@ MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model)
 void MPCAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
-    double T;
     param.loadScalar("T", T);
-    ts = T / K;
     param.loadMatrix("state_weights", state_weights);
     param.loadMatrix("input_weights", input_weights);
 }
@@ -32,39 +30,38 @@ void MPCAlgorithm::initialize()
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
-
-    exactLinearDiscretization(*model, ts, x_eq, u_eq, A, B);
-    std::cout << A << std::endl
-              << B << std::endl;
-
-    double sigma = ts * (K - 1);
-    Model::state_matrix_v_t A_bar(K);
-    Model::control_matrix_v_t B_bar(K);
-    Model::control_matrix_v_t C_bar(K);
-    Model::state_vector_v_t z_bar(K);
-
-    Eigen::MatrixXd X_eq;
-    Eigen::MatrixXd U_eq;
-    X_eq.resize(Model::state_dim, K);
-    U_eq.resize(Model::input_dim, K);
-    X_eq.setZero();
-    U_eq.setZero();
+    Eigen::MatrixXd X_eq(size_t(Model::state_dim), K);
+    Eigen::MatrixXd U_eq(size_t(Model::input_dim), K);
     X_eq.col(0) = x_eq;
-    U_eq.col(0) = u_eq;
     X_eq.col(1) = x_eq;
+    U_eq.col(0) = u_eq;
     U_eq.col(1) = u_eq;
-    multipleShooting(*model, sigma, X_eq, U_eq, A_bar, B_bar, C_bar, z_bar);
+    Model::state_matrix_v_t A_eq(K);
+    Model::control_matrix_v_t B_eq(K);
+    Model::control_matrix_v_t C_eq(K);
+    Model::state_vector_v_t z_eq(K);
 
-    std::cout << A_bar.at(0) << std::endl
-              << std::endl
-              << B_bar.at(0) + C_bar.at(0) << std::endl
-              << std::endl
-              << z_bar.at(0) << std::endl;
+    // exactLinearDiscretization(*model, T / (K - 1), x_eq, u_eq, A, B);
 
-    A = A_bar.at(0);
-    B = B_bar.at(0);
-    C = C_bar.at(0);
-    z = z_bar.at(0);
+    // std::cout
+    //     << A << std::endl
+    //     << std::endl
+    //     << B << std::endl
+    //     << std::endl;
+
+    multipleShooting(*model, T, X_eq, U_eq, A_eq, B_eq, C_eq, z_eq);
+
+    A = A_eq.at(0);
+    B = B_eq.at(0);
+    C = C_eq.at(0);
+    z = z_eq.at(0);
+
+    // std::cout << A << std::endl
+    //           << std::endl
+    //           << B + C << std::endl
+    //           << std::endl
+    //           << z << std::endl
+    //           << std::endl;
 
     socp = mpc::buildSCOP(*model, X, U, state_weights, input_weights, x_init, x_des, A, B, C, z);
 
@@ -88,7 +85,7 @@ void MPCAlgorithm::solve()
     // print("Solving model {}\n", Model::getModelName());
 
     const double timer_solve = tic();
-    solver->solveProblem(false);
+    solver->solveProblem(true);
     print("{:<{}}{:.2f}ms\n", "Time, solve:", 50, toc(timer_solve));
 
     readSolution();

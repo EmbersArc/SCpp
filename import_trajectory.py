@@ -19,10 +19,12 @@ data_folder = 'output/Rocket3D/'
 data_folder += sorted(os.listdir(data_folder))[-1]
 
 # load data
-X = np.loadtxt(open(f"{data_folder}/X_full.txt", "rb"))
-U = np.loadtxt(open(f"{data_folder}/U_full.txt", "rb"))
+X = np.loadtxt(open(f"{data_folder}/X_sim.txt", "rb"))
+U = np.loadtxt(open(f"{data_folder}/U_sim.txt", "rb"))
+t = np.loadtxt(open(f"{data_folder}/t_sim.txt", "rb"))
+# X = np.loadtxt(open(f"{data_folder}/X.txt", "rb"))
+# U = np.loadtxt(open(f"{data_folder}/U.txt", "rb"))
 # t = np.loadtxt(open(f"{data_folder}/t.txt", "rb"))
-t = 24.
 
 # get objects
 rck = bpy.data.objects["rck"]
@@ -49,11 +51,14 @@ for i in range(K):
 
     # location and rotation
     rck.location = np.array([x[0], x[1], x[2]]) * 10
-    q = np.array((x[6], x[7], x[8]))
-    rck.rotation_quaternion = [np.sqrt(1. - x[6:9].dot(x[6:9])), x[6], x[7], x[8]]
-    print(rck.rotation_quaternion)
-    rck.keyframe_insert(data_path='rotation_quaternion')
+
+    if(x.shape[0] == 13):
+        rck.rotation_quaternion = x[6], x[7], x[8], x[9]
+    elif(x.shape[0] == 12):
+        qw = np.sqrt(1. - x[6:9].T * x[6:9])
+        rck.rotation_quaternion = qw, x[6], x[7], x[8]
     rck.keyframe_insert(data_path='location')
+    rck.keyframe_insert(data_path='rotation_quaternion')
 
     # thrust magnitude and angles
     rx = np.arctan(-u[1] / u[2])

@@ -13,9 +13,9 @@ RocketHover::RocketHover()
 }
 
 void RocketHover::systemFlowMap(const state_vector_ad_t &x,
-                             const input_vector_ad_t &u,
-                             const param_vector_ad_t &p,
-                             state_vector_ad_t &f)
+                                const input_vector_ad_t &u,
+                                const param_vector_ad_t &p,
+                                state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
 
@@ -57,8 +57,8 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 }
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                         Eigen::MatrixXd &X0,
-                                         Eigen::MatrixXd &U0)
+                                            Eigen::MatrixXd &X0,
+                                            Eigen::MatrixXd &U0)
 {
     const size_t K = X0.cols();
 
@@ -79,11 +79,6 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
                                       (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(par.theta_max)) / 2.); }));
-
-        // // Max Tilt Angle
-        // // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
-        // socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
-        //                               (1.0) * var("X", {7, k})}) <= param(par.theta_max));
 
         // Max Rotation Velocity
         socp.addConstraint(
@@ -167,6 +162,7 @@ void RocketHover::Parameters::nondimensionalize()
     // m_scale = x_init(0);
     // r_scale = x_init.segment(0, 3).norm();
 
+    // m /= m_scale;
     // r_T_B /= r_scale;
     // g_I /= r_scale;
     // J_B /= m_scale * r_scale * r_scale;
@@ -177,12 +173,14 @@ void RocketHover::Parameters::nondimensionalize()
     // x_final.segment(0, 3) /= r_scale;
     // x_final.segment(3, 3) /= r_scale;
 
+    // v_I_max /= r_scale;
     // T_min /= m_scale * r_scale;
     // T_max /= m_scale * r_scale;
 }
 
 void RocketHover::Parameters::redimensionalize()
 {
+    // m *= m_scale;
     // r_T_B *= r_scale;
     // g_I *= r_scale;
     // J_B *= m_scale * r_scale * r_scale;
@@ -193,6 +191,7 @@ void RocketHover::Parameters::redimensionalize()
     // x_final.segment(0, 3) *= r_scale;
     // x_final.segment(3, 3) *= r_scale;
 
+    // v_I_max *= r_scale;
     // T_min *= m_scale * r_scale;
     // T_max *= m_scale * r_scale;
 }

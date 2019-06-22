@@ -20,8 +20,8 @@ void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
     typedef scalar_ad_t T;
 
     auto m = p(0);
-    auto g_I_ = p.segment<3>(1);
-    auto J_B_inv = p.segment<3>(4).asDiagonal().inverse();
+    auto J_B_inv = p.segment<3>(1).asDiagonal().inverse();
+    auto g_I_ = p.segment<3>(4);
     auto r_T_B_ = p.segment<3>(7);
     // = 10 parameters
 
@@ -32,10 +32,10 @@ void Rocket3D::systemFlowMap(const state_vector_ad_t &x,
 
     auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
 
-    f.segment(0, 3) << v;
-    f.segment(3, 3) << 1. / m * R_I_B * u + g_I_;
-    f.segment(6, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(10, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+    f.segment<3>(0) << v;
+    f.segment<3>(3) << 1. / m * R_I_B * u + g_I_;
+    f.segment<4>(6) << T(0.5) * omegaMatrix<T>(w) * q;
+    f.segment<3>(10) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
 void Rocket3D::getInitializedTrajectory(Eigen::MatrixXd &X,
@@ -45,20 +45,21 @@ void Rocket3D::getInitializedTrajectory(Eigen::MatrixXd &X,
 
     for (size_t k = 0; k < K; k++)
     {
-        const double alpha1 = double(K - k) / K;
-        const double alpha2 = double(k) / K;
+        const double a = double(K - k) / K;
+        const double b = double(k) / K;
 
         // position and linear velocity
-        X.col(k).segment(0, 6) = alpha1 * p.x_init.segment(0, 6) + alpha2 * p.x_final.segment(0, 6);
+        X.col(k).segment(0, 3) = a * p.x_init.segment(0, 3) + b * p.x_final.segment(0, 3);
+        X.col(k).segment(3, 3) = (p.x_final.segment(0, 3) - p.x_init.segment(0, 3)).normalized() * p.v_I_max / 2;
 
         // do SLERP for quaternion
         Eigen::Quaterniond q0(p.x_init(6), p.x_init(7), p.x_init(8), p.x_init(9));
         Eigen::Quaterniond q1(p.x_final(6), p.x_final(7), p.x_final(8), p.x_final(9));
-        Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
+        Eigen::Quaterniond qs = q0.slerp(b, q1);
         X.col(k).segment(6, 4) << qs.w(), qs.vec();
 
         // angular velocity
-        X.col(k).segment(10, 3) = alpha1 * p.x_init.segment(10, 3) + alpha2 * p.x_final.segment(10, 3);
+        X.col(k).segment(10, 3) = a * p.x_init.segment(10, 3) + b * p.x_final.segment(10, 3);
 
         // input
         U.setZero();
@@ -77,14 +78,46 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     // Initial state
-    for (size_t i = 0; i < STATE_DIM_; i++)
+    for (size_t i = 0; i < state_dim; i++)
     {
         socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
     }
+    // // Final state
+    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + param(p.x_final(0)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {1, K - 1}) + param(p.x_final(1)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {2, K - 1}) + param(p.x_final(2)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {3, K - 1}) + param(p.x_final(3)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {4, K - 1}) + param(p.x_final(4)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {5, K - 1}) + param(p.x_final(5)) == 0.0);
+    // // socp.addConstraint((-1.0) * var("X", {6, K - 1}) + param(p.x_final(6)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + param(p.x_final(7)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {8, K - 1}) + param(p.x_final(8)) == 0.0);
+    // // socp.addConstraint((-1.0) * var("X", {9, K - 1}) + param(p.x_final(9)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + param(p.x_final(10)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {11, K - 1}) + param(p.x_final(11)) == 0.0);
+    // socp.addConstraint((-1.0) * var("X", {12, K - 1}) + param(p.x_final(12)) == 0.0);
+
+    // // Final state
+    // socp.createTensorVariable("error", {state_dim}); // error minimization term
+    // socp.createTensorVariable("error_norm");         // error minimization term
+    // std::vector<op::AffineExpression> norm_args;
+    // for (size_t i = 0; i < state_dim; i++)
+    // {
+    //     socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) + 1.0 * var("error", {i}) == 0.0);
+    //     norm_args.push_back(param(p.state_weights(i)) * var("error", {i}));
+    // }
+    // socp.addConstraint(op::norm2(norm_args) <= 1.0 * var("error_norm"));
+    // socp.addMinimizationTerm(1.0 * var("error_norm"));
 
     // State Constraints:
     for (size_t k = 0; k < K; k++)
     {
+        // Max Velocity
+        socp.addConstraint(
+            op::norm2({(1.0) * var("X", {3, k}),
+                       (1.0) * var("X", {4, k}),
+                       (1.0) * var("X", {5, k})}) <= param(p.v_I_max));
+
         // Max Tilt Angle
         // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {7, k}),
@@ -100,14 +133,6 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     // Control Constraints
     for (size_t k = 0; k < K; k++)
     {
-        // Linearized Minimum Thrust
-        // op::AffineExpression lhs;
-        // for (size_t i = 0; i < INPUT_DIM_; i++)
-        // {
-        //     lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
-        // }
-        // socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
-
         // Simplified Minimum Thrust
         socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
@@ -122,6 +147,23 @@ void Rocket3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             op::norm2({(1.0) * var("U", {0, k}),
                        (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
     }
+
+    /**
+     * Build error cost
+     *
+     */
+    std::vector<op::AffineExpression> error_norm2_args;
+    for (size_t k = 0; k < K; k++)
+    {
+        for (size_t i = 0; i < state_dim; i++)
+        {
+            op::AffineExpression ex = param_fn([this, i, k]() { return -1.0 * p.state_weights(i) * p.x_final(i); }) + param(p.state_weights(i)) * var("X", {i, k});
+            error_norm2_args.push_back(ex);
+        }
+    }
+    socp.createTensorVariable("error_cost"); // error minimization term
+    socp.addConstraint(op::norm2(error_norm2_args) <= (1.0) * var("error_cost"));
+    socp.addMinimizationTerm(1.0 * var("error_cost"));
 }
 
 void Rocket3D::nondimensionalize()
@@ -148,12 +190,12 @@ void Rocket3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
 
 void Rocket3D::getNewModelParameters(param_vector_t &param)
 {
-    param << p.m, p.g_I, p.J_B, p.r_T_B;
+    param << p.m, p.J_B, p.g_I, p.r_T_B;
 }
 
 void Rocket3D::Parameters::loadFromFile()
 {
-    ParameterServer param(fmt::format("../MPCpp/models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../SCpp/models/config/{}.info", getModelName()));
 
     Eigen::Vector3d r_init, v_init, rpy_init, w_init;
     Eigen::Vector3d r_final, v_final, rpy_final, w_final;
@@ -188,61 +230,67 @@ void Rocket3D::Parameters::loadFromFile()
     deg2rad(rpy_init);
     deg2rad(rpy_final);
 
+    param.loadMatrix("state_weights", state_weights);
+
     x_init << r_init, v_init, eulerToQuaternion(rpy_init), w_init;
     x_final << r_final, v_final, eulerToQuaternion(rpy_final), w_final;
 }
 
 void Rocket3D::Parameters::nondimensionalize()
 {
-    // m_scale = x_init(0);
-    // r_scale = x_init.segment(0, 3).norm();
+    m_scale = m;
+    r_scale = x_init.segment(0, 3).norm();
 
-    // r_T_B /= r_scale;
-    // g_I /= r_scale;
-    // J_B /= m_scale * r_scale * r_scale;
+    m /= m_scale;
+    J_B /= m_scale * r_scale * r_scale;
+    g_I /= r_scale;
+    r_T_B /= r_scale;
 
-    // x_init.segment(0, 3) /= r_scale;
-    // x_init.segment(3, 3) /= r_scale;
+    x_init.segment(0, 3) /= r_scale;
+    x_init.segment(3, 3) /= r_scale;
 
-    // x_final.segment(0, 3) /= r_scale;
-    // x_final.segment(3, 3) /= r_scale;
+    x_final.segment(0, 3) /= r_scale;
+    x_final.segment(3, 3) /= r_scale;
 
-    // T_min /= m_scale * r_scale;
-    // T_max /= m_scale * r_scale;
+    v_I_max /= r_scale;
+    T_min /= m_scale * r_scale;
+    T_max /= m_scale * r_scale;
 }
 
 void Rocket3D::Parameters::redimensionalize()
 {
-    // r_T_B *= r_scale;
-    // g_I *= r_scale;
-    // J_B *= m_scale * r_scale * r_scale;
+    m *= m_scale;
+    J_B *= m_scale * r_scale * r_scale;
+    g_I *= r_scale;
+    r_T_B *= r_scale;
 
-    // x_init.segment(0, 3) *= r_scale;
-    // x_init.segment(3, 3) *= r_scale;
+    x_init.segment(0, 3) *= r_scale;
+    x_init.segment(3, 3) *= r_scale;
 
-    // x_final.segment(0, 3) *= r_scale;
-    // x_final.segment(3, 3) *= r_scale;
+    x_final.segment(0, 3) *= r_scale;
+    x_final.segment(3, 3) *= r_scale;
 
-    // T_min *= m_scale * r_scale;
-    // T_max *= m_scale * r_scale;
+    v_I_max *= r_scale;
+    T_min *= m_scale * r_scale;
+    T_max *= m_scale * r_scale;
 }
 
 void Rocket3D::Parameters::nondimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
 {
-    // const size_t K = X.cols();
+    const size_t K = X.cols();
 
-    // X.block(0, 0, 6, K) /= r_scale;
+    X.block(0, 0, 6, K) /= r_scale;
 
-    // U /= m_scale * r_scale;
+    U /= m_scale * r_scale;
 }
 
 void Rocket3D::Parameters::redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
 {
-    // const size_t K = X.cols();
+    const size_t K = X.cols();
 
-    // X.block(0, 0, 6, K) *= r_scale;
+    X.block(0, 0, 6, K) *= r_scale;
 
-    // U *= m_scale * r_scale;
+    U *= m_scale * r_scale;
 }
 
 } // namespace rocket3d
