@@ -26,9 +26,9 @@ class Cartpole : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         return "Cartpole";
     }
 
-    void getTimeHorizon(double &sigma) override
+    void getTimeHorizon(double &T) override
     {
-        sigma = p.final_time_guess;
+        T = p.final_time_guess;
     }
 
     void systemFlowMap(

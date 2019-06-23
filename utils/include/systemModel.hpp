@@ -86,9 +86,14 @@ public:
      * 
      * @return double The time horizon or initial time guess
      */
-    virtual void getTimeHorizon(double &sigma)
+    virtual void getTimeHorizon(double &T)
     {
         throw std::runtime_error("getTimeHorizon: This function has to be implemented by the derived class.");
+    };
+
+    virtual void getOperatingPoint(state_vector_t &x, input_vector_t &u)
+    {
+        throw std::runtime_error("getOperatingPoint: This function has to be implemented by the derived class.");
     };
 
     virtual void getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)

@@ -15,9 +15,6 @@ MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model)
 void MPCAlgorithm::loadParameters()
 {
     param.loadScalar("K", K);
-    param.loadScalar("T", T);
-    param.loadMatrix("state_weights", state_weights);
-    param.loadMatrix("input_weights", input_weights);
 }
 
 void MPCAlgorithm::initialize()
@@ -41,29 +38,18 @@ void MPCAlgorithm::initialize()
     Model::control_matrix_v_t C_eq(K);
     Model::state_vector_v_t z_eq(K);
 
-    // exactLinearDiscretization(*model, T / (K - 1), x_eq, u_eq, A, B);
+    double T;
+    model->getTimeHorizon(T);
 
-    // std::cout
-    //     << A << std::endl
-    //     << std::endl
-    //     << B << std::endl
-    //     << std::endl;
+    exactLinearDiscretization(*model, T / (K - 1), x_eq, u_eq, A, B);
 
     multipleShooting(*model, T, X_eq, U_eq, A_eq, B_eq, C_eq, z_eq);
-
     A = A_eq.at(0);
     B = B_eq.at(0);
     C = C_eq.at(0);
     z = z_eq.at(0);
 
-    // std::cout << A << std::endl
-    //           << std::endl
-    //           << B + C << std::endl
-    //           << std::endl
-    //           << z << std::endl
-    //           << std::endl;
-
-    socp = mpc::buildSCOP(*model, X, U, state_weights, input_weights, x_init, x_des, A, B, C, z);
+    socp = mpc::buildSCOP(*model, X, U, x_init, x_des, A, B, C, z);
 
     cacheIndices();
 

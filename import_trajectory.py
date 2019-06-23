@@ -15,7 +15,7 @@ thrust_magnitude = 20
 FPS = scn.render.fps
 
 # set output folder and get highest index
-data_folder = 'output/Rocket3D/'
+data_folder = 'output/RocketHover/'
 data_folder += sorted(os.listdir(data_folder))[-1]
 
 # load data
@@ -32,6 +32,7 @@ eng = bpy.data.objects["eng"]
 
 # get timesteps, set total frames and timestep
 K = X.shape[1]
+print("K:", K)
 trajectory_frames = FPS * t
 step_size = trajectory_frames / K
 
@@ -55,7 +56,7 @@ for i in range(K):
     if(x.shape[0] == 13):
         rck.rotation_quaternion = x[6], x[7], x[8], x[9]
     elif(x.shape[0] == 12):
-        qw = np.sqrt(1. - x[6:9].T * x[6:9])
+        qw = np.sqrt(1. - x[6:9].dot(x[6:9]))
         rck.rotation_quaternion = qw, x[6], x[7], x[8]
     rck.keyframe_insert(data_path='location')
     rck.keyframe_insert(data_path='rotation_quaternion')

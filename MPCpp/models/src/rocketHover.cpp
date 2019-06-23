@@ -34,7 +34,6 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
     f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 
-
     // // state variables
     // auto v = x.segment<3>(3);
     // auto eta = x.segment<3>(6);
@@ -55,6 +54,22 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     u << 0, 0, -p.g_I.z() * p.m;
+}
+
+void RocketHover::getTimeHorizon(double &T)
+{
+    T = p.time_horizon;
+}
+
+void RocketHover::getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)
+{
+    intermediate = p.state_weights_intermediate;
+    terminal = p.state_weights_terminal;
+}
+
+void RocketHover::getInputWeights(input_vector_t &intermediate)
+{
+    intermediate = p.input_weights;
 }
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -121,12 +136,17 @@ void RocketHover::Parameters::loadFromFile()
 {
     ParameterServer param(fmt::format("../MPCpp/models/config/{}.info", getModelName()));
 
-    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
-    Eigen::Vector3d r_final, v_final, rpy_final, w_final;
+    param.loadScalar("time_horizon", time_horizon);
+    param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
+    param.loadMatrix("state_weights_terminal", state_weights_terminal);
+    param.loadMatrix("input_weights", input_weights);
 
     param.loadMatrix("g_I", g_I);
     param.loadMatrix("J_B", J_B);
     param.loadMatrix("r_T_B", r_T_B);
+
+    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
+    Eigen::Vector3d r_final, v_final, rpy_final, w_final;
 
     param.loadMatrix("r_init", r_init);
     param.loadMatrix("v_init", v_init);

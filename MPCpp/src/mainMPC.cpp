@@ -25,8 +25,8 @@ int main()
     Model::dynamic_matrix_t X_sim(size_t(Model::state_dim), sim_steps);
     Model::dynamic_matrix_t U_sim(size_t(Model::input_dim), sim_steps);
 
-    solver.setDesiredState(model->par.x_final);
-
+    solver.setDesiredState(model->p.x_final);
+    solver.setInitialState(model->p.x_init);
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
@@ -38,8 +38,8 @@ int main()
         X_sim.col(i) = X.col(0);
         U_sim.col(i) = U.col(0);
 
-        model->par.x_init = X.col(1);
-        solver.setInitialState(model->par.x_init);
+        model->p.x_init = X.col(1);
+        solver.setInitialState(model->p.x_init);
     }
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));

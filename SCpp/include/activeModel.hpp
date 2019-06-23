@@ -5,8 +5,8 @@
 // #include "rocketLanding2d.hpp"
 // using Model = rocket2d::RocketLanding2D;
 
-#include "rocketLanding3d.hpp"
-using Model = rocketlanding3d::RocketLanding3D;
+// #include "rocketLanding3d.hpp"
+// using Model = rocketlanding3d::RocketLanding3D;
 
 // #include "rocket3d.hpp"
 // using Model = rocket3d::Rocket3D;
@@ -19,5 +19,5 @@ using Model = rocketlanding3d::RocketLanding3D;
 
 // --- MPC ---
 
-// #include "rocketHover.hpp"
-// using Model = rocketHover::RocketHover;
+#include "rocketHover.hpp"
+using Model = rocketHover::RocketHover;

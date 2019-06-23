@@ -66,7 +66,6 @@ private:
 
     ParameterServer param;
 
-    double T;
     size_t K;
 
     std::shared_ptr<Model> model;
@@ -76,8 +75,6 @@ private:
     Model::control_matrix_t C;
     Model::state_vector_t z;
 
-    Model::state_vector_t state_weights;
-    Model::input_vector_t input_weights;
     Model::state_vector_t x_init;
     Model::state_vector_t x_des;
 

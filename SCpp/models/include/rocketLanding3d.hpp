@@ -26,10 +26,7 @@ public:
         return "RocketLanding3D";
     }
 
-    void getTimeHorizon(double &sigma) override
-    {
-        sigma = p.final_time_guess;
-    }
+    void getTimeHorizon(double &T) override;
 
     void systemFlowMap(
         const state_vector_ad_t &x,

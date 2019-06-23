@@ -34,6 +34,12 @@ public:
 
     void getOperatingPoint(state_vector_t &x, input_vector_t &u);
 
+    void getTimeHorizon(double &T) override;
+
+    void getStateWeights(state_vector_t &intermediate, state_vector_t &terminal) override;
+
+    void getInputWeights(input_vector_t &intermediate) override;
+
     void addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                    Eigen::MatrixXd &X0,
                                    Eigen::MatrixXd &U0) override;
@@ -44,6 +50,11 @@ public:
 
     struct Parameters
     {
+        double time_horizon;
+        state_vector_t state_weights_intermediate;
+        state_vector_t state_weights_terminal;
+        input_vector_t input_weights;
+
         Eigen::Vector3d g_I;
         Eigen::Vector3d J_B;
         Eigen::Vector3d r_T_B;

@@ -24,9 +24,9 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
         return "CrewDragon";
     }
 
-    void getTimeHorizon(double &sigma) override
+    void getTimeHorizon(double &T) override
     {
-        sigma = final_time_guess;
+        T = final_time_guess;
     }
 
     void systemFlowMap(
