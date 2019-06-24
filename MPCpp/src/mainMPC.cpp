@@ -17,7 +17,7 @@ int main()
 
     double T;
     model->getTimeHorizon(T);
-    const size_t sim_steps = 100;
+    const size_t sim_steps = 30;
 
     solver.initialize();
     Model::dynamic_matrix_t X;
@@ -25,8 +25,12 @@ int main()
     Model::dynamic_matrix_t X_sim(size_t(Model::state_dim), sim_steps);
     Model::dynamic_matrix_t U_sim(size_t(Model::input_dim), sim_steps);
 
+    Model::input_vector_t u_init(0, 0, -model->p.g_I.z() * model->p.m);
+    Model::state_vector_t x_init = model->p.x_init;
+
     solver.setDesiredState(model->p.x_final);
-    solver.setInitialState(model->p.x_init);
+    solver.setInitialState(x_init);
+    solver.setInitialInput(u_init);
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
@@ -38,8 +42,10 @@ int main()
         X_sim.col(i) = X.col(0);
         U_sim.col(i) = U.col(0);
 
-        model->p.x_init = X.col(1);
-        solver.setInitialState(model->p.x_init);
+        x_init = X.col(1);
+        u_init = U.col(1);
+        solver.setInitialState(x_init);
+        solver.setInitialInput(u_init);
     }
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));

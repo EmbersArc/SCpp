@@ -11,7 +11,7 @@ os.chdir(dname)
 scn = bpy.context.scene
 
 # maximum thrust for scaling
-thrust_magnitude = 20
+max_thrust = 20
 FPS = scn.render.fps
 
 # set output folder and get highest index
@@ -29,19 +29,20 @@ t = np.loadtxt(open(f"{data_folder}/t_sim.txt", "rb"))
 # get objects
 rck = bpy.data.objects["rck"]
 eng = bpy.data.objects["eng"]
+air = bpy.data.objects["air"]
 
 # get timesteps, set total frames and timestep
 K = X.shape[1]
-print("K:", K)
 trajectory_frames = FPS * t
 step_size = trajectory_frames / K
 
 # clear animation data
 rck.animation_data_clear()
 eng.animation_data_clear()
+air.animation_data_clear()
 
 current_frame = 1
-scn.frame_current = 1
+scn.frame_current = current_frame
 # for each timestep in trajectory
 for i in range(K):
     current_frame += step_size
@@ -65,6 +66,11 @@ for i in range(K):
     rx = np.arctan(-u[1] / u[2])
     ry = np.arctan(u[0] / u[2])
     eng.rotation_euler = (rx, ry, 0)
+
+    thrust_magnitude = np.linalg.norm(u) / max_thrust
+
+    air.scale[2] = thrust_magnitude
+    air.keyframe_insert(data_path='scale')
 
     eng.keyframe_insert(data_path='rotation_euler')
 

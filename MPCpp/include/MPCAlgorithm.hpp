@@ -21,14 +21,19 @@ public:
     void initialize();
 
     /**
+    * Sets a new initial input
+    */
+    void setInitialInput(const Model::input_vector_t &u);
+
+    /**
     * Sets a new initial state
     */
-    void setInitialState(Model::state_vector_t &x);
+    void setInitialState(const Model::state_vector_t &x);
 
     /**
     * Sets a new desired state to track
     */
-    void setDesiredState(Model::state_vector_t &x);
+    void setDesiredState(const Model::state_vector_t &x);
 
     /**
      * @brief Solves the system.
@@ -43,7 +48,6 @@ public:
      * @param U     The input trajectory.
      */
     void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U);
-
 
 private:
     /**
@@ -75,6 +79,7 @@ private:
     Model::control_matrix_t C;
     Model::state_vector_t z;
 
+    Model::input_vector_t u_init;
     Model::state_vector_t x_init;
     Model::state_vector_t x_des;
 

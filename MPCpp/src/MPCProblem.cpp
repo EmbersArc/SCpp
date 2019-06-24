@@ -7,6 +7,7 @@ op::SecondOrderConeProgram buildSCOP(
     Model &model,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
+    Model::input_vector_t &u_init,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
     Model::state_matrix_t &A,
@@ -39,6 +40,12 @@ op::SecondOrderConeProgram buildSCOP(
     for (size_t i = 0; i < Model::state_dim; i++)
     {
         socp.addConstraint((-1.0) * var("X", {i, 0}) + param(x_init(i)) == 0.0);
+    }
+
+    // Initial input
+    for (size_t i = 0; i < Model::input_dim; i++)
+    {
+        socp.addConstraint((-1.0) * var("U", {i, 0}) + param(u_init(i)) == 0.0);
     }
 
     for (size_t k = 0; k < K - 1; k++)
@@ -103,7 +110,7 @@ op::SecondOrderConeProgram buildSCOP(
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
+            op::AffineExpression ex = input_weights(i) * var("U", {i, k});
             input_norm2_args.push_back(ex);
         }
     }

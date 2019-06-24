@@ -6,7 +6,7 @@
  * @brief Multiple-shooting discretization with linear interpolation on input and variable time
  * 
  * @param model 
- * @param sigma 
+ * @param T 
  * @param X 
  * @param U 
  * @param A_bar 
@@ -17,7 +17,7 @@
  */
 void multipleShootingVariableTime(
     Model &model,
-    double sigma,
+    double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -30,7 +30,7 @@ void multipleShootingVariableTime(
  * @brief Multiple-shooting discretization with linear interpolation on input and constant time
  * 
  * @param model 
- * @param sigma 
+ * @param T 
  * @param X 
  * @param U 
  * @param A_bar 
@@ -41,7 +41,7 @@ void multipleShootingVariableTime(
  */
 void multipleShooting(
     Model &model,
-    double sigma,
+    double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,

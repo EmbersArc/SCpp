@@ -65,7 +65,7 @@ class ODEMultipleShootingVariableTime
 {
 private:
     Model::input_vector_t u_t0, u_t1;
-    double sigma, dt;
+    double T, dt;
     Model &model;
 
 public:
@@ -74,10 +74,10 @@ public:
     ODEMultipleShootingVariableTime(
         const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
-        const double &sigma,
+        const double &T,
         double dt,
         Model &model)
-        : u_t0(u_t0), u_t1(u_t1), sigma(sigma), dt(dt), model(model) {}
+        : u_t0(u_t0), u_t1(u_t1), T(T), dt(dt), model(model) {}
 
     void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
     {
@@ -89,8 +89,8 @@ public:
         Model::control_matrix_t B_bar;
         model.computef(x, u, f);
         model.computeJacobians(x, u, A_bar, B_bar);
-        A_bar *= sigma;
-        B_bar *= sigma;
+        A_bar *= T;
+        B_bar *= T;
 
         const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim, Model::state_dim>(0, 1);
         const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
@@ -98,7 +98,7 @@ public:
         size_t cols = 0;
 
         // state
-        dVdt.block<Model::state_dim, 1>(0, cols) = sigma * f;
+        dVdt.block<Model::state_dim, 1>(0, cols) = T * f;
         cols += 1;
 
         // A_bar
@@ -128,7 +128,7 @@ public:
 
 void multipleShootingVariableTime(
     Model &model,
-    double sigma,
+    double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -150,7 +150,7 @@ void multipleShootingVariableTime(
         V.col(0) = X.col(k);
         V.block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
 
-        ODEMultipleShootingVariableTime odeMultipleShooting(U.col(k), U.col(k + 1), sigma, dt, model);
+        ODEMultipleShootingVariableTime odeMultipleShooting(U.col(k), U.col(k + 1), T, dt, model);
 
         integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 4.);
 
@@ -232,7 +232,7 @@ public:
 
 void multipleShooting(
     Model &model,
-    double sigma,
+    double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
     Model::state_matrix_v_t &A_bar,
@@ -242,7 +242,7 @@ void multipleShooting(
 {
     const size_t K = X.cols();
 
-    const double dt = sigma / double(K - 1);
+    const double dt = T / double(K - 1);
     using namespace boost::numeric::odeint;
     runge_kutta4<ODEMultipleShooting::ode_matrix_t, double, ODEMultipleShooting::ode_matrix_t, double, vector_space_algebra> stepper;
 

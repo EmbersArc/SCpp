@@ -9,6 +9,7 @@ op::SecondOrderConeProgram buildSCOP(
     Model &model,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
+    Model::input_vector_t &u_init,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
     Model::state_matrix_t &A,

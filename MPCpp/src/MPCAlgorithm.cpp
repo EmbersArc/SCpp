@@ -41,27 +41,30 @@ void MPCAlgorithm::initialize()
     double T;
     model->getTimeHorizon(T);
 
-    exactLinearDiscretization(*model, T / (K - 1), x_eq, u_eq, A, B);
-
     multipleShooting(*model, T, X_eq, U_eq, A_eq, B_eq, C_eq, z_eq);
     A = A_eq.at(0);
     B = B_eq.at(0);
     C = C_eq.at(0);
     z = z_eq.at(0);
 
-    socp = mpc::buildSCOP(*model, X, U, x_init, x_des, A, B, C, z);
+    socp = mpc::buildSCOP(*model, X, U, u_init, x_init, x_des, A, B, C, z);
 
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-void MPCAlgorithm::setInitialState(Model::state_vector_t &x)
+void MPCAlgorithm::setInitialInput(const Model::input_vector_t &u)
+{
+    u_init << u;
+}
+
+void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)
 {
     x_init << x;
 }
 
-void MPCAlgorithm::setDesiredState(Model::state_vector_t &x)
+void MPCAlgorithm::setDesiredState(const Model::state_vector_t &x)
 {
     x_des << x;
 }
@@ -71,7 +74,7 @@ void MPCAlgorithm::solve()
     // print("Solving model {}\n", Model::getModelName());
 
     const double timer_solve = tic();
-    solver->solveProblem(true);
+    solver->solveProblem(false);
     print("{:<{}}{:.2f}ms\n", "Time, solve:", 50, toc(timer_solve));
 
     readSolution();

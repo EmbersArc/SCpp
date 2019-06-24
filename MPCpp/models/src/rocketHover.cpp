@@ -33,21 +33,6 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     f.segment<3>(3) << 1. / T(p.m) * (R_I_B * u) + g_I_;
     f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
     f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
-
-    // // state variables
-    // auto v = x.segment<3>(3);
-    // auto eta = x.segment<3>(6);
-    // auto w = x.segment<3>(9);
-
-    // auto R_I_B = EulerRotationMatrix<T>(eta);
-    // auto J_B_inv = p.J_B.cast<T>().asDiagonal().inverse();
-    // auto g_I_ = p.g_I.cast<T>();
-    // auto r_T_B_ = p.r_T_B.cast<T>();
-
-    // f.segment<3>(0) << v;
-    // f.segment<3>(3) << 1. / T(p.m) * (R_I_B * u) + g_I_;
-    // f.segment<3>(6) << EulerRotationJacobian<T>(eta) * w;
-    // f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
@@ -82,26 +67,39 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
+    size_t total_slack_variables = 3 * (K - 1); // three state constraints per timestep
+    socp.createTensorVariable("epsilon", {total_slack_variables});
+    socp.createTensorVariable("epsilon_norm");
+    vector<op::AffineExpression> norm2_terms;
+    for (size_t i = 0; i < total_slack_variables; i++)
+    {
+        norm2_terms.push_back(1.0 * var("epsilon", {i}));
+    }
+    socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
+    socp.addMinimizationTerm(1000. * var("epsilon_norm"));
+
     // State Constraints:
-    for (size_t k = 0; k < K; k++)
+    size_t slack_index = 0;
+    for (size_t k = 1; k < K; k++)
     {
         // Max Velocity
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {3, k}),
                        (1.0) * var("X", {4, k}),
-                       (1.0) * var("X", {5, k})}) <= param(p.v_I_max));
+                       (1.0) * var("X", {5, k})}) <= param(p.v_I_max) + 1.0 * var("epsilon", {slack_index++}));
 
         // Max Tilt Angle
         // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
         socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
-                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
+                                      (1.0) * var("X", {7, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }) + 1.0 * var("epsilon", {slack_index++}));
 
         // Max Rotation Velocity
         socp.addConstraint(
             op::norm2({(1.0) * var("X", {9, k}),
                        (1.0) * var("X", {10, k}),
-                       (1.0) * var("X", {11, k})}) <= param(p.w_B_max));
+                       (1.0) * var("X", {11, k})}) <= param(p.w_B_max) + 1.0 * var("epsilon", {slack_index++}));
     }
+    assert(slack_index == total_slack_variables);
 
     // Control Constraints
     for (size_t k = 0; k < K - 1; k++)
