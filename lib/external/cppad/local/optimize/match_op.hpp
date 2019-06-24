@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_MATCH_OP_HPP
 # define CPPAD_LOCAL_OPTIMIZE_MATCH_OP_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -41,7 +41,7 @@ op_previous[ op_previous[current] ] = 0.
 \param current
 is the index of the current operator which must be an unary
 or binary operator with NumRes(op) > 0.
-Note that NumArg(ErfOp) == 3 but it is effectivey
+Note that NumArg(ErfOp) == NumArg(ErfcOp) == 3 but it is effectivey
 a unary operator and is allowed otherwise
 NumArg( random_itr.get_op[current]) < 3.
 It is assumed that hash_table_op is initialized as a vector of emtpy
@@ -51,7 +51,7 @@ each call to match_op.
 \li
 This must be a unary or binary
 operator; hence, NumArg( random_itr.get_op[current] ) is one or two.
-There is one exception, NumRes( ErfOp ) == 3, but arg[0]
+There is one exception, NumRes( ErfOp ) == NumArg(ErfcOp) == 3, but arg[0]
 is the only true arguments (the others are always the same).
 
 \li
@@ -85,7 +85,7 @@ void match_op(
     const play::const_random_iterator<Addr>&    random_itr     ,
     pod_vector<addr_t>&                         op_previous    ,
     size_t                                      current        ,
-    sparse_list&                                hash_table_op  ,
+    sparse::list_setvec&                        hash_table_op  ,
     pod_vector<bool>&                           work_bool      ,
     pod_vector<addr_t>&                         work_addr_t    )
 {   //
@@ -142,7 +142,7 @@ void match_op(
     size_t code = optimize_hash_code(opcode_t(op), num_arg, arg_match);
     //
     // iterator for the set with this hash code
-    sparse_list_const_iterator itr(hash_table_op, code);
+    sparse::list_setvec_const_iterator itr(hash_table_op, code);
     //
     // check for a match
     size_t count = 0;
@@ -186,7 +186,7 @@ void match_op(
         std::swap( arg_match[0], arg_match[1] );
         //
         code      = optimize_hash_code(opcode_t(op), num_arg, arg_match);
-        sparse_list_const_iterator itr_swap(hash_table_op, code);
+        sparse::list_setvec_const_iterator itr_swap(hash_table_op, code);
         while( *itr_swap != num_op )
         {
             size_t candidate  = *itr_swap;
@@ -221,7 +221,9 @@ void match_op(
     {   // restart the list
         hash_table_op.clear(code);
     }
-    // no match was found, add this operator the the set for this hash code
+    // No match was found. Add this operator the the set for this hash code
+    // Not using post_element becasue we need to iterate for
+    // this code before adding another element for this code.
     hash_table_op.add_element(code, current);
 }
 

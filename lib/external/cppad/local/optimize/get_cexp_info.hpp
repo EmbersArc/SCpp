@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_GET_CEXP_INFO_HPP
 # define CPPAD_LOCAL_OPTIMIZE_GET_CEXP_INFO_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -102,10 +102,10 @@ void get_cexp_info(
     const pod_vector<addr_t>&                   op_previous         ,
     const pod_vector<usage_t>&                  op_usage            ,
     const pod_vector<addr_t>&                   cexp2op             ,
-    const sparse_list&                          cexp_set            ,
+    const sparse::list_setvec&                  cexp_set            ,
     vector<struct_cexp_info>&                   cexp_info           ,
-    sparse_list&                                skip_op_true        ,
-    sparse_list&                                skip_op_false       )
+    sparse::list_setvec&                        skip_op_true        ,
+    sparse::list_setvec&                        skip_op_false       )
 {
     CPPAD_ASSERT_UNKNOWN( cexp_set.n_set() > 0  );
     CPPAD_ASSERT_UNKNOWN( cexp_info.size() == 0 );
@@ -168,7 +168,7 @@ void get_cexp_info(
         keep     &= op_usage[i_op] != usage_t(csum_usage);
         keep     &= op_previous[i_op] == 0;
         if( keep )
-        {   sparse_list_const_iterator itr(cexp_set, i_op);
+        {   sparse::list_setvec_const_iterator itr(cexp_set, i_op);
             if( *itr != cexp_set.end() )
             {   if( play->GetOp(i_op) == AFunOp )
                 {   // i_op is the first operations in this atomic function call.
@@ -195,18 +195,18 @@ void get_cexp_info(
                 bool   compare = bool( element % 2 );
                 if( compare == false )
                 {   // cexp_info[index].skip_op_false.push_back(i_op);
-                    skip_op_false.add_element(index, i_op);
+                    skip_op_false.post_element(index, i_op);
                     if( j_op != i_op )
                     {   // cexp_info[index].skip_op_false.push_back(j_op);
-                        skip_op_false.add_element(index, j_op);
+                        skip_op_false.post_element(index, j_op);
                     }
                 }
                 else
                 {   // cexp_info[index].skip_op_true.push_back(i_op);
-                    skip_op_true.add_element(index, i_op);
+                    skip_op_true.post_element(index, i_op);
                     if( j_op != i_op )
                     {   // cexp_info[index].skip_op_true.push_back(j_op);
-                        skip_op_true.add_element(index, j_op);
+                        skip_op_true.post_element(index, j_op);
                     }
                 }
                 ++itr;
@@ -214,6 +214,11 @@ void get_cexp_info(
         }
         CPPAD_ASSERT_UNKNOWN( i_op <= j_op );
         i_op += (1 + j_op) - i_op;
+    }
+    // process postings for skip_op_false, skip_op_true
+    for(size_t i = 0; i < num_cexp_op; ++i)
+    {   skip_op_false.process_post(i);
+        skip_op_true.process_post(i);
     }
     return;
 }

@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_OPTIMIZE_RUN_HPP
 # define CPPAD_LOCAL_OPTIMIZE_OPTIMIZE_RUN_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -157,7 +157,7 @@ void optimize_run(
     // -----------------------------------------------------------------------
     // operator information
     pod_vector<addr_t>        cexp2op;
-    sparse_list               cexp_set;
+    sparse::list_setvec       cexp_set;
     pod_vector<bool>          vecad_used;
     pod_vector<usage_t>       op_usage;
     get_op_usage(
@@ -183,8 +183,8 @@ void optimize_run(
     size_t num_cexp = cexp2op.size();
     CPPAD_ASSERT_UNKNOWN( conditional_skip || num_cexp == 0 );
     vector<struct_cexp_info>  cexp_info; // struct_cexp_info not POD
-    sparse_list               skip_op_true;
-    sparse_list               skip_op_false;
+    sparse::list_setvec       skip_op_true;
+    sparse::list_setvec       skip_op_false;
     //
     if( cexp2op.size() > 0 ) get_cexp_info(
         play,
@@ -612,6 +612,7 @@ void optimize_run(
             case CosOp:
             case CoshOp:
             case ErfOp:
+            case ErfcOp:
             case ExpOp:
             case Expm1Op:
             case LogOp:
@@ -632,7 +633,7 @@ void optimize_run(
                 CPPAD_ASSERT_UNKNOWN(
                     new_arg[0] < new_var[random_itr.var2op(i_var)]
                 );
-                if( op == ErfOp )
+                if( op == ErfOp || op == ErfcOp )
                 {   CPPAD_ASSERT_NARG_NRES(op, 3, 5);
                     // Error function is a special case
                     // second argument is always the parameter 0
@@ -1214,7 +1215,7 @@ void optimize_run(
             rec->ReplaceArg(i_arg++, right );
             rec->ReplaceArg(i_arg++, n_true     );
             rec->ReplaceArg(i_arg++, n_false    );
-            sparse_list::const_iterator itr_true(skip_op_true, i);
+            sparse::list_setvec::const_iterator itr_true(skip_op_true, i);
             while( *itr_true != skip_op_true.end() )
             {   i_op = *itr_true;
                 // op_usage[i_op] == usage_t(yes_usage)
@@ -1223,7 +1224,7 @@ void optimize_run(
                 //
                 ++itr_true;
             }
-            sparse_list::const_iterator itr_false(skip_op_false, i);
+            sparse::list_setvec::const_iterator itr_false(skip_op_false, i);
             while( *itr_false != skip_op_false.end() )
             {   i_op   = *itr_false;
                 // op_usage[i_op] == usage_t(yes_usage)

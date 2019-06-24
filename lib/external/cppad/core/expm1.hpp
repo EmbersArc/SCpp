@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_EXPM1_HPP
 # define CPPAD_CORE_EXPM1_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-17 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -18,10 +18,6 @@ $begin expm1$$
 $spell
     exp
     expm1
-    const
-    Vec
-    std
-    cmath
     CppAD
 $$
 $section The Exponential Function Minus One: expm1$$

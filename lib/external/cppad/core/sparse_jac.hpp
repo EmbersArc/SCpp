@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_SPARSE_JAC_HPP
 # define CPPAD_CORE_SPARSE_JAC_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -33,11 +33,11 @@ $$
 $section Computing Sparse Jacobians$$
 
 $head Syntax$$
-$icode%n_sweep% = %f%.sparse_jac_for(
+$icode%n_color% = %f%.sparse_jac_for(
     %group_max%, %x%, %subset%, %pattern%, %coloring%, %work%
 )
 %$$
-$icode%n_sweep% = %f%.sparse_jac_rev(
+$icode%n_color% = %f%.sparse_jac_rev(
     %x%, %subset%, %pattern%, %coloring%, %work%
 )%$$
 
@@ -171,19 +171,22 @@ for $icode f$$ and the sparsity pattern in $icode subset$$ are the same.
 If any of these values change, use $icode%work%.clear()%$$ to
 empty this structure.
 
-$head n_sweep$$
-The return value $icode n_sweep$$ has prototype
+$head n_color$$
+The return value $icode n_color$$ has prototype
 $codei%
-    size_t %n_sweep%
+    size_t %n_color%
 %$$
 If $code sparse_jac_for$$ ($code sparse_jac_rev$$) is used,
-$icode n_sweep$$ is the number of first order forward (reverse) sweeps
+$icode n_color$$ is the number of first order forward directions
 used to compute the requested Jacobian values.
 It is also the number of colors determined by the coloring method
 mentioned above.
 This is proportional to the total computational work,
 not counting the zero order forward sweep,
 or combining multiple columns (rows) into a single sweep.
+Note that if $icode%group_max% == 1%$$,
+or if we are using $code sparse_jac_rev$$,
+$icode n_color$$ is equal to the number of sweeps.
 
 $head Uses Forward$$
 After each call to $cref Forward$$,
@@ -208,7 +211,7 @@ They return $code true$$, if they succeed, and $code false$$ otherwise.
 $end
 */
 # include <cppad/core/cppad_assert.hpp>
-# include <cppad/local/sparse_internal.hpp>
+# include <cppad/local/sparse/internal.hpp>
 # include <cppad/local/color_general.hpp>
 # include <cppad/utility/vector.hpp>
 
@@ -346,9 +349,9 @@ size_t ADFun<Base,RecBase>::sparse_jac_for(
         bool transpose   = true;
         bool zero_empty  = false;
         bool input_empty = true;
-        local::sparse_list pattern_transpose;
+        local::sparse::list_setvec pattern_transpose;
         pattern_transpose.resize(n, m);
-        local::set_internal_sparsity(zero_empty, input_empty,
+        local::sparse::set_internal_pattern(zero_empty, input_empty,
             transpose, internal_index, pattern_transpose, pattern
         );
         //
@@ -539,9 +542,9 @@ size_t ADFun<Base,RecBase>::sparse_jac_rev(
         bool transpose   = false;
         bool zero_empty  = false;
         bool input_empty = true;
-        local::sparse_list internal_pattern;
+        local::sparse::list_setvec internal_pattern;
         internal_pattern.resize(m, n);
-        local::set_internal_sparsity(zero_empty, input_empty,
+        local::sparse::set_internal_pattern(zero_empty, input_empty,
             transpose, internal_index, internal_pattern, pattern
         );
         //

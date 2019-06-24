@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_GET_OP_PREVIOUS_HPP
 # define CPPAD_LOCAL_OPTIMIZE_GET_OP_PREVIOUS_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -74,7 +74,7 @@ template <class Addr, class Base>
 void get_op_previous(
     const player<Base>*                         play                ,
     const play::const_random_iterator<Addr>&    random_itr          ,
-    sparse_list&                                cexp_set            ,
+    sparse::list_setvec&                        cexp_set            ,
     pod_vector<addr_t>&                         op_previous         ,
     pod_vector<usage_t>&                        op_usage            )
 {
@@ -93,7 +93,7 @@ void get_op_previous(
     // ----------------------------------------------------------------------
     // compute op_previous
     // ----------------------------------------------------------------------
-    sparse_list  hash_table_op;
+    sparse::list_setvec  hash_table_op;
     hash_table_op.resize(CPPAD_HASH_TABLE_SIZE, num_op);
     //
     pod_vector<bool> work_bool;
@@ -147,6 +147,7 @@ void get_op_previous(
             case EqpvOp:
             case EqvvOp:
             case ErfOp:
+            case ErfcOp:
             case ExpOp:
             case Expm1Op:
             case LepvOp:

@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_AD_FUN_HPP
 # define CPPAD_CORE_AD_FUN_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -136,11 +136,11 @@ private:
     /// Packed results of the forward mode Jacobian sparsity calculations.
     /// for_jac_sparse_pack_.n_set() != 0  implies other sparsity results
     /// are empty
-    local::sparse_pack for_jac_sparse_pack_;
+    local::sparse::pack_setvec for_jac_sparse_pack_;
 
     /// Set results of the forward mode Jacobian sparsity calculations
     /// for_jac_sparse_set_.n_set() != 0  implies for_sparse_pack_ is empty.
-    local::sparse_list for_jac_sparse_set_;
+    local::sparse::list_setvec for_jac_sparse_set_;
 
     /// subgraph information for this object
     local::subgraph::subgraph_info subgraph_info_;
@@ -299,6 +299,9 @@ public:
     // assignment operator with move semantics
     void operator=(ADFun&& f);
 # endif
+
+    // create from Json AD graph
+    ADFun(const std::string& graph);
 
     // create ADFun< AD<Base> > from this ADFun<Base>
     // (doxygen in cppad/core/base2ad.hpp)
@@ -502,7 +505,7 @@ public:
     void ForSparseHesCheckpoint(
         vector<bool>&                 r         ,
         vector<bool>&                 s         ,
-        local::sparse_list&                  h
+        local::sparse::list_setvec&   h
     );
 
     // reverse mode Hessian sparsity pattern
@@ -519,7 +522,7 @@ public:
         size_t                        q         ,
         vector<bool>&                 s         ,
         bool                          transpose ,
-        local::sparse_list&                  h
+        local::sparse::list_setvec&   h
     );
 
     // internal set sparsity version of RevSparseJac
@@ -527,21 +530,21 @@ public:
     // (used by checkpoint functions only)
     void RevSparseJacCheckpoint(
         size_t                        q          ,
-        const local::sparse_list&     r          ,
+        const local::sparse::list_setvec&     r          ,
         bool                          transpose  ,
         bool                          dependency ,
-        local::sparse_list&                  s
+        local::sparse::list_setvec&   s
     );
 
     // internal set sparsity version of RevSparseJac
     // (doxygen in cppad/core/for_sparse_jac.hpp)
     // (used by checkpoint functions only)
     void ForSparseJacCheckpoint(
-    size_t                        q          ,
-    const local::sparse_list&     r          ,
-    bool                          transpose  ,
-    bool                          dependency ,
-    local::sparse_list&                  s
+    size_t                             q          ,
+    const local::sparse::list_setvec&  r          ,
+    bool                               transpose  ,
+    bool                               dependency ,
+    local::sparse::list_setvec&        s
     );
 
     /// amount of memory used for boolean Jacobain sparsity pattern
@@ -843,5 +846,6 @@ public:
 # include <cppad/core/omp_max_thread.hpp>
 # include <cppad/core/optimize.hpp>
 # include <cppad/core/abs_normal_fun.hpp>
+# include <cppad/core/json/json2adfun.hpp>
 
 # endif
