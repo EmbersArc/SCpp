@@ -20,10 +20,7 @@ public:
      */
     void initialize();
 
-    /**
-    * Sets a new initial input
-    */
-    void setInitialInput(const Model::input_vector_t &u);
+    void getTimesteps(size_t &K);
 
     /**
     * Sets a new initial state
@@ -79,7 +76,6 @@ private:
     Model::control_matrix_t C;
     Model::state_vector_t z;
 
-    Model::input_vector_t u_init;
     Model::state_vector_t x_init;
     Model::state_vector_t x_des;
 

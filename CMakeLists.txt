@@ -43,6 +43,7 @@ set(UTILS_SOURCES
     utils/src/timing.cpp
     utils/src/parameterServer.cpp
     utils/src/discretization.cpp
+    utils/src/simulation
 )
 # second order cone programming
 set(SCOP_SOURCES

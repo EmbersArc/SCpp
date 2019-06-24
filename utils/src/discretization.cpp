@@ -46,11 +46,14 @@ void exactLinearDiscretization(Model &model,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
-                               Model::control_matrix_t &B)
+                               Model::control_matrix_t &B,
+                               Model::state_vector_t &z)
 {
     Model::state_matrix_t A_c;
     Model::control_matrix_t B_c;
+    Model::state_vector_t f;
     model.computeJacobians(x_eq, u_eq, A_c, B_c);
+    model.computef(x_eq, u_eq, f);
 
     using namespace boost::numeric::odeint;
     runge_kutta4<Model::control_matrix_t, double, Model::control_matrix_t, double, vector_space_algebra> stepper;
@@ -59,6 +62,7 @@ void exactLinearDiscretization(Model &model,
     A = (ts * A_c).exp();
     B.setZero();
     integrate_adaptive(stepper, odeExactLinear, B, 0., ts, ts / 10.);
+    z = f - A * x_eq - B * u_eq;
 }
 
 class ODEMultipleShootingVariableTime

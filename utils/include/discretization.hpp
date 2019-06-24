@@ -62,4 +62,5 @@ void exactLinearDiscretization(Model &model,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
-                               Model::control_matrix_t &B);
+                               Model::control_matrix_t &B,
+                               Model::state_vector_t &z);

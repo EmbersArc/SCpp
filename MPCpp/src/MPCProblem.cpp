@@ -7,12 +7,10 @@ op::SecondOrderConeProgram buildSCOP(
     Model &model,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
-    Model::input_vector_t &u_init,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
     Model::state_matrix_t &A,
     Model::control_matrix_t &B,
-    Model::control_matrix_t &C,
     Model::state_vector_t &z)
 {
     const size_t K = X.cols();
@@ -26,10 +24,10 @@ op::SecondOrderConeProgram buildSCOP(
     model.getStateWeights(state_weights_intermediate, state_weights_terminal);
     model.getInputWeights(input_weights);
 
-    socp.createTensorVariable("X", {Model::state_dim, K}); // states
-    socp.createTensorVariable("U", {Model::input_dim, K}); // inputs
-    socp.createTensorVariable("error_cost");               // error minimization term
-    socp.createTensorVariable("input_cost");               // input minimization term
+    socp.createTensorVariable("X", {Model::state_dim, K});     // states
+    socp.createTensorVariable("U", {Model::input_dim, K - 1}); // inputs
+    socp.createTensorVariable("error_cost");                   // error minimization term
+    socp.createTensorVariable("input_cost");                   // input minimization term
 
     // shortcuts to access solver variables and create parameters
     auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
@@ -40,12 +38,6 @@ op::SecondOrderConeProgram buildSCOP(
     for (size_t i = 0; i < Model::state_dim; i++)
     {
         socp.addConstraint((-1.0) * var("X", {i, 0}) + param(x_init(i)) == 0.0);
-    }
-
-    // Initial input
-    for (size_t i = 0; i < Model::input_dim; i++)
-    {
-        socp.addConstraint((-1.0) * var("U", {i, 0}) + param(u_init(i)) == 0.0);
     }
 
     for (size_t k = 0; k < K - 1; k++)
@@ -69,9 +61,9 @@ op::SecondOrderConeProgram buildSCOP(
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B(i, j)) * var("U", {j, k});
 
-            // C * u(k+1)
-            for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + param(C(i, j)) * var("U", {j, k + 1});
+            // // C * u(k+1)
+            // for (size_t j = 0; j < Model::input_dim; j++)
+            //     eq = eq + param(C(i, j)) * var("U", {j, k + 1});
 
             // z
             eq = eq + param(z(i));
@@ -106,7 +98,7 @@ op::SecondOrderConeProgram buildSCOP(
      * 
      */
     std::vector<op::AffineExpression> input_norm2_args;
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < K - 1; k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
