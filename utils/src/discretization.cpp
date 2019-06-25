@@ -20,27 +20,6 @@ void eulerLinearDiscretization(Model &model,
     B = ts * B_c;
 }
 
-class ODEExactLinear
-{
-private:
-    Model::state_matrix_t A_c;
-    Model::control_matrix_t B_c;
-    double ts;
-
-public:
-    ODEExactLinear(
-        Model::state_matrix_t &A_c,
-        Model::control_matrix_t &B_c,
-        double ts) : A_c(A_c), B_c(B_c), ts(ts)
-    {
-    }
-
-    void operator()(const Model::control_matrix_t &B, Model::control_matrix_t &Bdt, const double t) const
-    {
-        Bdt = (A_c * (ts - t)).exp() * B_c;
-    }
-};
-
 void exactLinearDiscretization(Model &model,
                                double ts,
                                const Model::state_vector_t &x_eq,
@@ -55,13 +34,15 @@ void exactLinearDiscretization(Model &model,
     model.computeJacobians(x_eq, u_eq, A_c, B_c);
     model.computef(x_eq, u_eq, f);
 
-    using namespace boost::numeric::odeint;
-    runge_kutta4<Model::control_matrix_t, double, Model::control_matrix_t, double, vector_space_algebra> stepper;
-    ODEExactLinear odeExactLinear(A_c, B_c, ts);
+    Eigen::MatrixXd E;
+    E.resize(Model::state_dim + Model::input_dim, Model::state_dim + Model::input_dim);
+    E.setZero();
+    E.topLeftCorner(Model::state_dim, Model::state_dim) << A_c;
+    E.topRightCorner(Model::state_dim, Model::input_dim) << B_c;
+    Eigen::MatrixXd expE = (E * ts).exp();
 
-    A = (ts * A_c).exp();
-    B.setZero();
-    integrate_adaptive(stepper, odeExactLinear, B, 0., ts, ts / 10.);
+    A = expE.topLeftCorner(Model::state_dim, Model::state_dim);
+    B = expE.topRightCorner(Model::state_dim, Model::input_dim);
     z = f - A * x_eq - B * u_eq;
 }
 

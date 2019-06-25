@@ -17,7 +17,7 @@ int main()
 
     solver.initialize();
 
-    const size_t sim_steps = 100;
+    const size_t sim_steps = 1;
 
     Model::dynamic_matrix_t X;
     Model::dynamic_matrix_t U;

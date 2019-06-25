@@ -31,7 +31,12 @@ void MPCAlgorithm::initialize()
     double T;
     model->getTimeHorizon(T);
 
-    exactLinearDiscretization(*model, T / (K - 1), x_eq, u_eq, A, B, z);
+    const double dt = T / (K - 1);
+
+    print("Discretizing model {}\n", Model::getModelName());
+    const double timer_discretize = tic();
+    exactLinearDiscretization(*model, dt, x_eq, u_eq, A, B, z);
+    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 
     socp = mpc::buildSCOP(*model, X, U, x_init, x_des, A, B, z);
 
@@ -40,7 +45,7 @@ void MPCAlgorithm::initialize()
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-void MPCAlgorithm::getTimesteps(size_t &K)
+void MPCAlgorithm::getTimeSteps(size_t &K)
 {
     K = this->K;
 }
@@ -57,8 +62,7 @@ void MPCAlgorithm::setDesiredState(const Model::state_vector_t &x)
 
 void MPCAlgorithm::solve()
 {
-    // print("Solving model {}\n", Model::getModelName());
-
+    print("Solving model {}\n", Model::getModelName());
     const double timer_solve = tic();
     solver->solveProblem(false);
     print("{:<{}}{:.2f}ms\n", "Time, solve:", 50, toc(timer_solve));

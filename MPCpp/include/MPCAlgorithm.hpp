@@ -20,15 +20,21 @@ public:
      */
     void initialize();
 
-    void getTimesteps(size_t &K);
+    /**
+     * @brief Returns the number of discretization steps.
+     * 
+     */
+    void getTimeSteps(size_t &K);
 
     /**
-    * Sets a new initial state
+    * @brief  Sets a new initial state.
+    * 
     */
     void setInitialState(const Model::state_vector_t &x);
 
     /**
-    * Sets a new desired state to track
+    * @brief  Sets a new desired state to track.
+    * 
     */
     void setDesiredState(const Model::state_vector_t &x);
 
@@ -73,7 +79,6 @@ private:
 
     Model::state_matrix_t A;
     Model::control_matrix_t B;
-    Model::control_matrix_t C;
     Model::state_vector_t z;
 
     Model::state_vector_t x_init;

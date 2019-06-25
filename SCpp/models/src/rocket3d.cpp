@@ -230,8 +230,6 @@ void Rocket3D::Parameters::loadFromFile()
     deg2rad(rpy_init);
     deg2rad(rpy_final);
 
-    param.loadMatrix("state_weights", state_weights);
-
     x_init << r_init, v_init, eulerToQuaternion(rpy_init), w_init;
     x_final << r_final, v_final, eulerToQuaternion(rpy_final), w_final;
 }

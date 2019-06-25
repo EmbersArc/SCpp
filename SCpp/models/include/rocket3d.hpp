@@ -49,7 +49,7 @@ public:
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
-    void getNewModelParameters(param_vector_t &param);
+    void getNewModelParameters(param_vector_t &param) override;
 
     struct Parameters
     {

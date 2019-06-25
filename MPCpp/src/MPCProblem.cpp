@@ -44,8 +44,8 @@ op::SecondOrderConeProgram buildSCOP(
     {
         /**
          * Build linearized model equality constraint
-         *    x(k+1) == A x(k) * dt + B u(k)
-         * -I x(k+1)  + A x(k) * dt + B u(k) == 0
+         *    x(k+1) == A x(k) * dt + B u(k) + z
+         * -I x(k+1)  + A x(k) * dt + B u(k) + z == 0
          * 
          */
         for (size_t i = 0; i < Model::state_dim; i++)
@@ -60,10 +60,6 @@ op::SecondOrderConeProgram buildSCOP(
             // B * u(k)
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B(i, j)) * var("U", {j, k});
-
-            // // C * u(k+1)
-            // for (size_t j = 0; j < Model::input_dim; j++)
-            //     eq = eq + param(C(i, j)) * var("U", {j, k + 1});
 
             // z
             eq = eq + param(z(i));

@@ -32,7 +32,6 @@ void SCAlgorithm::loadParameters()
     {
         param.loadScalar("weight_trust_region_time", weight_trust_region_time);
     }
-    param.loadScalar("T", sigma);
 }
 
 void SCAlgorithm::initialize()

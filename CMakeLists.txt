@@ -12,13 +12,14 @@ link_directories(lib/ecos)
 link_libraries(ecos)
 
 # Eigen
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 # BOOST
-find_package(Boost REQUIRED) 
+find_package(Boost REQUIRED)
 
 # FILESYSTEM
-link_libraries(stdc++fs)
+# not required in GCC 9
+# link_libraries(stdc++fs)
 
 # FMT
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
@@ -69,8 +70,8 @@ set(SCVX_MODELS_SOURCES
     SCpp/models/src/cartpole.cpp
     SCpp/models/src/rocketLanding3d.cpp
     SCpp/models/src/rocketLanding2d.cpp
-    SCpp/models/src/crewDragon.cpp   
-    SCpp/models/src/rocket3d.cpp   
+    SCpp/models/src/crewDragon.cpp
+    SCpp/models/src/rocket3d.cpp
 )
 
 add_library(utils_lib STATIC ${UTILS_SOURCES})

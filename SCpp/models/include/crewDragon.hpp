@@ -50,7 +50,7 @@ class CrewDragon : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
     void redimensionalizeTrajectory(Eigen::MatrixXd &X,
                                     Eigen::MatrixXd &U) override;
 
-    void getNewModelParameters(param_vector_t &param);
+    void getNewModelParameters(param_vector_t &param) override;
 
     /**
      * @brief Varies the initial state randomly.

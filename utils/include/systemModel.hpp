@@ -70,6 +70,12 @@ public:
                                            Eigen::MatrixXd &U0){};
 
     /**
+     * @brief Updates the parameters in the system flow map.
+     * 
+     */
+    virtual void getNewModelParameters(param_vector_t &param){};
+
+    /**
      * @brief Function to remove mass and length dimensions from all function parameters.
      * 
      */
