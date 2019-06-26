@@ -4,10 +4,11 @@ project(MPCpp)
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -O2")
 
 # ECOS
-add_custom_target(ecos COMMAND make shared
+add_custom_target(ecos 
+                  COMMAND make shared
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos)
 include_directories(lib/ecos/include)
 include_directories(lib/ecos/external/SuiteSparse_config)
