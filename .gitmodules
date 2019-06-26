@@ -1,5 +1,5 @@
 [submodule "lib/ecos"]
-	path = lib/ecos
+	path = MPCpp/socp_interface/solvers/ecos
 	url = https://github.com/embotech/ecos.git
 [submodule "lib/fmt"]
 	path = lib/fmt
