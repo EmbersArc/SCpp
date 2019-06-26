@@ -11,8 +11,8 @@ public:
 
 private:
     Model &model;
-    double dt;
     Model::input_vector_t u0, u1;
+    double dt;
 };
 
 void simulate(Model &model, double dt,

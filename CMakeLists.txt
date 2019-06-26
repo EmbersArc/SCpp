@@ -4,11 +4,14 @@ project(MPCpp)
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
+
 # ECOS
-execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
-include_directories(MPCpp/socp_interface/solvers/ecos/include)
-include_directories(MPCpp/socp_interface/solvers/ecos/external/SuiteSparse_config)
-link_directories(MPCpp/socp_interface/solvers/ecos)
+add_custom_target(ecos COMMAND make shared
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos)
+include_directories(lib/ecos/include)
+include_directories(lib/ecos/external/SuiteSparse_config)
+link_directories(lib/ecos)
 link_libraries(ecos)
 
 # Eigen
@@ -55,6 +58,5 @@ add_library(mpc_lib STATIC ${MPC_SOURCES})
 
 target_link_libraries(mpc_lib scop_lib fmt)
 
-add_executable(MPCpp mainMPC.cpp)
-
-target_link_libraries(MPCpp mpc_lib)
+add_executable(mpc mainMPC.cpp)
+target_link_libraries(mpc mpc_lib)
