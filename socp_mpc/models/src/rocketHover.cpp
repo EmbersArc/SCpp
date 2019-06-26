@@ -132,7 +132,7 @@ void RocketHover::redimensionalize()
 
 void RocketHover::Parameters::loadFromFile()
 {
-    ParameterServer param(fmt::format("../MPCpp/models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../socp_mpc/models/config/{}.info", getModelName()));
 
     param.loadScalar("time_horizon", time_horizon);
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);

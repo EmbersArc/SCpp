@@ -4,14 +4,12 @@ project(scop_interface)
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -O2")
-
 # ECOS
-add_custom_target(ecos 
-                  COMMAND make shared
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/solvers/ecos)
+execute_process(COMMAND make shared WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/solvers/ecos)
 link_directories(solvers/ecos)
 link_libraries(${CMAKE_CURRENT_LIST_DIR}/solvers/ecos/libecos.so)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic -O2")
 
 set(TARGET_INCLUDE
 solvers/ecos/include

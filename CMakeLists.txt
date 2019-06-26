@@ -23,7 +23,7 @@ add_subdirectory(socp_mpc/socp_interface)
 
 # INCLUDES
 include_directories(socp_mpc/include)
-include_directories(socp_mpc/MPCmodels/include)
+include_directories(socp_mpc/models/include)
 include_directories(socp_mpc/utils/include)
 
 # SOURCES
@@ -37,7 +37,7 @@ set(MPC_SOURCES
     socp_mpc/src/MPCProblem.cpp
     socp_mpc/src/MPCAlgorithm.cpp
 
-    socp_mpc/MPCmodels/src/rocketHover.cpp
+    socp_mpc/models/src/rocketHover.cpp
 )
 
 add_library(mpc_lib STATIC ${MPC_SOURCES})

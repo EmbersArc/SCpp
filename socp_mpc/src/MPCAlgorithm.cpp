@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 
 MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model)
-    : param("../MPCpp/config/MPCParameters.info"), model(model)
+    : param("../socp_mpc/config/MPCParameters.info"), model(model)
 {
     loadParameters();
 }
