@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 # ECOS
 execute_process(COMMAND make shared WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib/ecos")
-include_directories(lib/ecos/include)
-include_directories(lib/ecos/external/SuiteSparse_config)
-link_directories(lib/ecos)
+include_directories(socp_interface/solvers/ecos/include)
+include_directories(socp_interface/solvers/ecos/external/SuiteSparse_config)
+link_directories(socp_interface/solvers/ecos)
 link_libraries(ecos)
 
 # Eigen
@@ -17,18 +17,11 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 # BOOST
 find_package(Boost REQUIRED)
 
-# FILESYSTEM
-# not required in GCC 9
-# link_libraries(stdc++fs)
-
 # FMT
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 
 # CPPAD
 include_directories(SYSTEM lib/external)
-
-# THREAD
-link_libraries(pthread)
 
 # INCLUDES
 include_directories(utils/include)
@@ -36,7 +29,7 @@ include_directories(MPCpp/include)
 include_directories(SCpp/include)
 include_directories(MPCpp/models/include)
 include_directories(SCpp/models/include)
-include_directories(solver/include)
+include_directories(socp_interface/include)
 
 # SOURCES
 # common utilities
@@ -48,8 +41,8 @@ set(UTILS_SOURCES
 )
 # second order cone programming
 set(SCOP_SOURCES
-    solver/src/ecosWrapper.cpp
-    solver/src/optimizationProblem.cpp
+    socp_interface/src/ecosWrapper.cpp
+    socp_interface/src/optimizationProblem.cpp
 )
 # MPC algorithm
 set(MPC_SOURCES

@@ -47,7 +47,7 @@ public:
     SystemModel(){};
 
     /**
-     * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class.
+     * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class. Only required for SC models,
      * 
      * @param X     State trajectory.
      * @param U     Input trajectory.
@@ -97,16 +97,32 @@ public:
         throw std::runtime_error("getTimeHorizon: This function has to be implemented by the derived class.");
     };
 
+    /**
+     * @brief Get the operating point of the system. Usually an equilibrium point for linearization.
+     * 
+     */
     virtual void getOperatingPoint(state_vector_t &x, input_vector_t &u)
     {
         throw std::runtime_error("getOperatingPoint: This function has to be implemented by the derived class.");
     };
 
+    /**
+     * @brief Get the weights for the state error.
+     * 
+     * @param intermediate 
+     * @param terminal 
+     */
     virtual void getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)
     {
         throw std::runtime_error("getStateWeights: This function has to be implemented by the derived class.");
     };
 
+
+    /**
+     * @brief Get the weights on the system input.
+     * 
+     * @param intermediate 
+     */
     virtual void getInputWeights(input_vector_t &intermediate)
     {
         throw std::runtime_error("getInputWeights: This function has to be implemented by the derived class.");

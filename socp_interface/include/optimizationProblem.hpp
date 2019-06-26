@@ -47,7 +47,7 @@ class Parameter
     double const_value = 0;
     ParameterSource parameterSource;
 
-  public:
+public:
     explicit Parameter(std::function<double()> callback) : callback(callback), parameterSource(ParameterSource::Callback)
     {
         if (!callback)
@@ -142,7 +142,7 @@ EqualityConstraint operator==(const AffineExpression &lhs, const double &zero);
 
 class GenericOptimizationProblem
 {
-  protected:
+protected:
     size_t n_variables = 0;
 
     /* Set of named tensor variables in the optimization problem */
@@ -151,7 +151,7 @@ class GenericOptimizationProblem
 
     size_t allocateVariableIndex();
 
-  public:
+public:
     void createTensorVariable(const std::string &name, const std::vector<size_t> &dimensions = {});
     size_t getTensorVariableIndex(const std::string &name, const std::vector<size_t> &indices);
     Variable getVariable(const std::string &name, const std::vector<size_t> &indices);

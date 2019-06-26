@@ -1,15 +1,11 @@
 #define JIT false
 
-#if JIT
-#include <cppad/cg.hpp>
-#else
 #include <cppad/cppad.hpp>
-#endif
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemDynamics
 {
-  public:
+public:
     using state_vector_t = Eigen::Matrix<double, STATE_DIM, 1>;
     using state_matrix_t = Eigen::Matrix<double, STATE_DIM, STATE_DIM>;
     using input_vector_t = Eigen::Matrix<double, INPUT_DIM, 1>;
@@ -24,11 +20,7 @@ class SystemDynamics
     using state_matrix_v_t = std::vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>>;
     using control_matrix_v_t = std::vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>>;
 
-#if JIT
-    using scalar_t = CppAD::cg::CG<double>;
-#else
     using scalar_t = double;
-#endif
     using scalar_ad_t = CppAD::AD<scalar_t>;
 
     using state_vector_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM, 1>;
@@ -84,15 +76,9 @@ class SystemDynamics
      */
     void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
 
-  private:
+private:
     // CppAD function
     CppAD::ADFun<scalar_t> f_;
-
-#if JIT
-    // Dynamic library and prepared model instances
-    std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib_;
-    std::unique_ptr<CppAD::cg::GenericModel<double>> model_;
-#endif
 };
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -115,20 +101,6 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
     // store operation sequence in x' = f(x) and stop recording
     f_ = CppAD::ADFun<scalar_t>(x, dynamic_vector_ad_t(dx));
     f_.optimize();
-
-#if JIT
-    // generate source code
-    CppAD::cg::ModelCSourceGen<double> cgen(f_, "model");
-    cgen.setCreateJacobian(true);
-    cgen.setCreateForwardZero(true);
-    CppAD::cg::ModelLibraryCSourceGen<double> libcgen(cgen);
-
-    // compile source code
-    CppAD::cg::GccCompiler<double> compiler;
-    CppAD::cg::DynamicModelLibraryProcessor<double> processor(libcgen);
-    dynamicLib_ = processor.createDynamicLibrary(compiler);
-    model_ = dynamicLib_->model("model");
-#endif
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -144,12 +116,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vecto
     input << x, u;
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
-#if JIT
-    dynamic_vector_map_t input_map(input.data(), STATE_DIM + INPUT_DIM);
-    model_->ForwardZero(input_map, f_map);
-#else
     f_map = f_.Forward(0, input);
-#endif
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -160,12 +127,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
-#if JIT
-    dynamic_vector_map_t input_map(const_cast<double *>(input.data()), STATE_DIM + INPUT_DIM);
-    model_->Jacobian(input_map, J_map);
-#else
     J_map = f_.Jacobian(input);
-#endif
 
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();

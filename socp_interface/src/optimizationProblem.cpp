@@ -1,10 +1,10 @@
-#include <fmt/format.h>
-
 #include "optimizationProblem.hpp"
+
+#include <iostream>
+#include <cmath>
 
 using std::string;
 using std::vector;
-using fmt::print;
 
 namespace op
 {
@@ -317,8 +317,8 @@ bool feasibility_check_message(double tol, double val, const T &constraint)
 {
     if (val > tol)
     {
-        print("Infeasible solution, constraint value: {}\n", val);
-        print("{}\n", constraint.print());
+        std::cout << "Infeasible solution, constraint value: " + std::to_string(val) << "\n"
+                  << constraint.print() << "\n";
 
         return false;
     }
@@ -364,7 +364,7 @@ double Norm2::evaluate(const vector<double> &soln_values) const
         double val = arg.evaluate(soln_values);
         return val * val;
     };
-    return sqrt(std::accumulate(arguments.begin(), arguments.end(), 0., sum_squares));
+    return std::sqrt(std::accumulate(arguments.begin(), arguments.end(), 0., sum_squares));
 }
 
 double SecondOrderConeConstraint::evaluate(const vector<double> &soln_values) const
