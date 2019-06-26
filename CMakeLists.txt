@@ -31,38 +31,30 @@ include_directories(MPCpp/socp_interface/include)
 include_directories(MPCpp/utils/include)
 
 # SOURCES
-# common utilities
-set(UTILS_SOURCES
-    MPCpp/utils/src/timing.cpp
-    MPCpp/utils/src/parameterServer.cpp
-)
-# second order cone programming
+# SOCP Interface
 set(SCOP_SOURCES
     MPCpp/socp_interface/src/ecosWrapper.cpp
     MPCpp/socp_interface/src/optimizationProblem.cpp
 )
-# MPC algorithm
+
+# MPC Algorithm
 set(MPC_SOURCES
+    MPCpp/utils/src/timing.cpp
+    MPCpp/utils/src/parameterServer.cpp
+
     MPCpp/src/simulation.cpp
     MPCpp/src/discretization.cpp
     MPCpp/src/MPCProblem.cpp
     MPCpp/src/MPCAlgorithm.cpp
-)
-# MPC models
-set(MPC_MODELS_SOURCES
+
     MPCpp/models/src/rocketHover.cpp
 )
 
-add_library(utils_lib STATIC ${UTILS_SOURCES})
 add_library(scop_lib STATIC ${SCOP_SOURCES})
 add_library(mpc_lib STATIC ${MPC_SOURCES})
-add_library(mpc_models_lib STATIC ${MPC_MODELS_SOURCES})
 
-target_link_libraries(utils_lib fmt)
-target_link_libraries(scop_lib fmt)
 target_link_libraries(mpc_lib scop_lib fmt)
-target_link_libraries(mpc_models_lib fmt)
 
-add_executable(MPCpp MPCpp/src/mainMPC.cpp)
+add_executable(MPCpp mainMPC.cpp)
 
-target_link_libraries(MPCpp scop_lib mpc_lib mpc_models_lib utils_lib)
+target_link_libraries(MPCpp mpc_lib)
