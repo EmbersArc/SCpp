@@ -28,7 +28,6 @@ add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 include_directories(SYSTEM lib/external)
 
 # INCLUDES
-include_directories(utils/include)
 include_directories(MPCpp/include)
 include_directories(MPCpp/models/include)
 include_directories(MPCpp/socp_interface/include)
