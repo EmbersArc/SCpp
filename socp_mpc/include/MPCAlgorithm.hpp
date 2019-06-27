@@ -36,7 +36,7 @@ public:
     * @brief  Sets a new desired state to track.
     * 
     */
-    void setDesiredState(const Model::state_vector_t &x);
+    void setFinalState(const Model::state_vector_t &x);
 
     /**
      * @brief Solves the system.
@@ -82,7 +82,7 @@ private:
     Model::state_vector_t z;
 
     Model::state_vector_t x_init;
-    Model::state_vector_t x_des;
+    Model::state_vector_t x_final;
 
     Eigen::MatrixXd X;
     Eigen::MatrixXd U;

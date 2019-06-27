@@ -36,7 +36,7 @@ int main()
     Model::input_vector_t u_final = u_init;
     Model::state_vector_t x_init = model->p.x_init;
 
-    solver.setDesiredState(model->p.x_final);
+    solver.setFinalState(model->p.x_final);
     solver.setInitialState(x_init);
 
     double timer_run = 0.;

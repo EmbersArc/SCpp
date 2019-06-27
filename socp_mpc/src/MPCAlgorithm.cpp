@@ -38,7 +38,7 @@ void MPCAlgorithm::initialize()
     exactLinearDiscretization(*model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 
-    socp = mpc::buildSCOP(*model, X, U, x_init, x_des, A, B, z);
+    socp = mpc::buildSCOP(*model, X, U, x_init, x_final, A, B, z);
 
     cacheIndices();
 
@@ -55,9 +55,9 @@ void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)
     x_init << x;
 }
 
-void MPCAlgorithm::setDesiredState(const Model::state_vector_t &x)
+void MPCAlgorithm::setFinalState(const Model::state_vector_t &x)
 {
-    x_des << x;
+    x_final << x;
 }
 
 void MPCAlgorithm::solve()

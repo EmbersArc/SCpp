@@ -1,1 +1,1 @@
-clear && ../cppcheck/cppcheck SCpp MPCpp solver -I SCpp/include -I MPCpp/include -I solver/include --enable=all --inconclusive --language=c++
+clear && ../cppcheck/cppcheck socp_mpc solver -I SCpp/include -I MPCpp/include -I solver/include --enable=all --inconclusive --language=c++

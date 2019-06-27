@@ -11,7 +11,7 @@ op::SecondOrderConeProgram buildSCOP(
     Eigen::MatrixXd &U,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
-    Model::state_matrix_t &A,
-    Model::control_matrix_t &B,
-    Model::state_vector_t &z);
+    const Model::state_matrix_t &A,
+    const Model::control_matrix_t &B,
+    const Model::state_vector_t &z);
 }
