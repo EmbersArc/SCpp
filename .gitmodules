@@ -1,7 +1,3 @@
 [submodule "lib/fmt"]
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "socp_mpc/socp_interface/solvers/ecos"]
-	path = socp_mpc/socp_interface/solvers/ecos
-	url = https://github.com/embotech/ecos.git
-	branch = master
