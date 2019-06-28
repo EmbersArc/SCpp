@@ -36,8 +36,11 @@ set(MPC_SOURCES
     socp_mpc/src/discretization.cpp
     socp_mpc/src/MPCProblem.cpp
     socp_mpc/src/MPCAlgorithm.cpp
+    socp_mpc/src/SCProblem.cpp
+    socp_mpc/src/SCAlgorithm.cpp
 
     socp_mpc/models/src/rocketHover.cpp
+    socp_mpc/models/src/rocketLanding3d.cpp
 )
 
 add_library(mpc_lib STATIC ${MPC_SOURCES})
@@ -46,3 +49,5 @@ target_link_libraries(mpc_lib scop_lib fmt)
 
 add_executable(mpc mainMPC.cpp)
 target_link_libraries(mpc mpc_lib)
+add_executable(sc mainSC.cpp)
+target_link_libraries(sc mpc_lib)

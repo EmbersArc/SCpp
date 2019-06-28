@@ -219,7 +219,7 @@ void RocketLanding3D::Parameters::randomizeInitialState()
 
 void RocketLanding3D::Parameters::loadFromFile()
 {
-    ParameterServer param(fmt::format("../SCpp/models/config/{}.info", getModelName()));
+    ParameterServer param(fmt::format("../socp_mpc/models/config/{}.info", getModelName()));
 
     bool randomInitialState;
     double I_sp;

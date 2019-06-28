@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 
 SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model)
-    : param("../SCpp/config/SCParameters.info"), model(model)
+    : param("../socp_mpc/config/SCParameters.info"), model(model)
 {
     loadParameters();
 }
