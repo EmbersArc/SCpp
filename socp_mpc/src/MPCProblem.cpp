@@ -82,8 +82,9 @@ op::SecondOrderConeProgram buildSCOP(
         {
             if (state_weights_intermediate(i) != 0.)
             {
-                auto x_fn = [state_weights_intermediate, &x_final, i, k]() { return -1.0 * state_weights_intermediate(i) * x_final(i); };
-                op::AffineExpression ex = param_fn(x_fn) + state_weights_intermediate(i) * var("X", {i, k});
+                op::Parameter x_desired = param_fn([state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
+                op::AffineTerm x_current = state_weights_intermediate(i) * var("X", {i, K - 1});
+                op::AffineExpression ex = x_desired + x_current;
                 error_norm2_args.push_back(ex);
             }
         }
@@ -92,8 +93,9 @@ op::SecondOrderConeProgram buildSCOP(
     {
         if (state_weights_terminal(i) != 0.)
         {
-            auto x_fn = [state_weights_terminal, &x_final, i]() { return -1.0 * state_weights_terminal(i) * x_final(i); };
-            op::AffineExpression ex = param_fn(x_fn) + state_weights_terminal(i) * var("X", {i, K - 1});
+            op::Parameter x_desired = param_fn([state_weights_terminal, &x_final, i]() { return -1.0 * state_weights_terminal(i) * x_final(i); });
+            op::AffineTerm x_current = state_weights_terminal(i) * var("X", {i, K - 1});
+            op::AffineExpression ex = x_desired + x_current;
             error_norm2_args.push_back(ex);
         }
     }

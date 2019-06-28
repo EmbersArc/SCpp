@@ -39,8 +39,11 @@ int main()
     solver.setFinalState(model->p.x_final);
     solver.setInitialState(x_init);
 
+    X_sim.col(0) = x_init;
+    U_sim.col(0) = u_init;
+
     double timer_run = 0.;
-    for (size_t i = 0; i < sim_steps; i++)
+    for (size_t i = 1; i < sim_steps; i++)
     {
         fmt::print("{:=^{}}\n", fmt::format("<SIMULATION STEP {}>", i), 60);
 
