@@ -72,7 +72,7 @@ public:
 
         double m_scale, r_scale;
 
-        void loadFromFile();
+        void loadFromFile(std::string path = "");
 
         void nondimensionalize();
 

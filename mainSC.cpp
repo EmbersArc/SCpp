@@ -1,18 +1,17 @@
-#include <filesystem>
+#include <experimental/filesystem>
 
 #include "SCAlgorithm.hpp"
 #include "timing.hpp"
 
-namespace fs = std::filesystem;
+namespace fs = std::experimental::filesystem;
 
-fs::path getOutputPath()
-{
-    return fs::path("..") / "output" / Model::getModelName();
-}
+fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
 
 int main()
 {
     auto model = std::make_shared<Model>();
+    model->p.loadFromFile();
+
     SCAlgorithm solver(model);
 
     solver.initialize();

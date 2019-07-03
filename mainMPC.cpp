@@ -1,76 +1,87 @@
-#include <filesystem>
+#include <experimental/filesystem>
 
 #include "MPCAlgorithm.hpp"
-#include "timing.hpp"
 #include "simulation.hpp"
+#include "timing.hpp"
 
-namespace fs = std::filesystem;
+namespace fs = std::experimental::filesystem;
 
-fs::path getOutputPath()
+fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
+
+// calculate an exponential moving average
+double expMovingAverage(double previousAverage, double period, double newValue)
 {
-    return fs::path("..") / "output" / Model::getModelName();
+    const double factor = 2. / (period + 1.);
+    const double result = (newValue - previousAverage) * factor + previousAverage;
+    return result;
 }
 
 int main()
 {
     auto model = std::make_shared<Model>();
+    model->p.loadFromFile();
+
     MPCAlgorithm solver(model);
 
-    double T;
-    model->getTimeHorizon(T);
-    const size_t sim_steps = 30;
-
-    size_t K;
-    solver.getTimeSteps(K);
-
-    const double dt = T / (K - 1);
+    const double sim_time = 15.;
 
     solver.initialize();
+
     Model::dynamic_matrix_t X;
     Model::dynamic_matrix_t U;
-    Model::dynamic_matrix_t X_sim, U_sim;
-    X_sim.resize(Model::state_dim, sim_steps);
-    U_sim.resize(Model::input_dim, sim_steps);
 
-    Model::input_vector_t u_init(0, 0, -model->p.g_I.z() * model->p.m);
-    Model::input_vector_t u_final = u_init;
-    Model::state_vector_t x_init = model->p.x_init;
+    Model::state_vector_v_t X_sim;
+    Model::input_vector_v_t U_sim;
+    std::vector<double> times;
 
+    Model::input_vector_t u(0, 0, -model->p.g_I.z() * model->p.m);
+    Model::state_vector_t x = model->p.x_init;
+
+    solver.setInitialState(x);
     solver.setFinalState(model->p.x_final);
-    solver.setInitialState(x_init);
 
-    X_sim.col(0) = x_init;
-    U_sim.col(0) = u_init;
+    double current_time = 0.;
+    size_t sim_step = 0;
 
-    double timer_run = 0.;
-    for (size_t i = 1; i < sim_steps; i++)
+    const double min_timestep = 0.010;
+    double avg_solve_time = min_timestep;
+
+    const double t_start_run = tic();
+    while (current_time < sim_time)
     {
-        fmt::print("{:=^{}}\n", fmt::format("<SIMULATION STEP {}>", i), 60);
+        fmt::print("{:=^{}}\n", fmt::format("<SIMULATION STEP {}>", sim_step), 60);
 
-        const double t0 = tic();
+        // forward estimation
+        Model::state_vector_t x_expected;
+        sim::simulate(*model, avg_solve_time, x, u, u, x_expected);
+        solver.setInitialState(x_expected);
+
+        X_sim.push_back(x);
+        U_sim.push_back(u);
+        times.push_back(current_time);
+
+        // solve with current state
+        const double t_start_solve = tic();
         solver.solve();
+        const double solve_time = std::max(toc(t_start_solve) * 0.001, min_timestep);
+        avg_solve_time = expMovingAverage(avg_solve_time, 20, solve_time);
+        fmt::print("{:<{}}{:.2f}ms\n", "Average solve time:", 50, avg_solve_time * 1000);
+
+        // move solve_time forward
+        sim::simulate(*model, solve_time, x, u, u, x);
+        current_time += solve_time;
+
+        // get the calculated input
         solver.getSolution(X, U);
-        const double solve_time = toc(t0);
-        timer_run += solve_time;
+        u = U.col(0);
 
-        Model::state_vector_t x_sim;
-
-        u_init = U.col(0);
-        u_final = U.col(0);
-
-        sim::simulate(*model, dt, x_init, u_init, u_final, x_sim);
-
-        X_sim.col(i) = x_sim;
-        U_sim.col(i) = U.col(0);
-
-        u_init = u_final;
-        x_init = x_sim;
-        solver.setInitialState(x_init);
+        sim_step++;
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);
-    fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, timer_run);
-    const double freq = double(sim_steps) / (timer_run / 1000.);
+    fmt::print("{:<{}}{:.2f}s\n", "Runtime:", 50, 0.001 * toc(t_start_run));
+    fmt::print("{:<{}}{:.2f}s\n", "Simulation time:", 50, current_time);
+    const double freq = double(sim_step) / current_time;
     fmt::print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
     fmt::print("\n");
 
@@ -84,27 +95,30 @@ int main()
 
     {
         std::ofstream f(outputPath / "X_sim.txt");
-        f << X_sim;
-    }
-    {
-        std::ofstream f(outputPath / "U_sim.txt");
-        f << U_sim;
-    }
-    {
-        std::ofstream f(outputPath / "t_sim.txt");
-        f << double(sim_steps) * dt;
-    }
-    {
-        std::ofstream f(outputPath / "X.txt");
+        Model::dynamic_matrix_t X;
+        X.resize(Model::state_dim, sim_step);
+        for (size_t i = 0; i < sim_step; i++)
+        {
+            X.col(i) = X_sim[i];
+        }
         f << X;
     }
     {
-        std::ofstream f(outputPath / "U.txt");
+        std::ofstream f(outputPath / "U_sim.txt");
+        Model::dynamic_matrix_t U;
+        U.resize(Model::input_dim, sim_step);
+        for (size_t i = 0; i < sim_step; i++)
+        {
+            U.col(i) = U_sim[i];
+        }
         f << U;
     }
     {
-        std::ofstream f(outputPath / "t.txt");
-        f << T;
+        std::ofstream f(outputPath / "t_sim.txt");
+        for (size_t i = 0; i < sim_step; i++)
+        {
+            f << times[i] << '\n';
+        }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }

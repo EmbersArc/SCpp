@@ -6,15 +6,27 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model)
-    : param("../socp_mpc/config/MPCParameters.info"), model(model)
+MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path) : model(model)
 {
-    loadParameters();
+    std::string filename = "MPCParameters.info";
+    std::string path;
+    if (parameter_path == "")
+    {
+        path = "../socp_mpc/config/" + filename;
+    }
+    else
+    {
+        path = parameter_path + filename;
+    }
+    loadParameters(path);
 }
 
-void MPCAlgorithm::loadParameters()
+void MPCAlgorithm::loadParameters(const std::string &path)
 {
+    ParameterServer param(path);
+
     param.loadScalar("K", K);
+    param.loadScalar("nondimensionalize", nondimensionalize);
 }
 
 void MPCAlgorithm::initialize()
@@ -45,26 +57,25 @@ void MPCAlgorithm::initialize()
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-void MPCAlgorithm::getTimeSteps(size_t &K)
-{
-    K = this->K;
-}
+void MPCAlgorithm::getTimeSteps(size_t &K) { K = this->K; }
 
-void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)
-{
-    x_init << x;
-}
+void MPCAlgorithm::setInitialState(const Model::state_vector_t &x) { x_init << x; }
 
-void MPCAlgorithm::setFinalState(const Model::state_vector_t &x)
-{
-    x_final << x;
-}
+void MPCAlgorithm::setFinalState(const Model::state_vector_t &x) { x_final << x; }
 
 void MPCAlgorithm::solve()
 {
     print("Solving model {}\n", Model::getModelName());
     const double timer_solve = tic();
+    if (nondimensionalize)
+    {
+        model->nondimensionalize();
+    }
     solver->solveProblem(false);
+    if (nondimensionalize)
+    {
+        model->redimensionalize();
+    }
     print("{:<{}}{:.2f}ms\n", "Time, solve:", 50, toc(timer_solve));
 
     readSolution();

@@ -1,5 +1,5 @@
-#include "activeModel.hpp"
 #include "MPCProblem.hpp"
+#include "activeModel.hpp"
 #include "discretization.hpp"
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
@@ -9,44 +9,44 @@ class MPCAlgorithm
 public:
     /**
      * @brief Construct a new free Final Time Algorithm solver.
-     * 
+     *
      * @param model     The system model.
      */
-    explicit MPCAlgorithm(std::shared_ptr<Model> model);
+    explicit MPCAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path = "");
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
-     * 
+     *
      */
     void initialize();
 
     /**
      * @brief Returns the number of discretization steps.
-     * 
+     *
      */
     void getTimeSteps(size_t &K);
 
     /**
-    * @brief  Sets a new initial state.
-    * 
-    */
+     * @brief  Sets a new initial state.
+     *
+     */
     void setInitialState(const Model::state_vector_t &x);
 
     /**
-    * @brief  Sets a new desired state to track.
-    * 
-    */
+     * @brief  Sets a new desired state to track.
+     *
+     */
     void setFinalState(const Model::state_vector_t &x);
 
     /**
      * @brief Solves the system.
-     * 
+     *
      */
     void solve();
 
     /**
      * @brief Get the solution variables object.
-     * 
+     *
      * @param X     The state trajectory.
      * @param U     The input trajectory.
      */
@@ -55,25 +55,24 @@ public:
 private:
     /**
      * @brief Saves solution indices for performance.
-     * 
+     *
      */
     void cacheIndices();
 
     /**
      * @brief Reads the solution variables X, U and sigma.
-     * 
+     *
      */
     void readSolution();
 
     /**
      * @brief Loads the parameters from the configuration file.
-     * 
+     *
      */
-    void loadParameters();
-
-    ParameterServer param;
+    void loadParameters(const std::string &path);
 
     size_t K;
+    bool nondimensionalize;
 
     std::shared_ptr<Model> model;
 

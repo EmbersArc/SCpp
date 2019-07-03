@@ -1,15 +1,11 @@
 #include "common.hpp"
 #include "rocketHover.hpp"
 
-using std::string;
-using std::vector;
-
 namespace rocketHover
 {
 
 RocketHover::RocketHover()
 {
-    p.loadFromFile();
 }
 
 void RocketHover::systemFlowMap(const state_vector_ad_t &x,
@@ -63,14 +59,14 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 {
     const size_t K = X0.cols();
 
-    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
+    auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
     size_t total_slack_variables = 3 * (K - 1); // three state constraints per timestep
     socp.createTensorVariable("epsilon", {total_slack_variables});
     socp.createTensorVariable("epsilon_norm");
-    vector<op::AffineExpression> norm2_terms;
+    std::vector<op::AffineExpression> norm2_terms;
     for (size_t i = 0; i < total_slack_variables; i++)
     {
         norm2_terms.push_back(1.0 * var("epsilon", {i}));
@@ -130,9 +126,14 @@ void RocketHover::redimensionalize()
     // p.redimensionalize();
 }
 
-void RocketHover::Parameters::loadFromFile()
+void RocketHover::Parameters::loadFromFile(std::string path)
 {
-    ParameterServer param(fmt::format("../socp_mpc/models/config/{}.info", getModelName()));
+    if (path == "")
+    {
+        path = "../socp_mpc/models/config/";
+    }
+    ParameterServer param(fmt::format("{}{}.info", path, getModelName()));
+    // ParameterServer param(fmt::format("../Dropbox/VSWorkspace/catkin_ws/src/rotors_simulator/rotors_control/SCpp/socp_mpc/models/config/{}.info", getModelName()));
 
     param.loadScalar("time_horizon", time_horizon);
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
@@ -178,41 +179,41 @@ void RocketHover::Parameters::loadFromFile()
 
 void RocketHover::Parameters::nondimensionalize()
 {
-    // m_scale = x_init(0);
-    // r_scale = x_init.segment(0, 3).norm();
+    m_scale = x_init(0);
+    r_scale = x_init.segment(0, 3).norm();
 
-    // m /= m_scale;
-    // r_T_B /= r_scale;
-    // g_I /= r_scale;
-    // J_B /= m_scale * r_scale * r_scale;
+    m /= m_scale;
+    r_T_B /= r_scale;
+    g_I /= r_scale;
+    J_B /= m_scale * r_scale * r_scale;
 
-    // x_init.segment(0, 3) /= r_scale;
-    // x_init.segment(3, 3) /= r_scale;
+    x_init.segment(0, 3) /= r_scale;
+    x_init.segment(3, 3) /= r_scale;
 
-    // x_final.segment(0, 3) /= r_scale;
-    // x_final.segment(3, 3) /= r_scale;
+    x_final.segment(0, 3) /= r_scale;
+    x_final.segment(3, 3) /= r_scale;
 
-    // v_I_max /= r_scale;
-    // T_min /= m_scale * r_scale;
-    // T_max /= m_scale * r_scale;
+    v_I_max /= r_scale;
+    T_min /= m_scale * r_scale;
+    T_max /= m_scale * r_scale;
 }
 
 void RocketHover::Parameters::redimensionalize()
 {
-    // m *= m_scale;
-    // r_T_B *= r_scale;
-    // g_I *= r_scale;
-    // J_B *= m_scale * r_scale * r_scale;
+    m *= m_scale;
+    r_T_B *= r_scale;
+    g_I *= r_scale;
+    J_B *= m_scale * r_scale * r_scale;
 
-    // x_init.segment(0, 3) *= r_scale;
-    // x_init.segment(3, 3) *= r_scale;
+    x_init.segment(0, 3) *= r_scale;
+    x_init.segment(3, 3) *= r_scale;
 
-    // x_final.segment(0, 3) *= r_scale;
-    // x_final.segment(3, 3) *= r_scale;
+    x_final.segment(0, 3) *= r_scale;
+    x_final.segment(3, 3) *= r_scale;
 
-    // v_I_max *= r_scale;
-    // T_min *= m_scale * r_scale;
-    // T_max *= m_scale * r_scale;
+    v_I_max *= r_scale;
+    T_min *= m_scale * r_scale;
+    T_max *= m_scale * r_scale;
 }
 
 } // namespace rocketHover

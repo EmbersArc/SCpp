@@ -10,7 +10,7 @@ Eigen::Vector3d toEulerAngle(const Eigen::Quaterniond &q)
     return Eigen::Vector3d(phi, theta, psi);
 }
 
-Eigen::Vector3d CustomController(std::shared_ptr<Model> model, Model::state_vector_t &x_init,
+Eigen::Vector3d woodPositionController(std::shared_ptr<Model> model, Model::state_vector_t &x_init,
                                  Model::state_vector_t &x_final)
 {
     const Eigen::Vector3d lambda_des = x_final.segment<3>(0);
@@ -136,8 +136,6 @@ Eigen::Vector3d CustomController(std::shared_ptr<Model> model, Model::state_vect
     control_vector(0, 0) = x0 * x59 - x65 * x9;
     control_vector(1, 0) = x0 * x65 + x59 * x9;
     control_vector(2, 0) = km_ * x31;
-
-    return control_vector;
 
     //! end generated
 

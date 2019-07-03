@@ -1,6 +1,6 @@
 #include <experimental/filesystem>
 
-#include "custom_controller.hpp"
+#include "positionController.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
 
@@ -48,9 +48,14 @@ int main()
         current_time += solve_time;
 
         // get the calculated input
-        u = CustomController(model, x, model->p.x_final);
+        u = woodPositionController(model, x, model->p.x_final);
 
         sim_step++;
+
+        if ((x - model->p.x_final).head<3>().norm() < 0.001 and x.segment<3>(3).norm() < 0.001)
+        {
+            break;
+        }
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);

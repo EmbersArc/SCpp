@@ -8,9 +8,9 @@ g_I
 
 J_B
 {
-    (0)   0.80294
-    (1)   0.80294
-    (2)   0.000163333
+    (0)   0.133823333
+    (1)   0.133823333
+    (2)   0.001
 }
 
 r_T_B
@@ -29,9 +29,9 @@ T_max       20.
 ; position
 r_init
 {
-    (0)     5.
-    (1)     2.
-    (2)     3.
+    (0)     0.
+    (1)     0.
+    (2)     0.5
 }
 ; velocity
 v_init
@@ -59,9 +59,9 @@ w_init
 ; position
 r_final
 {
-    (0)     -2.
-    (1)     -5.
-    (2)     10.
+    (0)     -4.
+    (1)     10.
+    (2)     5.
 }
 ; velocity
 v_final
@@ -88,20 +88,20 @@ w_final
 ; maximum gimbal
 gimbal_max  15.
 ; maximum angle
-theta_max   20.
+theta_max   30.
 ; maximum velocity
-v_I_max     3.
+v_I_max     5.
 ; maximum angluar velocity
-w_B_max     10.
+w_B_max     30.
 
 ; algorithm specific parameters
 time_horizon   5.
 
 state_weights_intermediate
 {
-    (0)   1.0
-    (1)   1.0
-    (2)   1.0
+    (0)   0.0
+    (1)   0.0
+    (2)   0.0
     (3)   0.0
     (4)   0.0
     (5)   0.0
@@ -118,15 +118,15 @@ state_weights_terminal
     (0)   10.0
     (1)   10.0
     (2)   10.0
-    (3)   1.0
-    (4)   1.0
-    (5)   1.0
-    (6)   1.0
-    (7)   1.0
-    (8)   1.0
-    (9)   1.0
-    (10)   1.0
-    (11)   1.0
+    (3)   5.0
+    (4)   5.0
+    (5)   5.0
+    (6)   5.0
+    (7)   5.0
+    (8)   5.0
+    (9)   5.0
+    (10)   5.0
+    (11)   5.0
 }
 
 input_weights

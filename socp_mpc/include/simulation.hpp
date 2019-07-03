@@ -1,4 +1,6 @@
-#include <activeModel.hpp>
+#pragma once
+
+#include "activeModel.hpp"
 
 namespace sim
 {
