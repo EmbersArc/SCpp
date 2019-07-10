@@ -79,15 +79,21 @@ public:
 private:
     // CppAD function
     CppAD::ADFun<scalar_t> f_;
+    bool initialized = false;
 };
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 {
+    if (initialized)
+    {
+        return;
+    }
+
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
     dynamic_vector_ad_t param(PARAM_DIM);
-    x.setRandom();
-    param.setRandom();
+    // x.setOnes();
+    // param.setOnes();
 
     // start recording
     CppAD::Independent(x, 0, false, param);
@@ -101,6 +107,8 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
     // store operation sequence in x' = f(x) and stop recording
     f_ = CppAD::ADFun<scalar_t>(x, dynamic_vector_ad_t(dx));
     f_.optimize();
+
+    initialized = true;
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -112,6 +120,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateParameters(param_vec
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
 {
+    assert(initialized);
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
@@ -122,6 +131,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vecto
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
 {
+    assert(initialized);
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;

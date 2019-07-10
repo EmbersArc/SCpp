@@ -13,6 +13,7 @@ find_package(Boost REQUIRED)
 
 # FMT
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
+set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # SOCP INTERFACE
 add_subdirectory(socp_mpc/socp_interface)
@@ -44,13 +45,13 @@ set(MPC_SOURCES
     socp_mpc/models/src/rocketLanding3d.cpp
 )
 
-add_library(mpc_lib STATIC ${MPC_SOURCES})
+add_library(mpc_lib SHARED ${MPC_SOURCES})
 
 target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
 target_include_directories(mpc_lib PUBLIC ${SOCP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SOCP_SYSTEM_INCLUDE_DIRECTORIES})
 
-target_compile_options(mpc_lib PUBLIC -std=c++17 -fPIC -Wall -Wunused)
+target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wunused)
 
 add_executable(mpc mainMPC.cpp)
 target_link_libraries(mpc mpc_lib)
@@ -58,5 +59,5 @@ target_link_libraries(mpc mpc_lib)
 add_executable(sc mainSC.cpp)
 target_link_libraries(sc mpc_lib)
 
-# add_executable(sim main.cpp)
-# target_link_libraries(sim mpc_lib)
+add_executable(sim main.cpp)
+target_link_libraries(sim mpc_lib)

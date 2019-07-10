@@ -84,13 +84,14 @@ a_d = -(k_1_ + k_2_) * sigma_sym - (k_1_ * k_2_ + 1) * lamda_sym
 # singularity
 # a_d[2] += 0.01 * Piecewise((1., (a_d + kg_ * E_z).norm() >= 0.98 * kg_),
 #                            (0., True))
+# a_d[2] = 0.9 * kg_ * tanh(a_d[2])
 
 # Normal control law:
 bar_T_z = km_ * sqrt(a_d_sym[0]**2 + a_d_sym[1]**2 + (a_d_sym[2] + kg_)**2)
 dot_bar_T_z = bar_T_z.diff(t)
 
 # Improved control law:
-condition = (R(eta_sym) * E_z).dot(R(eta_d) * E_z) >= 0  # switching condition
+# condition = (R(eta_sym) * E_z).dot(R(eta_d) * E_z) >= 0  # switching condition
 # bar_T_z = Piecewise(((R(eta_sym) * E_z).dot(a_d + kg_ * E_z), condition),
 #                     (0., True))
 a = 1. / km_ * bar_T_z * R(eta_sym) * E_z - kg_ * E_z

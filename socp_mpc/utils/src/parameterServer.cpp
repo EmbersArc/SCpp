@@ -3,5 +3,12 @@
 
 ParameterServer::ParameterServer(const std::string &filename)
 {
-    boost::property_tree::read_info(filename, pt);
+    try
+    {
+        boost::property_tree::read_info(filename, pt);
+    }
+    catch (...)
+    {
+        fmt::print("Could not open file for reading: {}", filename);
+    }
 }

@@ -76,6 +76,11 @@ int main()
         u = U.col(0);
 
         sim_step++;
+
+        // if ((x - model->p.x_final).head<3>().norm() < 0.01 and x.segment<3>(3).norm() < 0.01)
+        // {
+        //     break;
+        // }
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);

@@ -40,22 +40,20 @@ int main()
         U_sim.push_back(u);
         times.push_back(current_time);
 
-        // solve with current state
-        const double solve_time = min_timestep;
-
         // move solve_time forward
-        sim::simulate(*model, solve_time, x, u, u, x);
-        current_time += solve_time;
-
+        sim::simulate(*model, min_timestep, x, u, u, x);
+        current_time += min_timestep;
+    
         // get the calculated input
         u = woodPositionController(model, x, model->p.x_final);
+        // u = customPositionController(model, x, model->p.x_final);
 
         sim_step++;
 
-        if ((x - model->p.x_final).head<3>().norm() < 0.001 and x.segment<3>(3).norm() < 0.001)
-        {
-            break;
-        }
+        // if ((x - model->p.x_final).head<3>().norm() < 0.01 and x.segment<3>(3).norm() < 0.01)
+        // {
+        //     break;
+        // }
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);

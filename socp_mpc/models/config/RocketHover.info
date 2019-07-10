@@ -17,21 +17,19 @@ r_T_B
 {
     (0)   0
     (1)   0
-    (2)   -0.4
+    (2)   -0.33
 }
 
-m           1.6
+m       1.6
 
-T_min       5.
-T_max       20.
 
 ; ----- initial values -----
 ; position
 r_init
 {
     (0)     0.
-    (1)     0.
-    (2)     0.5
+    (1)     -3.
+    (2)     1.
 }
 ; velocity
 v_init
@@ -59,9 +57,9 @@ w_init
 ; position
 r_final
 {
-    (0)     -4.
-    (1)     10.
-    (2)     5.
+    (0)     3.
+    (1)     5.
+    (2)     3.
 }
 ; velocity
 v_final
@@ -85,53 +83,59 @@ w_final
     (2)    0. ; not controllable
 }
 
+; thrust
+T_min       5.
+T_max       20.
 ; maximum gimbal
-gimbal_max  15.
+gimbal_max  5.
 ; maximum angle
-theta_max   30.
+theta_max   10.
 ; maximum velocity
-v_I_max     5.
+v_I_max     3.
 ; maximum angluar velocity
-w_B_max     30.
+w_B_max     20.
 
 ; algorithm specific parameters
-time_horizon   5.
+time_horizon   2.5
 
 state_weights_intermediate
 {
-    (0)   0.0
-    (1)   0.0
-    (2)   0.0
-    (3)   0.0
-    (4)   0.0
-    (5)   0.0
-    (6)   0.0
-    (7)   0.0
-    (8)   0.0
-    (9)   0.0
-    (10)   0.0
-    (11)   0.0
+    scaling 0.
+    (0)   0.
+    (1)   0.
+    (2)   0.
+    (3)   0.
+    (4)   0.
+    (5)   0.
+    (6)   0.
+    (7)   0.
+    (8)   0.
+    (9)   0.
+    (10)   0.
+    (11)   0.
 }
 
 state_weights_terminal
 {
+    scaling 1.
     (0)   10.0
     (1)   10.0
     (2)   10.0
-    (3)   5.0
-    (4)   5.0
-    (5)   5.0
-    (6)   5.0
-    (7)   5.0
-    (8)   5.0
-    (9)   5.0
-    (10)   5.0
-    (11)   5.0
+    (3)   1.0
+    (4)   1.0
+    (5)   1.0
+    (6)   1.0
+    (7)   1.0
+    (8)   0.0
+    (9)   1.0
+    (10)   1.0
+    (11)   0.0
 }
 
 input_weights
 {
-    (0)   2
-    (1)   2
+    scaling 0.1
+    (0)   1
+    (1)   1
     (2)   1
 }
