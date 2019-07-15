@@ -6,6 +6,9 @@ using fmt::print;
 using std::string;
 using std::vector;
 
+namespace mpc
+{
+
 MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path) : model(model)
 {
     std::string filename = "MPCParameters.info";
@@ -31,7 +34,7 @@ void MPCAlgorithm::loadParameters(const std::string &path)
 
 void MPCAlgorithm::initialize()
 {
-    model->initializeModel();
+    print("Initializing model '{}'.\n", Model::getModelName());
 
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K - 1);
@@ -45,7 +48,12 @@ void MPCAlgorithm::initialize()
 
     const double dt = T / (K - 1);
 
-    print("Discretizing model {}\n", Model::getModelName());
+    print("Computing dynamics.\n");
+    const double timer_dynamics = tic();
+    model->initializeModel();
+    print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
+
+    print("Discretizing.\n");
     const double timer_discretize = tic();
     exactLinearDiscretization(*model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
@@ -125,3 +133,5 @@ void MPCAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix
     X = this->X;
     U = this->U;
 }
+
+} // namespace mpc

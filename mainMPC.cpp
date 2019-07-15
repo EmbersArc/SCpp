@@ -21,7 +21,7 @@ int main()
     auto model = std::make_shared<Model>();
     model->p.loadFromFile();
 
-    MPCAlgorithm solver(model);
+    mpc::MPCAlgorithm solver(model);
 
     const double sim_time = 15.;
 

@@ -4,6 +4,9 @@
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 
+namespace mpc
+{
+
 class MPCAlgorithm
 {
 public:
@@ -93,3 +96,5 @@ private:
 
     std::unique_ptr<EcosWrapper> solver;
 };
+
+} // namespace mpc
