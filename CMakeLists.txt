@@ -58,6 +58,3 @@ target_link_libraries(mpc mpc_lib)
 
 add_executable(sc mainSC.cpp)
 target_link_libraries(sc mpc_lib)
-
-add_executable(sim main.cpp)
-target_link_libraries(sim mpc_lib)
