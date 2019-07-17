@@ -9,6 +9,9 @@ op::SecondOrderConeProgram buildSCOP(
     Eigen::MatrixXd &U,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
+    Model::state_vector_t &state_weights_intermediate,
+    Model::state_vector_t &state_weights_terminal,
+    Model::input_vector_t &input_weights,
     const Model::state_matrix_t &A,
     const Model::control_matrix_t &B,
     const Model::state_vector_t &z)
@@ -16,13 +19,6 @@ op::SecondOrderConeProgram buildSCOP(
     const size_t K = X.cols();
 
     op::SecondOrderConeProgram socp;
-
-    Model::state_vector_t state_weights_intermediate;
-    Model::state_vector_t state_weights_terminal;
-    Model::input_vector_t input_weights;
-
-    model.getStateWeights(state_weights_intermediate, state_weights_terminal);
-    model.getInputWeights(input_weights);
 
     socp.createTensorVariable("X", {Model::state_dim, K});     // states
     socp.createTensorVariable("U", {Model::input_dim, K - 1}); // inputs
@@ -80,24 +76,18 @@ op::SecondOrderConeProgram buildSCOP(
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            if (state_weights_intermediate(i) != 0.)
-            {
-                op::Parameter x_desired = param_fn([state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
-                op::AffineTerm x_current = state_weights_intermediate(i) * var("X", {i, K - 1});
-                op::AffineExpression ex = x_desired + x_current;
-                error_norm2_args.push_back(ex);
-            }
+            op::Parameter x_desired = param_fn([&state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
+            op::AffineTerm x_current = param(state_weights_intermediate(i)) * var("X", {i, K - 1});
+            op::AffineExpression ex = x_desired + x_current;
+            error_norm2_args.push_back(ex);
         }
     }
     for (size_t i = 0; i < Model::state_dim; i++)
     {
-        if (state_weights_terminal(i) != 0.)
-        {
-            op::Parameter x_desired = param_fn([state_weights_terminal, &x_final, i]() { return -1.0 * state_weights_terminal(i) * x_final(i); });
-            op::AffineTerm x_current = state_weights_terminal(i) * var("X", {i, K - 1});
-            op::AffineExpression ex = x_desired + x_current;
-            error_norm2_args.push_back(ex);
-        }
+        op::Parameter x_desired = param_fn([&state_weights_terminal, &x_final, i]() { return -1.0 * state_weights_terminal(i) * x_final(i); });
+        op::AffineTerm x_current = param(state_weights_terminal(i)) * var("X", {i, K - 1});
+        op::AffineExpression ex = x_desired + x_current;
+        error_norm2_args.push_back(ex);
     }
     socp.addConstraint(op::norm2(error_norm2_args) <= (1.0) * var("error_cost"));
     socp.addMinimizationTerm(1.0 * var("error_cost"));
@@ -111,7 +101,7 @@ op::SecondOrderConeProgram buildSCOP(
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            op::AffineExpression ex = input_weights(i) * var("U", {i, k});
+            op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
             input_norm2_args.push_back(ex);
         }
     }

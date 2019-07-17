@@ -43,6 +43,9 @@ void MPCAlgorithm::initialize()
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
 
+    model->getStateWeights(state_weights_intermediate, state_weights_terminal);
+    model->getInputWeights(input_weights);
+
     double T;
     model->getTimeHorizon(T);
 
@@ -58,7 +61,11 @@ void MPCAlgorithm::initialize()
     exactLinearDiscretization(*model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 
-    socp = mpc::buildSCOP(*model, X, U, x_init, x_final, A, B, z);
+    socp = mpc::buildSCOP(*model,
+                          X, U,
+                          x_init, x_final,
+                          state_weights_intermediate, state_weights_terminal, input_weights,
+                          A, B, z);
 
     cacheIndices();
 
@@ -70,6 +77,17 @@ void MPCAlgorithm::getTimeSteps(size_t &K) { K = this->K; }
 void MPCAlgorithm::setInitialState(const Model::state_vector_t &x) { x_init << x; }
 
 void MPCAlgorithm::setFinalState(const Model::state_vector_t &x) { x_final << x; }
+
+void MPCAlgorithm::setStateWeights(const Model::state_vector_t &intermediate, const Model::state_vector_t &terminal)
+{
+    state_weights_intermediate = intermediate;
+    state_weights_terminal = terminal;
+}
+
+void MPCAlgorithm::setInputWeights(const Model::input_vector_t &intermediate)
+{
+    input_weights = intermediate;
+}
 
 void MPCAlgorithm::solve()
 {

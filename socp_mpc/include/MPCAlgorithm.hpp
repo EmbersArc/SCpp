@@ -42,6 +42,21 @@ public:
     void setFinalState(const Model::state_vector_t &x);
 
     /**
+     * @brief Set the state weights
+     * 
+     * @param intermediate 
+     * @param terminal 
+     */
+    void setStateWeights(const Model::state_vector_t &intermediate, const Model::state_vector_t &terminal);
+
+    /**
+     * @brief Set the input weights
+     * 
+     * @param intermediate 
+     */
+    void setInputWeights(const Model::input_vector_t &intermediate);
+
+    /**
      * @brief Solves the system.
      *
      */
@@ -82,6 +97,10 @@ private:
     Model::state_matrix_t A;
     Model::control_matrix_t B;
     Model::state_vector_t z;
+
+    Model::state_vector_t state_weights_intermediate;
+    Model::state_vector_t state_weights_terminal;
+    Model::input_vector_t input_weights;
 
     Model::state_vector_t x_init;
     Model::state_vector_t x_final;

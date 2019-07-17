@@ -28,8 +28,8 @@ m       1.6
 r_init
 {
     (0)     0.
-    (1)     -3.
-    (2)     1.
+    (1)     0.
+    (2)     2.
 }
 ; velocity
 v_init
@@ -87,9 +87,9 @@ w_final
 T_min       5.
 T_max       20.
 ; maximum gimbal
-gimbal_max  5.
+gimbal_max  10.
 ; maximum angle
-theta_max   10.
+theta_max   20.
 ; maximum velocity
 v_I_max     3.
 ; maximum angluar velocity
