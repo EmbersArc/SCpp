@@ -12,9 +12,10 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_vector_t &state_weights_intermediate,
     Model::state_vector_t &state_weights_terminal,
     Model::input_vector_t &input_weights,
-    const Model::state_matrix_t &A,
-    const Model::control_matrix_t &B,
-    const Model::state_vector_t &z)
+    Model::state_matrix_t &A,
+    Model::control_matrix_t &B,
+    Model::state_vector_t &z,
+    bool constant_dynamics)
 {
     const size_t K = X.cols();
 
@@ -51,17 +52,38 @@ op::SecondOrderConeProgram buildSCOP(
 
             // A * x(k)
             for (size_t j = 0; j < Model::state_dim; j++)
-                if (A(i, j) != 0.)
-                    eq = eq + A(i, j) * var("X", {j, k});
+                if (constant_dynamics)
+                {
+                    if (A(i, j) != 0)
+                        eq = eq + A(i, j) * var("X", {j, k});
+                }
+                else
+                {
+                    eq = eq + param(A(i, j)) * var("X", {j, k});
+                }
 
             // B * u(k)
             for (size_t j = 0; j < Model::input_dim; j++)
-                if (B(i, j) != 0.)
-                    eq = eq + B(i, j) * var("U", {j, k});
+                if (constant_dynamics)
+                {
+                    if (B(i, j) != 0.)
+                        eq = eq + B(i, j) * var("U", {j, k});
+                }
+                else
+                {
+                    eq = eq + param(B(i, j)) * var("U", {j, k});
+                }
 
             // z
-            if (z(i) != 0.)
-                eq = eq + z(i);
+            if (constant_dynamics)
+            {
+                if (z(i) != 0.)
+                    eq = eq + z(i);
+            }
+            else
+            {
+                eq = eq + param(z(i));
+            }
 
             socp.addConstraint(eq == 0.0);
         }

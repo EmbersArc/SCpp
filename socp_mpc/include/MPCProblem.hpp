@@ -14,7 +14,8 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_vector_t &state_weights_intermediate,
     Model::state_vector_t &state_weights_terminal,
     Model::input_vector_t &input_weights,
-    const Model::state_matrix_t &A,
-    const Model::control_matrix_t &B,
-    const Model::state_vector_t &z);
+    Model::state_matrix_t &A,
+    Model::control_matrix_t &B,
+    Model::state_vector_t &z,
+    bool constant_dynamics = false);
 }

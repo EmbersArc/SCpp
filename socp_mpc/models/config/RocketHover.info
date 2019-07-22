@@ -20,7 +20,7 @@ r_T_B
     (2)   -0.33
 }
 
-m       1.6
+m       1.61
 
 
 ; ----- initial values -----
@@ -57,9 +57,9 @@ w_init
 ; position
 r_final
 {
-    (0)     3.
-    (1)     5.
-    (2)     3.
+    (0)     2.
+    (1)     2.
+    (2)     2.
 }
 ; velocity
 v_final

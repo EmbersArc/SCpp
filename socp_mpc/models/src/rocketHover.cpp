@@ -69,18 +69,22 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
     for (size_t k = 1; k < K; k++)
     {
         // Max Velocity
-        socp.addConstraint(op::norm2({(1.0) * var("X", {3, k}), (1.0) * var("X", {4, k}), (1.0) * var("X", {5, k})}) <=
+        socp.addConstraint(op::norm2({(1.0) * var("X", {3, k}),
+                                      (1.0) * var("X", {4, k}),
+                                      (1.0) * var("X", {5, k})}) <=
                            param(p.v_I_max) + 1.0 * var("epsilon", {slack_index++}));
 
         // Max Tilt Angle
-        // norm2([x(7), x(8)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}), (1.0) * var("X", {7, k})}) <=
+        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
+                                      (1.0) * var("X", {7, k})}) <=
                            param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }) +
                                1.0 * var("epsilon", {slack_index++}));
 
         // Max Rotation Velocity
         socp.addConstraint(
-            op::norm2({(1.0) * var("X", {9, k}), (1.0) * var("X", {10, k}), (1.0) * var("X", {11, k})}) <=
+            op::norm2({(1.0) * var("X", {9, k}),
+                       (1.0) * var("X", {10, k}),
+                       (1.0) * var("X", {11, k})}) <=
             param(p.w_B_max) + 1.0 * var("epsilon", {slack_index++}));
     }
     assert(slack_index == total_slack_variables);
@@ -92,11 +96,13 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
         socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
         // Maximum Thrust
-        socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}), (1.0) * var("U", {1, k}), (1.0) * var("U", {2, k})}) <=
+        socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}),
+                                      (1.0) * var("U", {1, k}), (1.0) * var("U", {2, k})}) <=
                            param(p.T_max));
 
         // Maximum Gimbal Angle
-        socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}), (1.0) * var("U", {1, k})}) <=
+        socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}),
+                                      (1.0) * var("U", {1, k})}) <=
                            param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
     }
 }
@@ -118,9 +124,6 @@ void RocketHover::Parameters::loadFromFile(std::string path)
         path = "../socp_mpc/models/config/";
     }
     ParameterServer param(fmt::format("{}{}.info", path, getModelName()));
-    // ParameterServer
-    // param(fmt::format("../Dropbox/VSWorkspace/catkin_ws/src/rotors_simulator/rotors_control/SCpp/socp_mpc/models/config/{}.info",
-    // getModelName()));
 
     param.loadScalar("time_horizon", time_horizon);
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
@@ -160,8 +163,8 @@ void RocketHover::Parameters::loadFromFile(std::string path)
     deg2rad(rpy_init);
     deg2rad(rpy_final);
 
-    const Eigen::Vector3d quat_init = eulerToQuaternion(rpy_init).tail<3>();
-    const Eigen::Vector3d quat_final = eulerToQuaternion(rpy_final).tail<3>();
+    const Eigen::Vector3d quat_init = quaternionToVector(eulerToQuaternion(rpy_init)).tail<3>();
+    const Eigen::Vector3d quat_final = quaternionToVector(eulerToQuaternion(rpy_final)).tail<3>();
     x_init << r_init, v_init, quat_init, w_init;
     x_final << r_final, v_final, quat_final, w_final;
 }

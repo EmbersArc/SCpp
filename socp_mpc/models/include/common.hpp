@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <iostream>
 
 template <typename T>
 void deg2rad(T &deg)
@@ -9,15 +10,57 @@ void deg2rad(T &deg)
 }
 
 template <typename T>
-Eigen::Matrix<T, 4, 1> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &rpy)
+Eigen::Quaternion<T> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &eta)
 {
-    Eigen::Quaternion<T> q = Eigen::AngleAxis<T>(rpy.x(), Eigen::Matrix<T, 3, 1>::UnitX()) *
-                             Eigen::AngleAxis<T>(rpy.y(), Eigen::Matrix<T, 3, 1>::UnitY()) *
-                             Eigen::AngleAxis<T>(rpy.z(), Eigen::Matrix<T, 3, 1>::UnitZ());
-    Eigen::Matrix<T, 4, 1> quat;
-    quat << q.w(), q.vec();
+    Eigen::Quaternion<T> q;
+    q = Eigen::AngleAxis<T>(eta.x(), Eigen::Matrix<T, 3, 1>::UnitX()) *
+        Eigen::AngleAxis<T>(eta.y(), Eigen::Matrix<T, 3, 1>::UnitY()) *
+        Eigen::AngleAxis<T>(eta.z(), Eigen::Matrix<T, 3, 1>::UnitZ());
+    return q;
+}
 
-    return quat;
+template <typename T>
+Eigen::Matrix<T, 4, 1> quaternionToVector(const Eigen::Quaternion<T> &q)
+{
+    Eigen::Matrix<T, 4, 1> q_vec;
+    q_vec << q.w(), q.vec();
+    return q_vec;
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 1> quaternionToEulerRPY(const Eigen::Quaternion<T> &q)
+{
+    const Eigen::Matrix<T, 3, 3> R = q.toRotationMatrix();
+    const T phi = atan2(-R(1, 2), R(2, 2));
+    const T theta = asin(R(0, 2));
+    const T psi = atan2(-R(0, 1), R(0, 0));
+
+    return Eigen::Matrix<T, 3, 1>(phi, theta, psi);
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 1> quaternionToEulerYPR(const Eigen::Quaternion<T> &q)
+{
+    const Eigen::Matrix<T, 3, 3> R = q.toRotationMatrix();
+    const T phi = atan2(R(2, 1), R(2, 2));
+    const T theta = asin(-R(2, 0));
+    const T psi = atan2(R(1, 0), R(0, 0));
+    return Eigen::Matrix<T, 3, 1>(phi, theta, psi);
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 3> rotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
+{
+    const T phi = eta.x();
+    const T theta = eta.y();
+    const T psi = eta.z();
+
+    Eigen::Matrix<T, 3, 3> M;
+    M.row(0) << cos(psi), -sin(psi), 0;
+    M.row(1) << cos(theta) * sin(psi), cos(theta) * cos(psi), 0;
+    M.row(2) << -sin(theta) * cos(psi), sin(theta) * sin(psi), cos(theta);
+
+    return M / cos(theta);
 }
 
 template <typename T>
@@ -59,19 +102,4 @@ Eigen::Matrix<T, 3, 3> EulerRotationMatrix(const Eigen::Matrix<T, 3, 1> &eta)
         sin(phi) * cos(psi) + cos(phi) * sin(theta) * sin(psi), cos(phi) * cos(theta);
 
     return R;
-}
-
-template <typename T>
-Eigen::Matrix<T, 3, 3> EulerRotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
-{
-    const T phi = eta(0);
-    const T theta = eta(1);
-    const T psi = eta(2);
-
-    Eigen::Matrix<T, 3, 3> J;
-    J.row(0) << cos(psi), -sin(psi), 0.;
-    J.row(1) << cos(theta) * sin(psi), cos(theta) * cos(psi), 0;
-    J.row(2) << -sin(theta) * cos(psi), sin(theta) * sin(psi), cos(theta);
-
-    return 1. / cos(theta) * J;
 }

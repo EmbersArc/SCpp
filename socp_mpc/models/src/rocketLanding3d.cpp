@@ -214,7 +214,7 @@ void RocketLanding3D::Parameters::randomizeInitialState()
     double ry = dist(eng) * rpy_init.y();
     double rz = rpy_init.z();
     Eigen::Vector3d euler(rx, ry, rz);
-    x_init.segment(7, 4) << eulerToQuaternion(euler);
+    x_init.segment(7, 4) << quaternionToVector(eulerToQuaternion(euler));
 }
 
 void RocketLanding3D::Parameters::loadFromFile()
@@ -257,7 +257,8 @@ void RocketLanding3D::Parameters::loadFromFile()
 
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
-    x_init << m_init, r_init, v_init, eulerToQuaternion(rpy_init), w_init;
+    Eigen::Vector4d q_init = quaternionToVector(eulerToQuaternion(rpy_init));
+    x_init << m_init, r_init, v_init, q_init, w_init;
     if (randomInitialState)
     {
         randomizeInitialState();

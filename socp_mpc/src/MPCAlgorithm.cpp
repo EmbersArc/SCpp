@@ -32,16 +32,12 @@ void MPCAlgorithm::loadParameters(const std::string &path)
     param.loadScalar("nondimensionalize", nondimensionalize);
 }
 
-void MPCAlgorithm::initialize()
+void MPCAlgorithm::initialize(bool constant_dynamics)
 {
     print("Initializing model '{}'.\n", Model::getModelName());
 
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K - 1);
-
-    Model::state_vector_t x_eq;
-    Model::input_vector_t u_eq;
-    model->getOperatingPoint(x_eq, u_eq);
 
     model->getStateWeights(state_weights_intermediate, state_weights_terminal);
     model->getInputWeights(input_weights);
@@ -49,27 +45,36 @@ void MPCAlgorithm::initialize()
     double T;
     model->getTimeHorizon(T);
 
-    const double dt = T / (K - 1);
+    dt = T / (K - 1);
 
     print("Computing dynamics.\n");
     const double timer_dynamics = tic();
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
-    print("Discretizing.\n");
-    const double timer_discretize = tic();
-    exactLinearDiscretization(*model, dt, x_eq, u_eq, A, B, z);
-    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
+    Model::state_vector_t x_eq;
+    Model::input_vector_t u_eq;
+    model->getOperatingPoint(x_eq, u_eq);
+    discretize(x_eq, u_eq);
 
     socp = mpc::buildSCOP(*model,
                           X, U,
                           x_init, x_final,
                           state_weights_intermediate, state_weights_terminal, input_weights,
-                          A, B, z);
+                          A, B, z,
+                          constant_dynamics);
 
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
+}
+
+void MPCAlgorithm::discretize(const Model::state_vector_t &x, const Model::input_vector_t &u)
+{
+    print("Discretizing.\n");
+    const double timer_discretize = tic();
+    exactLinearDiscretization(*model, dt, x, u, A, B, z);
+    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 }
 
 void MPCAlgorithm::getTimeSteps(size_t &K) { K = this->K; }

@@ -21,7 +21,13 @@ public:
      * @brief Initializes the algorithm. Has to be called before solving the problem.
      *
      */
-    void initialize();
+    void initialize(bool constant_dynamics = false);
+
+    /**
+     * @brief Discretizes the system.
+     *
+     */
+    void discretize(const Model::state_vector_t &x, const Model::input_vector_t &u);
 
     /**
      * @brief Returns the number of discretization steps.
@@ -90,6 +96,7 @@ private:
     void loadParameters(const std::string &path);
 
     size_t K;
+    double dt;
     bool nondimensionalize;
 
     std::shared_ptr<Model> model;

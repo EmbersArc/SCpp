@@ -25,7 +25,7 @@ int main()
 
     const double sim_time = 15.;
 
-    solver.initialize();
+    solver.initialize(true);
 
     Model::dynamic_matrix_t X;
     Model::dynamic_matrix_t U;
