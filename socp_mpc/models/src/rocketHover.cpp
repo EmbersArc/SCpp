@@ -21,16 +21,19 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x, const input_vector_a
     auto g_I_ = p.g_I.cast<T>();
     auto r_T_B_ = p.r_T_B.cast<T>();
 
+    Eigen::Matrix<T, 3, 1> thrust = u.head<3>();
+    Eigen::Matrix<T, 3, 1> tau(0., 0., u(3));
+
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / T(p.m) * (R_I_B * u) + g_I_;
+    f.segment<3>(3) << 1. / T(p.m) * (R_I_B * thrust) + g_I_;
     f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
-    f.segment<3>(9) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+    f.segment<3>(9) << J_B_inv * (r_T_B_.cross(thrust) + tau) - w.cross(w);
 }
 
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    u << 0, 0, -p.g_I.z() * p.m;
+    u << 0, 0, -p.g_I.z() * p.m, 0;
 }
 
 void RocketHover::getTimeHorizon(double &T) { T = p.time_horizon; }
