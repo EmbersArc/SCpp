@@ -40,6 +40,7 @@ set(MPC_SOURCES
     socp_mpc/src/MPCAlgorithm.cpp
     socp_mpc/src/SCProblem.cpp
     socp_mpc/src/SCAlgorithm.cpp
+    socp_mpc/src/LQR.cpp
 
     socp_mpc/models/src/rocketHover.cpp
     socp_mpc/models/src/rocketLanding3d.cpp
