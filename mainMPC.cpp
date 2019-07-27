@@ -34,7 +34,7 @@ int main()
     Model::input_vector_v_t U_sim;
     std::vector<double> times;
 
-    Model::input_vector_t u(0, 0, -model->p.g_I.z() * model->p.m);
+    Model::input_vector_t u(0, 0, -model->p.g_I.z() * model->p.m, 0);
     Model::state_vector_t x = model->p.x_init;
 
     solver.setInitialState(x);

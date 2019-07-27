@@ -28,6 +28,18 @@ Eigen::Matrix<T, 4, 1> quaternionToVector(const Eigen::Quaternion<T> &q)
 }
 
 template <typename T>
+Eigen::Quaternion<T> vectorToQuaternion(const Eigen::Matrix<T, 3, 1> &v)
+{
+    return Eigen::Quaternion<T>(std::sqrt(1. - v.squaredNorm()), v.x(), v.y(), v.z());
+}
+
+template <typename T>
+Eigen::Quaternion<T> vectorToQuaternion(const Eigen::Matrix<T, 4, 1> &v)
+{
+    return Eigen::Quaternion<T>(v(3), v(0), v(1), v(2));
+}
+
+template <typename T>
 Eigen::Matrix<T, 3, 1> quaternionToEulerRPY(const Eigen::Quaternion<T> &q)
 {
     const Eigen::Matrix<T, 3, 3> R = q.toRotationMatrix();

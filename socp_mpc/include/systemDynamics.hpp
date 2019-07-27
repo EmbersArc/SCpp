@@ -9,7 +9,9 @@ public:
     using state_vector_t = Eigen::Matrix<double, STATE_DIM, 1>;
     using state_matrix_t = Eigen::Matrix<double, STATE_DIM, STATE_DIM>;
     using input_vector_t = Eigen::Matrix<double, INPUT_DIM, 1>;
+    using input_matrix_t = Eigen::Matrix<double, INPUT_DIM, INPUT_DIM>;
     using control_matrix_t = Eigen::Matrix<double, STATE_DIM, INPUT_DIM>;
+    using feedback_matrix_t = Eigen::Matrix<double, INPUT_DIM, STATE_DIM>;
     using param_vector_t = Eigen::Matrix<double, PARAM_DIM, 1>;
     using dynamic_vector_t = Eigen::Matrix<double, Eigen::Dynamic, 1>;
     using dynamic_matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;

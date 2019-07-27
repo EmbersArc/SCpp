@@ -96,7 +96,7 @@ v_I_max     3.
 w_B_max     20.
 
 ; algorithm specific parameters
-time_horizon   2.5
+time_horizon   2.
 
 state_weights_intermediate
 {
@@ -138,4 +138,5 @@ input_weights
     (0)   1
     (1)   1
     (2)   1
+    (3)   1
 }
