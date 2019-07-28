@@ -34,7 +34,8 @@ int main()
     Model::input_vector_v_t U_sim;
     std::vector<double> times;
 
-    Model::input_vector_t u(0, 0, -model->p.g_I.z() * model->p.m, 0);
+    Model::input_vector_t u;
+    u.setZero();
     Model::state_vector_t x = model->p.x_init;
 
     solver.setInitialState(x);
@@ -76,11 +77,6 @@ int main()
         u = U.col(0);
 
         sim_step++;
-
-        // if ((x - model->p.x_final).head<3>().norm() < 0.01 and x.segment<3>(3).norm() < 0.01)
-        // {
-        //     break;
-        // }
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);
