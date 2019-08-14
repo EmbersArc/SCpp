@@ -43,7 +43,7 @@ void exactLinearDiscretization(Model &model,
 
     A = expE.topLeftCorner(Model::state_dim, Model::state_dim);
     B = expE.topRightCorner(Model::state_dim, Model::input_dim);
-    z = f - A * x_eq - B * u_eq;
+    z.noalias() = f - A * x_eq - B * u_eq;
 }
 
 class ODEMultipleShootingVariableTime
@@ -87,25 +87,25 @@ public:
         cols += 1;
 
         // A_bar
-        dVdt.block<Model::state_dim, Model::state_dim>(0, cols) = A_bar * Phi_A_xi;
+        dVdt.block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A_bar * Phi_A_xi;
         cols += Model::state_dim;
 
         // B_bar
         const double alpha = (dt - t) / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * alpha;
         cols += Model::input_dim;
 
         // C_bar
         const double beta = t / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * beta;
         cols += Model::input_dim;
 
         // S_bar
-        dVdt.block<Model::state_dim, 1>(0, cols) = Phi_A_xi_inverse * f;
+        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * f;
         cols += 1;
 
         // z_bar
-        dVdt.block<Model::state_dim, 1>(0, cols) = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
 
         assert(cols + 1 == size_t(dVdt.cols()));
     }
@@ -144,16 +144,16 @@ void multipleShootingVariableTime(
         A_bar[k] = V.block<Model::state_dim, Model::state_dim>(0, cols);
         cols += Model::state_dim;
 
-        B_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        B_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
-        C_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        C_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
-        S_bar[k] = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
+        S_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
         cols += 1;
 
-        z_bar[k] = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
+        z_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
 }
 
@@ -195,21 +195,21 @@ public:
         cols += 1;
 
         // A_bar
-        dVdt.block<Model::state_dim, Model::state_dim>(0, cols) = A_bar * Phi_A_xi;
+        dVdt.block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A_bar * Phi_A_xi;
         cols += Model::state_dim;
 
         // B_bar
         const double alpha = (dt - t) / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * alpha;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * alpha;
         cols += Model::input_dim;
 
         // C_bar
         const double beta = t / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols) = Phi_A_xi_inverse * B_bar * beta;
+        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * beta;
         cols += Model::input_dim;
 
         // z_bar
-        dVdt.block<Model::state_dim, 1>(0, cols) = Phi_A_xi_inverse * (f - A_bar * x - B_bar * u);
+        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (f - A_bar * x - B_bar * u);
 
         assert(cols + 1 == size_t(dVdt.cols()));
     }
@@ -247,12 +247,12 @@ void multipleShooting(
         A_bar[k] = V.block<Model::state_dim, Model::state_dim>(0, cols);
         cols += Model::state_dim;
 
-        B_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        B_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
-        C_bar[k] = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
+        C_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
-        z_bar[k] = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
+        z_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
 }
