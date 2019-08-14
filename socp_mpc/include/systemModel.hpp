@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 
+#include "fmt/format.h"
+
 #include "optimizationProblem.hpp"
 #include "systemDynamics.hpp"
 
@@ -79,13 +81,19 @@ public:
      * @brief Function to remove mass and length dimensions from all function parameters.
      * 
      */
-    virtual void nondimensionalize(){};
+    virtual void nondimensionalize()
+    {
+        fmt::print("nondimensionalize: Function called without implementation.");
+    };
 
     /**
      * @brief Function to add mass and length dimensions to all function parameters.
      * 
      */
-    virtual void redimensionalize(){};
+    virtual void redimensionalize()
+    {
+        fmt::print("redimensionalize: Function called without implementation.");
+    };
 
     /**
      * @brief Get the time horizon or initial time guess.
@@ -117,7 +125,6 @@ public:
         throw std::runtime_error("getStateWeights: This function has to be implemented by the derived class.");
     };
 
-
     /**
      * @brief Get the weights on the system input.
      * 
@@ -135,7 +142,10 @@ public:
      * @param U     Input trajectory.
      */
     virtual void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                             Eigen::MatrixXd &U){};
+                                             Eigen::MatrixXd &U)
+    {
+        fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
+    };
 
     /**
      * @brief Function to add mass and length dimensions to state and input trajectory.
@@ -144,5 +154,8 @@ public:
      * @param U     Input trajectory.
      */
     virtual void redimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                            Eigen::MatrixXd &U){};
+                                            Eigen::MatrixXd &U)
+    {
+        fmt::print("redimensionalizeTrajectory: Function called without implementation.");
+    };
 };
