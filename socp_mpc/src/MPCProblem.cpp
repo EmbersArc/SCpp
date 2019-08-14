@@ -15,7 +15,8 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_matrix_t &A,
     Model::control_matrix_t &B,
     Model::state_vector_t &z,
-    bool constant_dynamics)
+    bool constant_dynamics,
+    bool intermediate_cost_active)
 {
     const size_t K = X.cols();
 
@@ -94,14 +95,17 @@ op::SecondOrderConeProgram buildSCOP(
      * 
      */
     std::vector<op::AffineExpression> error_norm2_args;
-    for (size_t k = 1; k < K - 1; k++)
+    if (intermediate_cost_active)
     {
-        for (size_t i = 0; i < Model::state_dim; i++)
+        for (size_t k = 1; k < K - 1; k++)
         {
-            op::Parameter x_desired = param_fn([&state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
-            op::AffineTerm x_current = param(state_weights_intermediate(i)) * var("X", {i, K - 1});
-            op::AffineExpression ex = x_desired + x_current;
-            error_norm2_args.push_back(ex);
+            for (size_t i = 0; i < Model::state_dim; i++)
+            {
+                op::Parameter x_desired = param_fn([&state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
+                op::AffineTerm x_current = param(state_weights_intermediate(i)) * var("X", {i, K - 1});
+                op::AffineExpression ex = x_desired + x_current;
+                error_norm2_args.push_back(ex);
+            }
         }
     }
     for (size_t i = 0; i < Model::state_dim; i++)
