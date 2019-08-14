@@ -36,7 +36,10 @@ void SCAlgorithm::loadParameters()
 
 void SCAlgorithm::initialize()
 {
+    print("Computing dynamics.\n");
+    const double timer_dynamics = tic();
     model->initializeModel();
+    print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
     A_bar.resize(K - 1);
     B_bar.resize(K - 1);
@@ -69,6 +72,7 @@ bool SCAlgorithm::iterate()
     {
         multipleShooting(*model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
     }
+
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
     // solve the problem
