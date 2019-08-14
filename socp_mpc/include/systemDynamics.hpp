@@ -94,8 +94,8 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
     dynamic_vector_ad_t param(PARAM_DIM);
-    // x.setOnes();
-    // param.setOnes();
+    x.setOnes();
+    param.setOnes();
 
     // start recording
     CppAD::Independent(x, 0, false, param);
