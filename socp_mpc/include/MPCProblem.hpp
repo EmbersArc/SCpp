@@ -17,5 +17,6 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_matrix_t &A,
     Model::control_matrix_t &B,
     Model::state_vector_t &z,
-    bool constant_dynamics = false);
+    bool constant_dynamics = false,
+    bool intermediate_cost_active = true);
 }
