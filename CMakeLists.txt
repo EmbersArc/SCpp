@@ -52,10 +52,12 @@ target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
 target_include_directories(mpc_lib PUBLIC ${SOCP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SOCP_SYSTEM_INCLUDE_DIRECTORIES})
 
-target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wunused)
+target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wunused -O2)
 
 add_executable(mpc mainMPC.cpp)
 target_link_libraries(mpc mpc_lib)
 
-add_executable(sc mainSC.cpp)
+add_executable(sc_sim mainSC.cpp)
+target_link_libraries(sc_sim mpc_lib)
+add_executable(sc SC.cpp)
 target_link_libraries(sc mpc_lib)
