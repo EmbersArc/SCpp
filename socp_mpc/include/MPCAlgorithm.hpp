@@ -21,7 +21,8 @@ public:
      * @brief Initializes the algorithm. Has to be called before solving the problem.
      *
      */
-    void initialize(bool constant_dynamics = false);
+    void initialize(bool constant_dynamics = false,
+                    bool intermediate_cost_active = true);
 
     /**
      * @brief Discretizes the system.
