@@ -1,4 +1,5 @@
 #include "LQR.hpp"
+#include "fmt/format.h"
 
 constexpr size_t STATE_DIM = Model::state_dim;
 using schur_matrix_t = Eigen::Matrix<double, 2 * STATE_DIM, 2 * STATE_DIM>;
@@ -60,17 +61,16 @@ bool careSolve(const Model::state_matrix_t &Q,
                const Model::state_matrix_t &A,
                const Model::control_matrix_t &B,
                Model::state_matrix_t &P,
-               bool RisDiagonal,
                Model::input_matrix_t &R_inverse)
 {
-    if (RisDiagonal)
+    if ((R - Model::input_matrix_t::Identity().cwiseProduct(R)).any())
     {
-        R_inverse.setZero();
-        R_inverse.diagonal() = R.diagonal().cwiseInverse();
+        R_inverse = R.inverse();
     }
     else
     {
-        R_inverse = R.inverse();
+        R_inverse.setZero();
+        R_inverse.diagonal() = R.diagonal().cwiseInverse();
     }
 
     schur_matrix_t M;
@@ -83,14 +83,34 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
                 const Model::input_matrix_t &R,
                 const Model::state_matrix_t &A,
                 const Model::control_matrix_t &B,
-                Model::feedback_matrix_t &K,
-                bool RisDiagonal)
+                Model::feedback_matrix_t &K)
 {
+    fmt::print("Checking controllability.\n");
+
+    using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
+
+    ctrl_matrix_t C;
+    Model::control_matrix_t Cblock = B;
+    for (size_t i = 0; i < Model::state_dim; i++)
+    {
+        C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim) = Cblock;
+        Cblock = A * Cblock;
+    }
+    Eigen::FullPivLU<ctrl_matrix_t> lu_decomp(C);
+
+    if (lu_decomp.rank() == Model::state_dim)
+    {
+        fmt::print("System is controllable.\n");
+    }
+    else
+    {
+        fmt::print("WARNING: System is not controllable!\n");
+    }
+
+    fmt::print("Computing feedback gains.\n");
     Model::input_matrix_t R_inverse;
     Model::state_matrix_t P;
-
-    bool success = careSolve(Q, R, A, B, P, RisDiagonal, R_inverse);
-
+    bool success = careSolve(Q, R, A, B, P, R_inverse);
     K = (R_inverse * (B.transpose() * P));
 
     return success;
