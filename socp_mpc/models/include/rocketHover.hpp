@@ -48,6 +48,9 @@ public:
 
     void redimensionalize() override;
 
+    void getInitializedTrajectory(Eigen::MatrixXd &X,
+                                  Eigen::MatrixXd &U) override;
+
     struct Parameters
     {
         double time_horizon;
@@ -66,6 +69,9 @@ public:
         double theta_max;
         double v_I_max;
         double w_B_max;
+
+        Eigen::Vector3d rpy_init;
+        Eigen::Vector3d rpy_final;
 
         state_vector_t x_init;
         state_vector_t x_final;

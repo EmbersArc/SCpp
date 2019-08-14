@@ -12,28 +12,27 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x, const input_vector_a
     typedef scalar_ad_t T;
 
     // state variables
-    auto v = x.segment<3>(3);
-    auto q = x.segment<3>(6);
-    auto w = x.segment<3>(9);
+    Eigen::Matrix<T, 3, 1> v(x(3), x(4), x(5));
+    Eigen::Matrix<T, 3, 1> eta(x(6), x(7), 0.);
+    Eigen::Matrix<T, 3, 1> w(x(8), x(9), 0.);
 
-    auto R_I_B = Eigen::Quaternion<T>(sqrt(1. - q.squaredNorm()), q(0), q(1), q(2)).toRotationMatrix();
+    auto R_I_B = eulerToQuaternion(eta).toRotationMatrix();
     auto J_B_inv = p.J_B.cast<T>().asDiagonal().inverse();
     auto g_I_ = p.g_I.cast<T>();
     auto r_T_B_ = p.r_T_B.cast<T>();
 
-    Eigen::Matrix<T, 3, 1> thrust = u.head<3>();
-    Eigen::Matrix<T, 3, 1> tau(0., 0., u(3));
+    const Eigen::Matrix<T, 3, 1> thrust = u;
 
     f.segment<3>(0) << v;
     f.segment<3>(3) << 1. / T(p.m) * (R_I_B * thrust) + g_I_;
-    f.segment<3>(6) << T(0.5) * omegaMatrixReduced<T>(q) * w;
-    f.segment<3>(9) << J_B_inv * (r_T_B_.cross(thrust) + tau) - w.cross(w);
+    f.segment<2>(6) << (rotationJacobian(eta) * w).head<2>();
+    f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(thrust)) - w.cross(w)).head<2>();
 }
 
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
-    x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    u << 0, 0, -p.g_I.z() * p.m, 0;
+    x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    u << 0, 0, -p.g_I.z() * p.m;
 }
 
 void RocketHover::getTimeHorizon(double &T) { T = p.time_horizon; }
@@ -65,7 +64,14 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
         norm2_terms.push_back(1.0 * var("epsilon", {i}));
     }
     socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
-    socp.addMinimizationTerm(1000. * var("epsilon_norm"));
+    socp.addMinimizationTerm(100. * var("epsilon_norm"));
+
+    // Initial and final state
+    for (size_t i = 0; i < STATE_DIM_; i++)
+    {
+        socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
+        socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+    }
 
     // State Constraints:
     size_t slack_index = 0;
@@ -80,14 +86,12 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
         // Max Tilt Angle
         socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
                                       (1.0) * var("X", {7, k})}) <=
-                           param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }) +
-                               1.0 * var("epsilon", {slack_index++}));
+                           param(p.theta_max) + 1.0 * var("epsilon", {slack_index++}));
 
         // Max Rotation Velocity
         socp.addConstraint(
-            op::norm2({(1.0) * var("X", {9, k}),
-                       (1.0) * var("X", {10, k}),
-                       (1.0) * var("X", {11, k})}) <=
+            op::norm2({(1.0) * var("X", {8, k}),
+                       (1.0) * var("X", {9, k})}) <=
             param(p.w_B_max) + 1.0 * var("epsilon", {slack_index++}));
     }
     assert(slack_index == total_slack_variables);
@@ -120,6 +124,25 @@ void RocketHover::redimensionalize()
     // p.redimensionalize();
 }
 
+void RocketHover::getInitializedTrajectory(Eigen::MatrixXd &X,
+                                           Eigen::MatrixXd &U)
+{
+    const size_t K = X.cols();
+
+    for (size_t k = 0; k < K; k++)
+    {
+        const double alpha1 = double(K - k) / K;
+        const double alpha2 = double(k) / K;
+
+        // mass, position and linear velocity
+        X.col(k) = alpha1 * p.x_init + alpha2 * p.x_final;
+
+        // input
+        U.setZero();
+        U.row(2).setConstant(-p.g_I.z() * p.m);
+    }
+}
+
 void RocketHover::Parameters::loadFromFile(std::string path)
 {
     if (path == "")
@@ -137,8 +160,8 @@ void RocketHover::Parameters::loadFromFile(std::string path)
     param.loadMatrix("J_B", J_B);
     param.loadMatrix("r_T_B", r_T_B);
 
-    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
-    Eigen::Vector3d r_final, v_final, rpy_final, w_final;
+    Eigen::Vector3d r_init, v_init, w_init;
+    Eigen::Vector3d r_final, v_final, w_final;
 
     param.loadMatrix("r_init", r_init);
     param.loadMatrix("v_init", v_init);
@@ -166,10 +189,8 @@ void RocketHover::Parameters::loadFromFile(std::string path)
     deg2rad(rpy_init);
     deg2rad(rpy_final);
 
-    const Eigen::Vector3d quat_init = quaternionToVector(eulerToQuaternion(rpy_init)).tail<3>();
-    const Eigen::Vector3d quat_final = quaternionToVector(eulerToQuaternion(rpy_final)).tail<3>();
-    x_init << r_init, v_init, quat_init, w_init;
-    x_final << r_final, v_final, quat_final, w_final;
+    x_init << r_init, v_init, rpy_init.head<2>(), w_init.head<2>();
+    x_final << r_final, v_final, rpy_final.head<2>(), w_final.head<2>();
 }
 
 void RocketHover::Parameters::nondimensionalize()
