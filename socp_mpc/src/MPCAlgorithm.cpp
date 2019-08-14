@@ -32,7 +32,8 @@ void MPCAlgorithm::loadParameters(const std::string &path)
     param.loadScalar("nondimensionalize", nondimensionalize);
 }
 
-void MPCAlgorithm::initialize(bool constant_dynamics)
+void MPCAlgorithm::initialize(bool constant_dynamics,
+                              bool intermediate_cost_active)
 {
     print("Initializing model '{}'.\n", Model::getModelName());
 
@@ -62,7 +63,7 @@ void MPCAlgorithm::initialize(bool constant_dynamics)
                           x_init, x_final,
                           state_weights_intermediate, state_weights_terminal, input_weights,
                           A, B, z,
-                          constant_dynamics);
+                          constant_dynamics, intermediate_cost_active);
 
     cacheIndices();
 
@@ -102,7 +103,18 @@ void MPCAlgorithm::solve()
     {
         model->nondimensionalize();
     }
-    solver->solveProblem(false);
+    const int exit_flag = solver->solveProblem(false);
+    if (exit_flag == -4)
+    {
+        print("Process interrupted.");
+        std::terminate();
+    }
+
+    if (exit_flag != 0)
+    {
+        print("There was an issue (Exit code {}) while solving the problem. Continuing.\n", exit_flag);
+    }
+
     if (nondimensionalize)
     {
         model->redimensionalize();
