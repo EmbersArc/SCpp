@@ -66,11 +66,13 @@ bool SCAlgorithm::iterate()
     double timer = tic();
     if (free_final_time)
     {
-        multipleShootingVariableTime(*model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+        discretization::multipleShootingVariableTime(*model, sigma, X, U,
+                                                     A_bar, B_bar, C_bar, S_bar, z_bar);
     }
     else
     {
-        multipleShooting(*model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+        discretization::multipleShooting(*model, sigma, X, U,
+                                         A_bar, B_bar, C_bar, z_bar);
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));

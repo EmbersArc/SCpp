@@ -5,6 +5,9 @@
 #include "eigenIntegration.hpp"
 #include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
+namespace discretization
+{
+
 void eulerLinearDiscretization(Model &model,
                                double ts,
                                const Model::state_vector_t &x_eq,
@@ -256,3 +259,5 @@ void multipleShooting(
         z_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
 }
+
+} // namespace discretization

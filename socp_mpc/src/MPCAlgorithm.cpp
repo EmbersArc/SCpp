@@ -74,7 +74,7 @@ void MPCAlgorithm::discretize(const Model::state_vector_t &x, const Model::input
 {
     print("Discretizing.\n");
     const double timer_discretize = tic();
-    exactLinearDiscretization(*model, dt, x, u, A, B, z);
+    discretization::exactLinearDiscretization(*model, dt, x, u, A, B, z);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 }
 

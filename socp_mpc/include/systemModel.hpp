@@ -54,8 +54,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void getInitializedTrajectory(Eigen::MatrixXd &X,
-                                          Eigen::MatrixXd &U)
+    virtual void getInitializedTrajectory(Eigen::MatrixXd &,
+                                          Eigen::MatrixXd &)
     {
         throw std::runtime_error("getInitializedTrajectory: This function has to be implemented by the derived class.");
     };
@@ -67,15 +67,15 @@ public:
      * @param X     Last state trajectory.
      * @param U     Last input trajectory.
      */
-    virtual void addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                           Eigen::MatrixXd &X0,
-                                           Eigen::MatrixXd &U0){};
+    virtual void addApplicationConstraints(op::SecondOrderConeProgram &,
+                                           Eigen::MatrixXd &,
+                                           Eigen::MatrixXd &){};
 
     /**
      * @brief Updates the parameters in the system flow map.
      * 
      */
-    virtual void getNewModelParameters(param_vector_t &param){};
+    virtual void getNewModelParameters(param_vector_t &){};
 
     /**
      * @brief Function to remove mass and length dimensions from all function parameters.
@@ -100,7 +100,7 @@ public:
      * 
      * @return double The time horizon or initial time guess
      */
-    virtual void getTimeHorizon(double &T)
+    virtual void getTimeHorizon(double &)
     {
         throw std::runtime_error("getTimeHorizon: This function has to be implemented by the derived class.");
     };
@@ -109,7 +109,7 @@ public:
      * @brief Get the operating point of the system. Usually an equilibrium point for linearization.
      * 
      */
-    virtual void getOperatingPoint(state_vector_t &x, input_vector_t &u)
+    virtual void getOperatingPoint(state_vector_t &, input_vector_t &)
     {
         throw std::runtime_error("getOperatingPoint: This function has to be implemented by the derived class.");
     };
@@ -120,7 +120,7 @@ public:
      * @param intermediate 
      * @param terminal 
      */
-    virtual void getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)
+    virtual void getStateWeights(state_vector_t &, state_vector_t &)
     {
         throw std::runtime_error("getStateWeights: This function has to be implemented by the derived class.");
     };
@@ -130,7 +130,7 @@ public:
      * 
      * @param intermediate 
      */
-    virtual void getInputWeights(input_vector_t &intermediate)
+    virtual void getInputWeights(input_vector_t &)
     {
         throw std::runtime_error("getInputWeights: This function has to be implemented by the derived class.");
     };
@@ -141,8 +141,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                             Eigen::MatrixXd &U)
+    virtual void nondimensionalizeTrajectory(Eigen::MatrixXd &,
+                                             Eigen::MatrixXd &)
     {
         fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
     };
@@ -153,8 +153,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void redimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                            Eigen::MatrixXd &U)
+    virtual void redimensionalizeTrajectory(Eigen::MatrixXd &,
+                                            Eigen::MatrixXd &)
     {
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };

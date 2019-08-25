@@ -85,17 +85,18 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
                 const Model::control_matrix_t &B,
                 Model::feedback_matrix_t &K)
 {
-    fmt::print("Checking controllability.\n");
+    fmt::print("Checking controllability... ");
 
     using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
 
     ctrl_matrix_t C;
-    Model::control_matrix_t Cblock = B;
-    for (size_t i = 0; i < Model::state_dim; i++)
+    C.block<Model::state_dim, Model::input_dim>(0, 0) = B;
+    for (size_t i = 1; i < Model::state_dim; i++)
     {
-        C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim) = Cblock;
-        Cblock = A * Cblock;
+        C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim).noalias() =
+            A * C.block<Model::state_dim, Model::input_dim>(0, (i - 1) * Model::input_dim);
     }
+    
     Eigen::FullPivLU<ctrl_matrix_t> lu_decomp(C);
 
     if (lu_decomp.rank() == Model::state_dim)

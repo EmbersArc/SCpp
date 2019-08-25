@@ -78,6 +78,8 @@ public:
 
         double m_scale, r_scale;
 
+        bool constrain_initial_final;
+
         void loadFromFile(std::string path = "");
 
         void nondimensionalize();

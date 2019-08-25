@@ -31,9 +31,11 @@ set(SOCP_INCLUDE_DIRECTORIES
 # SOURCES
 # MPC Algorithm
 set(MPC_SOURCES
+    # utilities
     socp_mpc/utils/src/timing.cpp
     socp_mpc/utils/src/parameterServer.cpp
 
+    # main functionality
     socp_mpc/src/simulation.cpp
     socp_mpc/src/discretization.cpp
     socp_mpc/src/MPCProblem.cpp
@@ -42,6 +44,7 @@ set(MPC_SOURCES
     socp_mpc/src/SCAlgorithm.cpp
     socp_mpc/src/LQR.cpp
 
+    # models
     socp_mpc/models/src/rocketHover.cpp
     socp_mpc/models/src/rocketLanding3d.cpp
 )
@@ -52,7 +55,7 @@ target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
 target_include_directories(mpc_lib PUBLIC ${SOCP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SOCP_SYSTEM_INCLUDE_DIRECTORIES})
 
-target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wunused -O2)
+target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -O2)
 
 add_executable(mpc mainMPC.cpp)
 target_link_libraries(mpc mpc_lib)

@@ -2,6 +2,9 @@
 
 #include "activeModel.hpp"
 
+namespace discretization
+{
+
 /**
  * @brief Multiple-shooting discretization with linear interpolation on input and variable time
  * 
@@ -49,7 +52,6 @@ void multipleShooting(
     Model::control_matrix_v_t &C_bar,
     Model::state_vector_v_t &z_bar);
 
-
 void eulerLinearDiscretization(Model &model,
                                double ts,
                                const Model::state_vector_t &x_eq,
@@ -64,3 +66,5 @@ void exactLinearDiscretization(Model &model,
                                Model::state_matrix_t &A,
                                Model::control_matrix_t &B,
                                Model::state_vector_t &z);
+
+}

@@ -6,7 +6,9 @@ namespace rocketHover
 
 RocketHover::RocketHover() {}
 
-void RocketHover::systemFlowMap(const state_vector_ad_t &x, const input_vector_ad_t &u, const param_vector_ad_t &par,
+void RocketHover::systemFlowMap(const state_vector_ad_t &x,
+                                const input_vector_ad_t &u,
+                                const param_vector_ad_t &,
                                 state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
@@ -45,7 +47,9 @@ void RocketHover::getStateWeights(state_vector_t &intermediate, state_vector_t &
 
 void RocketHover::getInputWeights(input_vector_t &intermediate) { intermediate = p.input_weights; }
 
-void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Eigen::MatrixXd &X0, Eigen::MatrixXd &U0)
+void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+                                            Eigen::MatrixXd &X0,
+                                            Eigen::MatrixXd &)
 {
     const size_t K = X0.cols();
 
@@ -66,11 +70,14 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
     socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
     socp.addMinimizationTerm(100. * var("epsilon_norm"));
 
-    // Initial and final state
-    for (size_t i = 0; i < STATE_DIM_; i++)
+    if (p.constrain_initial_final)
     {
-        socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
-        socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+        // Initial and final state
+        for (size_t i = 0; i < STATE_DIM_; i++)
+        {
+            socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
+            socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+        }
     }
 
     // State Constraints:
@@ -110,7 +117,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp, Ei
         // Maximum Gimbal Angle
         socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}),
                                       (1.0) * var("U", {1, k})}) <=
-                           param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
+                           param_fn([this]() { return std::tan(p.gimbal_max); }) * var("U", {2, k}));
     }
 }
 
@@ -180,6 +187,7 @@ void RocketHover::Parameters::loadFromFile(std::string path)
     param.loadScalar("theta_max", theta_max);
     param.loadScalar("v_I_max", v_I_max);
     param.loadScalar("w_B_max", w_B_max);
+    param.loadScalar("constrain_initial_final", constrain_initial_final);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);
