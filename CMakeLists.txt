@@ -43,6 +43,7 @@ set(MPC_SOURCES
     socp_mpc/src/SCProblem.cpp
     socp_mpc/src/SCAlgorithm.cpp
     socp_mpc/src/LQR.cpp
+    socp_mpc/src/LQRAlgorithm.cpp
 
     # models
     socp_mpc/models/src/rocketHover.cpp
