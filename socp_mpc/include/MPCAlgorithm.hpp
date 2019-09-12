@@ -15,7 +15,7 @@ public:
      *
      * @param model     The system model.
      */
-    explicit MPCAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path = "");
+    explicit MPCAlgorithm(std::shared_ptr<Model> model);
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
@@ -94,7 +94,7 @@ private:
      * @brief Loads the parameters from the configuration file.
      *
      */
-    void loadParameters(const std::string &path);
+    void loadParameters();
 
     size_t K;
     double dt;

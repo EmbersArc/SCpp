@@ -26,8 +26,6 @@ public:
         return "RocketLanding3D";
     }
 
-    void getTimeHorizon(double &T) override;
-
     void systemFlowMap(
         const state_vector_ad_t &x,
         const input_vector_ad_t &u,

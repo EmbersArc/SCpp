@@ -10,7 +10,7 @@ fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelNam
 int main()
 {
     auto model = std::make_shared<Model>();
-    model->p.loadFromFile();
+    model->loadParameters();
 
     SCAlgorithm solver(model);
 

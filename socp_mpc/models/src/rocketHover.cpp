@@ -37,8 +37,6 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
     u << 0, 0, -p.g_I.z() * p.m;
 }
 
-void RocketHover::getTimeHorizon(double &T) { T = p.time_horizon; }
-
 void RocketHover::getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)
 {
     intermediate = p.state_weights_intermediate;
@@ -150,18 +148,14 @@ void RocketHover::getInitializedTrajectory(Eigen::MatrixXd &X,
     }
 }
 
-void RocketHover::Parameters::loadFromFile(std::string path)
+void RocketHover::loadParameters()
 {
-    if (path == "")
-    {
-        path = "../socp_mpc/models/config/";
-    }
-    ParameterServer param(fmt::format("{}{}.info", path, getModelName()));
+    p.loadFromFile(getParameterFolder() + "model.info");
+}
 
-    param.loadScalar("time_horizon", time_horizon);
-    param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
-    param.loadMatrix("state_weights_terminal", state_weights_terminal);
-    param.loadMatrix("input_weights", input_weights);
+void RocketHover::Parameters::loadFromFile(const std::string &path)
+{
+    ParameterServer param(path);
 
     param.loadMatrix("g_I", g_I);
     param.loadMatrix("J_B", J_B);

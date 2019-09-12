@@ -9,27 +9,23 @@ using std::vector;
 namespace mpc
 {
 
-MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path) : model(model)
+MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model) : model(model)
 {
-    std::string filename = "MPCParameters.info";
-    std::string path;
-    if (parameter_path == "")
-    {
-        path = "../socp_mpc/config/" + filename;
-    }
-    else
-    {
-        path = parameter_path + filename;
-    }
-    loadParameters(path);
+    loadParameters();
 }
 
-void MPCAlgorithm::loadParameters(const std::string &path)
+void MPCAlgorithm::loadParameters()
 {
-    ParameterServer param(path);
+    ParameterServer param(model->getParameterFolder() + "MPC.info");
 
     param.loadScalar("K", K);
     param.loadScalar("nondimensionalize", nondimensionalize);
+    double time_horizon;
+    param.loadScalar("time_horizon", time_horizon);
+    dt = time_horizon / (K - 1);
+    param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
+    param.loadMatrix("state_weights_terminal", state_weights_terminal);
+    param.loadMatrix("input_weights", input_weights);
 }
 
 void MPCAlgorithm::initialize(bool constant_dynamics,
@@ -42,11 +38,6 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
 
     model->getStateWeights(state_weights_intermediate, state_weights_terminal);
     model->getInputWeights(input_weights);
-
-    double T;
-    model->getTimeHorizon(T);
-
-    dt = T / (K - 1);
 
     print("Computing dynamics.\n");
     const double timer_dynamics = tic();

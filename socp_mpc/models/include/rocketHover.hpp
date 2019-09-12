@@ -32,9 +32,7 @@ public:
         const param_vector_ad_t &par,
         state_vector_ad_t &f) override;
 
-    void getOperatingPoint(state_vector_t &x, input_vector_t &u);
-
-    void getTimeHorizon(double &T) override;
+    void getOperatingPoint(state_vector_t &x, input_vector_t &u) override;
 
     void getStateWeights(state_vector_t &intermediate, state_vector_t &terminal) override;
 
@@ -50,6 +48,8 @@ public:
 
     void getInitializedTrajectory(Eigen::MatrixXd &X,
                                   Eigen::MatrixXd &U) override;
+
+    void loadParameters();
 
     struct Parameters
     {
@@ -80,7 +80,7 @@ public:
 
         bool constrain_initial_final;
 
-        void loadFromFile(std::string path = "");
+        void loadFromFile(const std::string &path);
 
         void nondimensionalize();
 

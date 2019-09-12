@@ -1,0 +1,42 @@
+; algorithm specific parameters
+time_horizon   3.
+K              10
+nondimensionalize false
+
+state_weights_intermediate
+{
+    scaling 1.
+    (0)   1.
+    (1)   1.
+    (2)   1.
+    (3)   1.
+    (4)   1.
+    (5)   1.
+    (6)   1.
+    (7)   1.
+    (8)   1.
+    (9)   1.
+}
+
+state_weights_terminal
+{
+    scaling 1.
+    (0)   1.
+    (1)   1.
+    (2)   1.
+    (3)   0.
+    (4)   0.
+    (5)   0.
+    (6)   0.
+    (7)   0.
+    (8)   0.
+    (9)   0.
+}
+
+input_weights
+{
+    scaling 0.3
+    (0)   1.
+    (1)   1.
+    (2)   1.
+}

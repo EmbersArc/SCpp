@@ -12,7 +12,7 @@ public:
      *
      * @param model     The system model.
      */
-    explicit LQRAlgorithm(std::shared_ptr<Model> model, const std::string parameter_path = "");
+    explicit LQRAlgorithm(std::shared_ptr<Model> model);
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
@@ -65,7 +65,7 @@ private:
      * @brief Loads the parameters from the configuration file.
      *
      */
-    void loadParameters(const std::string &path);
+    void loadParameters();
 
     Model::feedback_matrix_t K;
 

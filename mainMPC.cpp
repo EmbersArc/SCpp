@@ -19,7 +19,7 @@ double expMovingAverage(double previousAverage, double period, double newValue)
 int main()
 {
     auto model = std::make_shared<Model>();
-    model->p.loadFromFile();
+    model->loadParameters();
 
     mpc::MPCAlgorithm solver(model);
 

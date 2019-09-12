@@ -96,16 +96,6 @@ public:
     };
 
     /**
-     * @brief Get the time horizon or initial time guess.
-     * 
-     * @return double The time horizon or initial time guess
-     */
-    virtual void getTimeHorizon(double &)
-    {
-        throw std::runtime_error("getTimeHorizon: This function has to be implemented by the derived class.");
-    };
-
-    /**
      * @brief Get the operating point of the system. Usually an equilibrium point for linearization.
      * 
      */
@@ -158,4 +148,17 @@ public:
     {
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };
+
+    void setParameterFolder(const std::string &path)
+    {
+        param_folder_path = path;
+    }
+
+    const std::string getParameterFolder()
+    {
+        return param_folder_path;
+    }
+
+private:
+    std::string param_folder_path = "../socp_mpc/config";
 };
