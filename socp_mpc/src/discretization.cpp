@@ -46,7 +46,7 @@ void exactLinearDiscretization(Model::ptr_t model,
 
     A = expE.topLeftCorner(Model::state_dim, Model::state_dim);
     B = expE.topRightCorner(Model::state_dim, Model::input_dim);
-    z.noalias() = f - A * x_eq - B * u_eq;
+    z = ts * f - A * x_eq - B * u_eq;
 }
 
 class ODEMultipleShootingVariableTime

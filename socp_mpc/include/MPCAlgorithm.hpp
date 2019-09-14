@@ -98,7 +98,6 @@ private:
     Model::state_vector_t state_weights_terminal;
     Model::input_vector_t input_weights;
 
-
     Model::state_vector_t x_init;
     Model::state_vector_t x_final;
 
