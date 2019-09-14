@@ -21,10 +21,7 @@ class RocketHover : public SystemModel<RocketHover, STATE_DIM_, INPUT_DIM_, PARA
 public:
     RocketHover();
 
-    static std::string getModelName()
-    {
-        return "RocketHover";
-    }
+    inline static const std::string modelName = "RocketHover";
 
     void systemFlowMap(
         const state_vector_ad_t &x,

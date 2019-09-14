@@ -53,9 +53,9 @@ int main()
         fmt::print("{:=^{}}\n", fmt::format("<SIMULATION STEP {}>", sim_step), 60);
 
         // forward estimation
-        Model::state_vector_t x_expected;
-        sim::simulate(*model, avg_solve_time, x, u, u, x_expected);
-        solver.setInitialState(x_expected);
+        // Model::state_vector_t x_expected;
+        // sim::simulate(model, avg_solve_time, x, u, u, x_expected);
+        solver.setInitialState(x);
 
         X_sim.push_back(x);
         U_sim.push_back(u);
@@ -69,7 +69,7 @@ int main()
         fmt::print("{:<{}}{:.2f}ms\n", "Average solve time:", 50, avg_solve_time * 1000);
 
         // move solve_time forward
-        sim::simulate(*model, solve_time, x, u, u, x);
+        sim::simulate(model, solve_time, x, u, u, x);
         current_time += solve_time;
 
         // get the calculated input

@@ -9,14 +9,15 @@ using std::vector;
 namespace mpc
 {
 
-MPCAlgorithm::MPCAlgorithm(Model::ptr_t model) : model(model)
+MPCAlgorithm::MPCAlgorithm(Model::ptr_t model)
 {
+    this->model = model;
     loadParameters();
 }
 
 void MPCAlgorithm::loadParameters()
 {
-    ParameterServer param(model->getParameterFolder() + "MPC.info");
+    ParameterServer param(model->getParameterFolder() + "/MPC.info");
 
     param.loadScalar("K", K);
     param.loadScalar("nondimensionalize", nondimensionalize);
@@ -24,6 +25,9 @@ void MPCAlgorithm::loadParameters()
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
     param.loadMatrix("state_weights_terminal", state_weights_terminal);
     param.loadMatrix("input_weights", input_weights);
+
+    setStateWeights(state_weights_intermediate, state_weights_terminal);
+    setInputWeights(input_weights);
 }
 
 void MPCAlgorithm::initialize(bool constant_dynamics,
@@ -40,10 +44,10 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
     print("Discretizing.\n");
+    const double timer_discretize = tic();
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
-    const double timer_discretize = tic();
     const double dt = time_horizon / (K - 1);
     discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));

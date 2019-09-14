@@ -27,9 +27,9 @@ m       1.40
 ; position
 r_init
 {
-    (0)    0.
-    (1)    0.
-    (2)    20.
+    (0)    5.
+    (1)    5.
+    (2)    2.
 }
 ; velocity
 v_init
@@ -59,7 +59,7 @@ r_final
 {
     (0)    0.
     (1)    0.
-    (2)    20.
+    (2)    2.
 }
 ; velocity
 v_final

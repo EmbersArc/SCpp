@@ -130,6 +130,11 @@ public:
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };
 
+    static const std::string getModelName()
+    {
+        return DERIVED::modelName;
+    }
+
     void setParameterFolder(const std::string &path)
     {
         param_folder_path = path;
@@ -137,9 +142,9 @@ public:
 
     const std::string getParameterFolder()
     {
-        return param_folder_path;
+        return param_folder_path + getModelName();
     }
 
 private:
-    std::string param_folder_path = "../socp_mpc/config";
+    std::string param_folder_path = "../socp_mpc/models/config/";
 };

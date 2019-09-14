@@ -142,7 +142,7 @@ void RocketHover::getInitializedTrajectory(Eigen::MatrixXd &X,
 
 void RocketHover::loadParameters()
 {
-    p.loadFromFile(getParameterFolder() + "model.info");
+    p.loadFromFile(getParameterFolder() + "/model.info");
 }
 
 void RocketHover::Parameters::loadFromFile(const std::string &path)

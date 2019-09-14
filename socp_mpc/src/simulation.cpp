@@ -7,15 +7,15 @@
 namespace sim
 {
 
-ODE::ODE(Model &model, double dt, const Model::input_vector_t &u0, const Model::input_vector_t &u1) : model(model), u0(u0), u1(u1), dt(dt) {}
+ODE::ODE(Model::ptr_t model, double dt, const Model::input_vector_t &u0, const Model::input_vector_t &u1) : model(model), u0(u0), u1(u1), dt(dt) {}
 
 void ODE::operator()(const Model::state_vector_t &f, Model::state_vector_t &dfdt, const double t)
 {
     Model::input_vector_t u = u0 + t / dt * (u1 - u0);
-    model.computef(f, u, dfdt);
+    model->computef(f, u, dfdt);
 }
 
-void simulate(Model &model, double dt,
+void simulate(Model::ptr_t model, double dt,
               const Model::state_vector_t &x0,
               const Model::input_vector_t &u0,
               const Model::input_vector_t &u1,

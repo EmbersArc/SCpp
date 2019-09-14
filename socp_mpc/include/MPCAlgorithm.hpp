@@ -84,19 +84,18 @@ private:
      */
     void loadParameters();
 
-    size_t K;
     double time_horizon;
+    size_t K;
     bool nondimensionalize;
+    Model::state_vector_t state_weights_intermediate;
+    Model::state_vector_t state_weights_terminal;
+    Model::input_vector_t input_weights;
 
     Model::ptr_t model;
 
     Model::state_matrix_t A;
     Model::control_matrix_t B;
     Model::state_vector_t z;
-
-    Model::state_vector_t state_weights_intermediate;
-    Model::state_vector_t state_weights_terminal;
-    Model::input_vector_t input_weights;
 
     Model::state_vector_t x_init;
     Model::state_vector_t x_final;
