@@ -32,22 +32,22 @@ public:
         const param_vector_ad_t &par,
         state_vector_ad_t &f) override;
 
-    void getInitializedTrajectory(Eigen::MatrixXd &X,
-                                  Eigen::MatrixXd &U) override;
+    void getInitializedTrajectory(state_vector_v_t &X,
+                                  input_vector_v_t &U) override;
 
     void addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                   Eigen::MatrixXd &X0,
-                                   Eigen::MatrixXd &U0) override;
+                                   state_vector_v_t &X0,
+                                   input_vector_v_t &U0) override;
 
     void nondimensionalize() override;
 
     void redimensionalize() override;
 
-    void nondimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                     Eigen::MatrixXd &U) override;
+    void nondimensionalizeTrajectory(state_vector_v_t &X,
+                                     input_vector_v_t &U) override;
 
-    void redimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                    Eigen::MatrixXd &U) override;
+    void redimensionalizeTrajectory(state_vector_v_t &X,
+                                    input_vector_v_t &U) override;
 
     void getNewModelParameters(param_vector_t &param) override;
 
@@ -81,9 +81,9 @@ public:
 
         void redimensionalize();
 
-        void nondimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const;
+        void nondimensionalizeTrajectory(state_vector_v_t &X, input_vector_v_t &U) const;
 
-        void redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const;
+        void redimensionalizeTrajectory(state_vector_v_t &X, input_vector_v_t &U) const;
     } p;
 };
 

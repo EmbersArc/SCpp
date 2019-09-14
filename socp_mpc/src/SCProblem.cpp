@@ -8,8 +8,8 @@ op::SecondOrderConeProgram buildSCOP(
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,
-    Eigen::MatrixXd &X,
-    Eigen::MatrixXd &U,
+    Model::state_vector_v_t &X,
+    Model::input_vector_v_t &U,
     double &sigma,
     Model::state_matrix_v_t &A_bar,
     Model::control_matrix_v_t &B_bar,
@@ -18,7 +18,7 @@ op::SecondOrderConeProgram buildSCOP(
     Model::state_vector_v_t &z_bar,
     bool free_final_time)
 {
-    const size_t K = X.cols();
+    const size_t K = X.size();
 
     op::SecondOrderConeProgram socp;
 
@@ -161,11 +161,11 @@ op::SecondOrderConeProgram buildSCOP(
 
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            norm2_args.push_back(param(X(i, k)) + (-1.0) * var("X", {i, k}));
+            norm2_args.push_back(param(X[k](i)) + (-1.0) * var("X", {i, k}));
         }
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            norm2_args.push_back(param(U(i, k)) + (-1.0) * var("U", {i, k}));
+            norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
         }
         socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }

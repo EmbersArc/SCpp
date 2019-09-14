@@ -40,10 +40,10 @@ void RocketLanding3D::systemFlowMap(const state_vector_ad_t &x,
     f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
-void RocketLanding3D::getInitializedTrajectory(Eigen::MatrixXd &X,
-                                               Eigen::MatrixXd &U)
+void RocketLanding3D::getInitializedTrajectory(state_vector_v_t &X,
+                                               input_vector_v_t &U)
 {
-    const size_t K = X.cols();
+    const size_t K = X.size();
 
     for (size_t k = 0; k < K; k++)
     {
@@ -51,29 +51,28 @@ void RocketLanding3D::getInitializedTrajectory(Eigen::MatrixXd &X,
         const double alpha2 = double(k) / K;
 
         // mass, position and linear velocity
-        X(0, k) = alpha1 * p.x_init(0) + alpha2 * p.x_final(0);
-        X.col(k).segment(1, 6) = alpha1 * p.x_init.segment(1, 6) + alpha2 * p.x_final.segment(1, 6);
+        X.at(k)(0) = alpha1 * p.x_init(0) + alpha2 * p.x_final(0);
+        X.at(k).segment(1, 6) = alpha1 * p.x_init.segment(1, 6) + alpha2 * p.x_final.segment(1, 6);
 
         // do SLERP for quaternion
         Eigen::Quaterniond q0(p.x_init(7), p.x_init(8), p.x_init(9), p.x_init(10));
         Eigen::Quaterniond q1(p.x_final(7), p.x_final(8), p.x_final(9), p.x_final(10));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
-        X.col(k).segment(7, 4) << qs.w(), qs.vec();
+        X.at(k).segment(7, 4) << qs.w(), qs.vec();
 
         // angular velocity
-        X.col(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
+        X.at(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
 
         // input
-        U.setZero();
-        U.row(2).setConstant((p.T_max - p.T_min) / 2.);
+        U.at(k) << 0, 0, (p.T_max - p.T_min) / 2.;
     }
 }
 
 void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                                Eigen::MatrixXd &X0,
-                                                Eigen::MatrixXd &U0)
+                                                state_vector_v_t &X0,
+                                                input_vector_v_t &U0)
 {
-    const size_t K = X0.cols();
+    const size_t K = X0.size();
 
     auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
@@ -139,7 +138,7 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
         op::AffineExpression lhs;
         for (size_t i = 0; i < INPUT_DIM_; i++)
         {
-            lhs = lhs + param_fn([&U0, i, k]() { return (U0(i, k) / sqrt(U0(0, k) * U0(0, k) + U0(1, k) * U0(1, k) + U0(2, k) * U0(2, k))); }) * var("U", {i, k});
+            lhs = lhs + param_fn([&U0, i, k]() { return (U0.at(k)(i) / sqrt(U0.at(k)(0) * U0.at(k)(0) + U0.at(k)(1) * U0.at(k)(1) + U0.at(k)(2) * U0.at(k)(2))); }) * var("U", {i, k});
         }
         socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
 
@@ -169,14 +168,14 @@ void RocketLanding3D::redimensionalize()
     p.redimensionalize();
 }
 
-void RocketLanding3D::nondimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                                  Eigen::MatrixXd &U)
+void RocketLanding3D::nondimensionalizeTrajectory(state_vector_v_t &X,
+                                                  input_vector_v_t &U)
 {
     p.nondimensionalizeTrajectory(X, U);
 }
 
-void RocketLanding3D::redimensionalizeTrajectory(Eigen::MatrixXd &X,
-                                                 Eigen::MatrixXd &U)
+void RocketLanding3D::redimensionalizeTrajectory(state_vector_v_t &X,
+                                                 input_vector_v_t &U)
 {
     p.redimensionalizeTrajectory(X, U);
 }
@@ -302,24 +301,31 @@ void RocketLanding3D::Parameters::redimensionalize()
     T_max *= m_scale * r_scale;
 }
 
-void RocketLanding3D::Parameters::nondimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
+void RocketLanding3D::Parameters::nondimensionalizeTrajectory(state_vector_v_t &X,
+                                                              input_vector_v_t &U) const
 {
-    const size_t K = X.cols();
+    const size_t K = X.size();
+    for (size_t k = 0; k < K; k++)
+    {
+        X[k](0) /= m_scale;
+        X[k].segment<6>(1) /= r_scale;
 
-    X.row(0) /= m_scale;
-    X.block(1, 0, 6, K) /= r_scale;
-
-    U /= m_scale * r_scale;
+        U[k] /= m_scale * r_scale;
+    }
 }
 
-void RocketLanding3D::Parameters::redimensionalizeTrajectory(Eigen::MatrixXd &X, Eigen::MatrixXd &U) const
+void RocketLanding3D::Parameters::redimensionalizeTrajectory(state_vector_v_t &X,
+                                                             input_vector_v_t &U) const
 {
-    const size_t K = X.cols();
+    const size_t K = X.size();
 
-    X.row(0) *= m_scale;
-    X.block(1, 0, 6, K) *= r_scale;
+    for (size_t k = 0; k < K; k++)
+    {
+        X[k](0) *= m_scale;
+        X[k].segment<6>(1) *= r_scale;
 
-    U *= m_scale * r_scale;
+        U[k] *= m_scale * r_scale;
+    }
 }
 
 } // namespace rocketlanding3d

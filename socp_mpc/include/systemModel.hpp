@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <Eigen/StdVector>
 
 #include "fmt/format.h"
 
@@ -56,8 +55,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void getInitializedTrajectory(Eigen::MatrixXd &,
-                                          Eigen::MatrixXd &)
+    virtual void getInitializedTrajectory(state_vector_v_t &,
+                                          input_vector_v_t &)
     {
         throw std::runtime_error("getInitializedTrajectory: This function has to be implemented by the derived class.");
     };
@@ -70,8 +69,8 @@ public:
      * @param U     Last input trajectory.
      */
     virtual void addApplicationConstraints(op::SecondOrderConeProgram &,
-                                           Eigen::MatrixXd &,
-                                           Eigen::MatrixXd &){};
+                                           state_vector_v_t &,
+                                           input_vector_v_t &){};
 
     /**
      * @brief Updates the parameters in the system flow map.
@@ -112,8 +111,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void nondimensionalizeTrajectory(Eigen::MatrixXd &,
-                                             Eigen::MatrixXd &)
+    virtual void nondimensionalizeTrajectory(state_vector_v_t &,
+                                             input_vector_v_t &)
     {
         fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
     };
@@ -124,8 +123,8 @@ public:
      * @param X     State trajectory.
      * @param U     Input trajectory.
      */
-    virtual void redimensionalizeTrajectory(Eigen::MatrixXd &,
-                                            Eigen::MatrixXd &)
+    virtual void redimensionalizeTrajectory(state_vector_v_t &,
+                                            input_vector_v_t &)
     {
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };

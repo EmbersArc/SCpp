@@ -1,5 +1,3 @@
-#define JIT false
-
 #include <cppad/cppad.hpp>
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -17,10 +15,10 @@ public:
     using dynamic_matrix_t = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
     using dynamic_vector_map_t = Eigen::Map<dynamic_vector_t>;
 
-    using state_vector_v_t = std::vector<state_vector_t, Eigen::aligned_allocator<state_vector_t>>;
-    using input_vector_v_t = std::vector<input_vector_t, Eigen::aligned_allocator<input_vector_t>>;
-    using state_matrix_v_t = std::vector<state_matrix_t, Eigen::aligned_allocator<state_matrix_t>>;
-    using control_matrix_v_t = std::vector<control_matrix_t, Eigen::aligned_allocator<control_matrix_t>>;
+    using state_vector_v_t = std::vector<state_vector_t>;
+    using input_vector_v_t = std::vector<input_vector_t>;
+    using state_matrix_v_t = std::vector<state_matrix_t>;
+    using control_matrix_v_t = std::vector<control_matrix_t>;
 
     using scalar_t = double;
     using scalar_ad_t = CppAD::AD<scalar_t>;

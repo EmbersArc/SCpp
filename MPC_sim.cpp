@@ -27,8 +27,8 @@ int main()
 
     solver.initialize(true);
 
-    Model::dynamic_matrix_t X;
-    Model::dynamic_matrix_t U;
+    Model::state_vector_v_t X;
+    Model::input_vector_v_t U;
 
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
@@ -41,14 +41,14 @@ int main()
     solver.setInitialState(x);
     solver.setFinalState(model->p.x_final);
 
-    double current_time = 0.;
+    double t = 0.;
     size_t sim_step = 0;
 
     const double min_timestep = 0.010;
     double avg_solve_time = min_timestep;
 
-    const double t_start_run = tic();
-    while (current_time < sim_time)
+    const double run_timer = tic();
+    while (t < sim_time)
     {
         fmt::print("{:=^{}}\n", fmt::format("<SIMULATION STEP {}>", sim_step), 60);
 
@@ -59,7 +59,7 @@ int main()
 
         X_sim.push_back(x);
         U_sim.push_back(u);
-        times.push_back(current_time);
+        times.push_back(t);
 
         // solve with current state
         const double t_start_solve = tic();
@@ -70,56 +70,54 @@ int main()
 
         // move solve_time forward
         sim::simulate(model, solve_time, x, u, u, x);
-        current_time += solve_time;
+        t += solve_time;
 
         // get the calculated input
         solver.getSolution(X, U);
-        u = U.col(0);
+        u = U.at(0);
 
         sim_step++;
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);
-    fmt::print("{:<{}}{:.2f}s\n", "Runtime:", 50, 0.001 * toc(t_start_run));
-    fmt::print("{:<{}}{:.2f}s\n", "Simulation time:", 50, current_time);
-    const double freq = double(sim_step) / current_time;
+    fmt::print("{:<{}}{:.2f}s\n", "Runtime:", 50, 0.001 * toc(run_timer));
+    fmt::print("{:<{}}{:.2f}s\n", "Simulation time:", 50, t);
+    const double freq = double(sim_step) / t;
     fmt::print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
     fmt::print("\n");
 
     // write solution to files
-    double timer = tic();
+    double write_timer = tic();
     fs::path outputPath = getOutputPath() / std::to_string(0);
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");
     }
 
+    const Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
+                                    Eigen::DontAlignCols,
+                                    ", ", "\n");
+
     {
         std::ofstream f(outputPath / "X_sim.txt");
-        Model::dynamic_matrix_t X;
-        X.resize(Model::state_dim, sim_step);
         for (size_t i = 0; i < sim_step; i++)
         {
-            X.col(i) = X_sim[i];
+            f << X_sim.at(i).transpose().format(CSVFormat) << "\n";
         }
-        f << X;
     }
     {
         std::ofstream f(outputPath / "U_sim.txt");
-        Model::dynamic_matrix_t U;
-        U.resize(Model::input_dim, sim_step);
         for (size_t i = 0; i < sim_step; i++)
         {
-            U.col(i) = U_sim[i];
+            f << U_sim.at(i).transpose().format(CSVFormat) << "\n";
         }
-        f << U;
     }
     {
         std::ofstream f(outputPath / "t_sim.txt");
         for (size_t i = 0; i < sim_step; i++)
         {
-            f << times[i] << '\n';
+            f << times[i] << "\n";
         }
     }
-    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
+    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(write_timer));
 }

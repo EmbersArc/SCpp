@@ -55,7 +55,7 @@ void LQRAlgorithm::getSolution(Model::input_vector_t &u)
 
 void LQRAlgorithm::loadParameters()
 {
-    ParameterServer param(model->getParameterFolder() + "LQR.info");
+    ParameterServer param(model->getParameterFolder() + "/LQR.info");
 
     Model::state_vector_t q;
     Model::input_vector_t r;

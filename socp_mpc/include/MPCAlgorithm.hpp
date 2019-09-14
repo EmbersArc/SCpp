@@ -63,7 +63,7 @@ public:
      * @param X     The state trajectory.
      * @param U     The input trajectory.
      */
-    void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U);
+    void getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U);
 
 private:
     /**
@@ -100,8 +100,8 @@ private:
     Model::state_vector_t x_init;
     Model::state_vector_t x_final;
 
-    Eigen::MatrixXd X;
-    Eigen::MatrixXd U;
+    Model::state_vector_v_t X;
+    Model::input_vector_v_t U;
 
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;

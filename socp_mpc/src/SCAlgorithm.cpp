@@ -47,8 +47,8 @@ void SCAlgorithm::initialize()
     S_bar.resize(K - 1);
     z_bar.resize(K - 1);
 
-    X.resize(Model::state_dim, K);
-    U.resize(Model::input_dim, K);
+    X.resize(K);
+    U.resize(K);
 
     socp = sc::buildSCOP(model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
@@ -175,8 +175,8 @@ void SCAlgorithm::cacheIndices()
     {
         sigma_index = socp.getTensorVariableIndex("sigma", {});
     }
-    X_indices.resizeLike(X);
-    U_indices.resizeLike(U);
+    X_indices.resize(Model::state_dim, X.size());
+    U_indices.resize(Model::input_dim, X.size());
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
@@ -200,16 +200,16 @@ void SCAlgorithm::readSolution()
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X(i, k) = solver->getSolutionValue(X_indices(i, k));
+            X.at(k)(i) = solver->getSolutionValue(X_indices(i, k));
         }
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U(i, k) = solver->getSolutionValue(U_indices(i, k));
+            U.at(k)(i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }
 
-void SCAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t)
+void SCAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t)
 {
     X = this->X;
     U = this->U;

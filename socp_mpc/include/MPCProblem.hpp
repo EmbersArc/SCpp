@@ -7,8 +7,8 @@ namespace mpc
 {
 op::SecondOrderConeProgram buildSCOP(
     Model::ptr_t model,
-    Eigen::MatrixXd &X,
-    Eigen::MatrixXd &U,
+    Model::state_vector_v_t &X,
+    Model::input_vector_v_t &U,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
     Model::state_vector_t &state_weights_intermediate,

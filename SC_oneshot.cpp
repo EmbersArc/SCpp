@@ -16,8 +16,8 @@ int main()
 
     solver.initialize();
 
-    Model::dynamic_matrix_t X;
-    Model::dynamic_matrix_t U;
+    Model::state_vector_v_t X;
+    Model::input_vector_v_t U;
     double t;
 
     double timer_run = tic();
@@ -37,13 +37,23 @@ int main()
         throw std::runtime_error("Could not create output directory!");
     }
 
+    const Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
+                                    Eigen::DontAlignCols,
+                                    ", ", "\n");
+
     {
         std::ofstream f(outputPath / "X.txt");
-        f << X;
+        for (size_t i = 0; i < X.size(); i++)
+        {
+            f << X.at(i).transpose().format(CSVFormat) << "\n";
+        }
     }
     {
         std::ofstream f(outputPath / "U.txt");
-        f << U;
+        for (size_t i = 0; i < U.size(); i++)
+        {
+            f << U.at(i).transpose().format(CSVFormat) << "\n";
+        }
     }
     {
         std::ofstream f(outputPath / "t.txt");

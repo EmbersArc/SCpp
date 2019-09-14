@@ -38,10 +38,10 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 }
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                            Eigen::MatrixXd &X0,
-                                            Eigen::MatrixXd &)
+                                            state_vector_v_t &X0,
+                                            input_vector_v_t &)
 {
-    const size_t K = X0.cols();
+    const size_t K = X0.size();
 
     auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) {
         return socp.getVariable(name, indices);
@@ -121,10 +121,10 @@ void RocketHover::redimensionalize()
     // p.redimensionalize();
 }
 
-void RocketHover::getInitializedTrajectory(Eigen::MatrixXd &X,
-                                           Eigen::MatrixXd &U)
+void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
+                                           input_vector_v_t &U)
 {
-    const size_t K = X.cols();
+    const size_t K = X.size();
 
     for (size_t k = 0; k < K; k++)
     {
@@ -132,11 +132,10 @@ void RocketHover::getInitializedTrajectory(Eigen::MatrixXd &X,
         const double alpha2 = double(k) / K;
 
         // mass, position and linear velocity
-        X.col(k) = alpha1 * p.x_init + alpha2 * p.x_final;
+        X.at(k) = alpha1 * p.x_init + alpha2 * p.x_final;
 
         // input
-        U.setZero();
-        U.row(2).setConstant(-p.g_I.z() * p.m);
+        U.at(k) << 0, 0, -p.g_I.z() * p.m;
     }
 }
 

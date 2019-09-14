@@ -34,7 +34,7 @@ public:
      * @param U     The input trajectory.
      * @param t     The final time.
      */
-  void getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U, double &t);
+  void getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t);
 
 private:
   /**
@@ -87,8 +87,8 @@ private:
   Model::state_vector_v_t z_bar;
 
   double sigma;
-  Eigen::MatrixXd X;
-  Eigen::MatrixXd U;
+  Model::state_vector_v_t X;
+  Model::input_vector_v_t U;
 
   size_t sigma_index;
   Eigen::MatrixXi X_indices;

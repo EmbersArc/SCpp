@@ -1,7 +1,6 @@
-; algorithm specific parameters
-time_horizon   3.
-K              10
-nondimensionalize false
+time_horizon        3.
+K                   10
+nondimensionalize   false
 
 state_weights_intermediate
 {

@@ -35,8 +35,8 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
 {
     print("Initializing model '{}'.\n", Model::getModelName());
 
-    X.resize(Model::state_dim, K);
-    U.resize(Model::input_dim, K - 1);
+    X.resize(K);
+    U.resize(K - 1);
 
     print("Computing dynamics.\n");
     const double timer_dynamics = tic();
@@ -129,8 +129,8 @@ void MPCAlgorithm::solve()
 void MPCAlgorithm::cacheIndices()
 {
     // cache indices for performance
-    X_indices.resizeLike(X);
-    U_indices.resizeLike(U);
+    X_indices.resize(Model::state_dim, K);
+    U_indices.resize(Model::input_dim, K);
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
@@ -153,19 +153,19 @@ void MPCAlgorithm::readSolution()
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X(i, k) = solver->getSolutionValue(X_indices(i, k));
+            X.at(k)(i) = solver->getSolutionValue(X_indices(i, k));
         }
     }
     for (size_t k = 0; k < K - 1; k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U(i, k) = solver->getSolutionValue(U_indices(i, k));
+            U.at(k)(i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }
 
-void MPCAlgorithm::getSolution(Model::dynamic_matrix_t &X, Model::dynamic_matrix_t &U)
+void MPCAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U)
 {
     X = this->X;
     U = this->U;
