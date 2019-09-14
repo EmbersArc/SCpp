@@ -9,7 +9,7 @@ using std::vector;
 namespace mpc
 {
 
-MPCAlgorithm::MPCAlgorithm(std::shared_ptr<Model> model) : model(model)
+MPCAlgorithm::MPCAlgorithm(Model::ptr_t model) : model(model)
 {
     loadParameters();
 }
@@ -20,9 +20,7 @@ void MPCAlgorithm::loadParameters()
 
     param.loadScalar("K", K);
     param.loadScalar("nondimensionalize", nondimensionalize);
-    double time_horizon;
     param.loadScalar("time_horizon", time_horizon);
-    dt = time_horizon / (K - 1);
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
     param.loadMatrix("state_weights_terminal", state_weights_terminal);
     param.loadMatrix("input_weights", input_weights);
@@ -36,20 +34,21 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K - 1);
 
-    model->getStateWeights(state_weights_intermediate, state_weights_terminal);
-    model->getInputWeights(input_weights);
-
     print("Computing dynamics.\n");
     const double timer_dynamics = tic();
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
+    print("Discretizing.\n");
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
-    discretize(x_eq, u_eq);
+    const double timer_discretize = tic();
+    const double dt = time_horizon / (K - 1);
+    discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
+    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
 
-    socp = mpc::buildSCOP(*model,
+    socp = mpc::buildSCOP(model,
                           X, U,
                           x_init, x_final,
                           state_weights_intermediate, state_weights_terminal, input_weights,
@@ -61,21 +60,12 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-void MPCAlgorithm::discretize(const Model::state_vector_t &x, const Model::input_vector_t &u)
-{
-    print("Discretizing.\n");
-    const double timer_discretize = tic();
-    discretization::exactLinearDiscretization(*model, dt, x, u, A, B, z);
-    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
-}
+void MPCAlgorithm::setInitialState(const Model::state_vector_t &x) { x_init = x; }
 
-void MPCAlgorithm::getTimeSteps(size_t &K) { K = this->K; }
+void MPCAlgorithm::setFinalState(const Model::state_vector_t &x) { x_final = x; }
 
-void MPCAlgorithm::setInitialState(const Model::state_vector_t &x) { x_init << x; }
-
-void MPCAlgorithm::setFinalState(const Model::state_vector_t &x) { x_final << x; }
-
-void MPCAlgorithm::setStateWeights(const Model::state_vector_t &intermediate, const Model::state_vector_t &terminal)
+void MPCAlgorithm::setStateWeights(const Model::state_vector_t &intermediate,
+                                   const Model::state_vector_t &terminal)
 {
     state_weights_intermediate = intermediate;
     state_weights_terminal = terminal;

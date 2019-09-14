@@ -6,7 +6,7 @@ using fmt::print;
 using std::string;
 using std::vector;
 
-SCAlgorithm::SCAlgorithm(std::shared_ptr<Model> model)
+SCAlgorithm::SCAlgorithm(Model::ptr_t model)
     : param("../socp_mpc/config/SCParameters.info"), model(model)
 {
     loadParameters();
@@ -50,7 +50,7 @@ void SCAlgorithm::initialize()
     X.resize(Model::state_dim, K);
     U.resize(Model::input_dim, K);
 
-    socp = sc::buildSCOP(*model,
+    socp = sc::buildSCOP(model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
                          X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar, free_final_time);
 
@@ -66,12 +66,12 @@ bool SCAlgorithm::iterate()
     double timer = tic();
     if (free_final_time)
     {
-        discretization::multipleShootingVariableTime(*model, sigma, X, U,
+        discretization::multipleShootingVariableTime(model, sigma, X, U,
                                                      A_bar, B_bar, C_bar, S_bar, z_bar);
     }
     else
     {
-        discretization::multipleShooting(*model, sigma, X, U,
+        discretization::multipleShooting(model, sigma, X, U,
                                          A_bar, B_bar, C_bar, z_bar);
     }
 

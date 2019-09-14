@@ -6,7 +6,7 @@
 namespace sc
 {
 op::SecondOrderConeProgram buildSCOP(
-    Model &model,
+    Model::ptr_t model,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,

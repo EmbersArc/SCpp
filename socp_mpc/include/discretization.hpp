@@ -19,7 +19,7 @@ namespace discretization
  * @param z_bar 
  */
 void multipleShootingVariableTime(
-    Model &model,
+    Model::ptr_t model,
     double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
@@ -43,7 +43,7 @@ void multipleShootingVariableTime(
  * @param z_bar 
  */
 void multipleShooting(
-    Model &model,
+    Model::ptr_t model,
     double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
@@ -52,14 +52,14 @@ void multipleShooting(
     Model::control_matrix_v_t &C_bar,
     Model::state_vector_v_t &z_bar);
 
-void eulerLinearDiscretization(Model &model,
+void eulerLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
                                Model::state_matrix_t &A,
                                Model::control_matrix_t &B);
 
-void exactLinearDiscretization(Model &model,
+void exactLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,

@@ -37,14 +37,6 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
     u << 0, 0, -p.g_I.z() * p.m;
 }
 
-void RocketHover::getStateWeights(state_vector_t &intermediate, state_vector_t &terminal)
-{
-    intermediate = p.state_weights_intermediate;
-    terminal = p.state_weights_terminal;
-}
-
-void RocketHover::getInputWeights(input_vector_t &intermediate) { intermediate = p.input_weights; }
-
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                             Eigen::MatrixXd &X0,
                                             Eigen::MatrixXd &)

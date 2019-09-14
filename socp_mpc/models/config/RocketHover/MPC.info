@@ -35,7 +35,7 @@ state_weights_terminal
 
 input_weights
 {
-    scaling 0.3
+    scaling 1.
     (0)   1.
     (1)   1.
     (2)   1.

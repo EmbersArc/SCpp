@@ -12,7 +12,7 @@ public:
      *
      * @param model     The system model.
      */
-    explicit LQRAlgorithm(std::shared_ptr<Model> model);
+    explicit LQRAlgorithm(Model::ptr_t model);
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
@@ -69,7 +69,7 @@ private:
 
     Model::feedback_matrix_t K;
 
-    std::shared_ptr<Model> model;
+    Model::ptr_t model;
 
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;

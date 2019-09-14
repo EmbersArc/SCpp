@@ -16,7 +16,7 @@ namespace rocketlanding3d
  * @brief A 3D rocket landing model.
  * 
  */
-class RocketLanding3D : public SystemModel<STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
 public:
     RocketLanding3D();

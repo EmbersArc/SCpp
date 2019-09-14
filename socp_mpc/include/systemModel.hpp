@@ -8,11 +8,13 @@
 #include "optimizationProblem.hpp"
 #include "systemDynamics.hpp"
 
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+template <typename DERIVED, size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
     typedef SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM> BASE;
+
+    using ptr_t = std::shared_ptr<DERIVED>;
 
     using typename BASE::control_matrix_t;
     using typename BASE::control_matrix_v_t;
@@ -102,27 +104,6 @@ public:
     virtual void getOperatingPoint(state_vector_t &, input_vector_t &)
     {
         throw std::runtime_error("getOperatingPoint: This function has to be implemented by the derived class.");
-    };
-
-    /**
-     * @brief Get the weights for the state error.
-     * 
-     * @param intermediate 
-     * @param terminal 
-     */
-    virtual void getStateWeights(state_vector_t &, state_vector_t &)
-    {
-        throw std::runtime_error("getStateWeights: This function has to be implemented by the derived class.");
-    };
-
-    /**
-     * @brief Get the weights on the system input.
-     * 
-     * @param intermediate 
-     */
-    virtual void getInputWeights(input_vector_t &)
-    {
-        throw std::runtime_error("getInputWeights: This function has to be implemented by the derived class.");
     };
 
     /**

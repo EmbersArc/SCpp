@@ -8,7 +8,7 @@
 namespace discretization
 {
 
-void eulerLinearDiscretization(Model &model,
+void eulerLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
@@ -17,13 +17,13 @@ void eulerLinearDiscretization(Model &model,
 {
     Model::state_matrix_t A_c;
     Model::control_matrix_t B_c;
-    model.computeJacobians(x_eq, u_eq, A_c, B_c);
+    model->computeJacobians(x_eq, u_eq, A_c, B_c);
 
     A = Model::state_matrix_t::Identity() + ts * A_c;
     B = ts * B_c;
 }
 
-void exactLinearDiscretization(Model &model,
+void exactLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
                                const Model::input_vector_t &u_eq,
@@ -34,8 +34,8 @@ void exactLinearDiscretization(Model &model,
     Model::state_matrix_t A_c;
     Model::control_matrix_t B_c;
     Model::state_vector_t f;
-    model.computeJacobians(x_eq, u_eq, A_c, B_c);
-    model.computef(x_eq, u_eq, f);
+    model->computeJacobians(x_eq, u_eq, A_c, B_c);
+    model->computef(x_eq, u_eq, f);
 
     Eigen::MatrixXd E;
     E.resize(Model::state_dim + Model::input_dim, Model::state_dim + Model::input_dim);
@@ -54,7 +54,7 @@ class ODEMultipleShootingVariableTime
 private:
     Model::input_vector_t u_t0, u_t1;
     double T, dt;
-    Model &model;
+    Model::ptr_t model;
 
 public:
     using ode_matrix_t = Eigen::Matrix<double, Model::state_dim, 1 + Model::state_dim + 2 * Model::input_dim + 2>;
@@ -64,7 +64,7 @@ public:
         const Model::input_vector_t &u_t1,
         const double &T,
         double dt,
-        Model &model)
+        Model::ptr_t model)
         : u_t0(u_t0), u_t1(u_t1), T(T), dt(dt), model(model) {}
 
     void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
@@ -75,8 +75,8 @@ public:
         Model::state_vector_t f;
         Model::state_matrix_t A_bar;
         Model::control_matrix_t B_bar;
-        model.computef(x, u, f);
-        model.computeJacobians(x, u, A_bar, B_bar);
+        model->computef(x, u, f);
+        model->computeJacobians(x, u, A_bar, B_bar);
         A_bar *= T;
         B_bar *= T;
 
@@ -115,7 +115,7 @@ public:
 };
 
 void multipleShootingVariableTime(
-    Model &model,
+    Model::ptr_t model,
     double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,
@@ -165,7 +165,7 @@ class ODEMultipleShooting
 private:
     Model::input_vector_t u_t0, u_t1;
     double dt;
-    Model &model;
+    Model::ptr_t model;
 
 public:
     using ode_matrix_t = Eigen::Matrix<double, Model::state_dim, 1 + Model::state_dim + 2 * Model::input_dim + 1>;
@@ -174,7 +174,7 @@ public:
         const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
         double dt,
-        Model &model)
+        Model::ptr_t model)
         : u_t0(u_t0), u_t1(u_t1), dt(dt), model(model) {}
 
     void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
@@ -185,8 +185,8 @@ public:
         Model::state_vector_t f;
         Model::state_matrix_t A_bar;
         Model::control_matrix_t B_bar;
-        model.computef(x, u, f);
-        model.computeJacobians(x, u, A_bar, B_bar);
+        model->computef(x, u, f);
+        model->computeJacobians(x, u, A_bar, B_bar);
 
         const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim, Model::state_dim>(0, 1);
         const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
@@ -219,7 +219,7 @@ public:
 };
 
 void multipleShooting(
-    Model &model,
+    Model::ptr_t model,
     double T,
     const Eigen::MatrixXd &X,
     const Eigen::MatrixXd &U,

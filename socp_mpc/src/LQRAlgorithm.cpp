@@ -3,7 +3,7 @@
 namespace lqr
 {
 
-LQRAlgorithm::LQRAlgorithm(std::shared_ptr<Model> model) : model(model)
+LQRAlgorithm::LQRAlgorithm(Model::ptr_t model) : model(model)
 {
     loadParameters();
 }
@@ -56,13 +56,13 @@ void LQRAlgorithm::getSolution(Model::input_vector_t &u)
 void LQRAlgorithm::loadParameters()
 {
     ParameterServer param(model->getParameterFolder() + "LQR.info");
-    
+
     Model::state_vector_t q;
     Model::input_vector_t r;
     param.loadMatrix("state_weights", q);
     param.loadMatrix("input_weights", r);
-    Q.diagonal() = q;
-    R.diagonal() = r;
+    setStateWeights(q);
+    setInputWeights(r);
 }
 
 } // namespace lqr

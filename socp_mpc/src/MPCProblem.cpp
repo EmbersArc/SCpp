@@ -4,7 +4,7 @@ namespace mpc
 {
 
 op::SecondOrderConeProgram buildSCOP(
-    Model &model,
+    Model::ptr_t model,
     Eigen::MatrixXd &X,
     Eigen::MatrixXd &U,
     Model::state_vector_t &x_init,
@@ -134,7 +134,7 @@ op::SecondOrderConeProgram buildSCOP(
     socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
     socp.addMinimizationTerm(1.0 * var("input_cost"));
 
-    model.addApplicationConstraints(socp, X, U);
+    model->addApplicationConstraints(socp, X, U);
     return socp;
 }
 

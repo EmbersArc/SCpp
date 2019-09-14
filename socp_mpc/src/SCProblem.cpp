@@ -4,7 +4,7 @@ namespace sc
 {
 
 op::SecondOrderConeProgram buildSCOP(
-    Model &model,
+    Model::ptr_t model,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,
@@ -188,7 +188,7 @@ op::SecondOrderConeProgram buildSCOP(
         socp.addMinimizationTerm(param(weight_trust_region_trajectory) * var("norm2_Delta"));
     }
 
-    model.addApplicationConstraints(socp, X, U);
+    model->addApplicationConstraints(socp, X, U);
     return socp;
 }
 

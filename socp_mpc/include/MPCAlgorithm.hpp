@@ -15,7 +15,7 @@ public:
      *
      * @param model     The system model.
      */
-    explicit MPCAlgorithm(std::shared_ptr<Model> model);
+    explicit MPCAlgorithm(Model::ptr_t model);
 
     /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
@@ -23,18 +23,6 @@ public:
      */
     void initialize(bool constant_dynamics = false,
                     bool intermediate_cost_active = true);
-
-    /**
-     * @brief Discretizes the system.
-     *
-     */
-    void discretize(const Model::state_vector_t &x, const Model::input_vector_t &u);
-
-    /**
-     * @brief Returns the number of discretization steps.
-     *
-     */
-    void getTimeSteps(size_t &K);
 
     /**
      * @brief  Sets a new initial state.
@@ -97,10 +85,10 @@ private:
     void loadParameters();
 
     size_t K;
-    double dt;
+    double time_horizon;
     bool nondimensionalize;
 
-    std::shared_ptr<Model> model;
+    Model::ptr_t model;
 
     Model::state_matrix_t A;
     Model::control_matrix_t B;
@@ -109,6 +97,7 @@ private:
     Model::state_vector_t state_weights_intermediate;
     Model::state_vector_t state_weights_terminal;
     Model::input_vector_t input_weights;
+
 
     Model::state_vector_t x_init;
     Model::state_vector_t x_final;
