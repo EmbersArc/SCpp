@@ -57,16 +57,16 @@ int main()
 
     {
         std::ofstream f(outputPath / "X_sim.txt");
-        for (size_t i = 0; i < X_sim.size(); i++)
+        for (auto &x : X_sim)
         {
-            f << X_sim.at(i).transpose().format(CSVFormat) << "\n";
+            f << x.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "U_sim.txt");
-        for (size_t i = 0; i < X_sim.size(); i++)
+        for (auto &u : U_sim)
         {
-            f << U_sim.at(i).transpose().format(CSVFormat) << "\n";
+            f << u.transpose().format(CSVFormat) << "\n";
         }
     }
     {

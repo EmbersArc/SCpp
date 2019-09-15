@@ -39,7 +39,7 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                             state_vector_v_t &X0,
-                                            input_vector_v_t &)
+                                            input_vector_v_t & /* U0 */)
 {
     const size_t K = X0.size();
 

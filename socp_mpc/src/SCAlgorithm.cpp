@@ -200,11 +200,11 @@ void SCAlgorithm::readSolution()
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X.at(k)(i) = solver->getSolutionValue(X_indices(i, k));
+            X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U.at(k)(i) = solver->getSolutionValue(U_indices(i, k));
+            U[k](i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }

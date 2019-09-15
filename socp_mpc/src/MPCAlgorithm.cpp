@@ -81,9 +81,15 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     solver = std::make_unique<EcosWrapper>(socp);
 }
 
-void MPCAlgorithm::setInitialState(const Model::state_vector_t &x) { x_init = x; }
+void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)
+{
+    x_init = x;
+}
 
-void MPCAlgorithm::setFinalState(const Model::state_vector_t &x) { x_final = x; }
+void MPCAlgorithm::setFinalState(const Model::state_vector_t &x)
+{
+    x_final = x;
+}
 
 void MPCAlgorithm::setStateWeights(const Model::state_vector_t &intermediate,
                                    const Model::state_vector_t &terminal)
@@ -153,14 +159,14 @@ void MPCAlgorithm::readSolution()
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X.at(k)(i) = solver->getSolutionValue(X_indices(i, k));
+            X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
     }
     for (size_t k = 0; k < K - 1; k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U.at(k)(i) = solver->getSolutionValue(U_indices(i, k));
+            U[k](i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }

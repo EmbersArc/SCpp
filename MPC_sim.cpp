@@ -25,7 +25,7 @@ int main()
 
     const double sim_time = 15.;
 
-    solver.initialize(true);
+    solver.initialize(true, false);
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
@@ -38,7 +38,6 @@ int main()
     u.setZero();
     Model::state_vector_t x = model->p.x_init;
 
-    solver.setInitialState(x);
     solver.setFinalState(model->p.x_final);
 
     double t = 0.;
@@ -77,6 +76,11 @@ int main()
         u = U.at(0);
 
         sim_step++;
+
+        if ((x - model->p.x_final).norm() < 0.02)
+        {
+            break;
+        }
     }
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);
@@ -100,23 +104,23 @@ int main()
 
     {
         std::ofstream f(outputPath / "X_sim.txt");
-        for (size_t i = 0; i < sim_step; i++)
+        for (auto &x : X_sim)
         {
-            f << X_sim.at(i).transpose().format(CSVFormat) << "\n";
+            f << x.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "U_sim.txt");
-        for (size_t i = 0; i < sim_step; i++)
+        for (auto &u : U_sim)
         {
-            f << U_sim.at(i).transpose().format(CSVFormat) << "\n";
+            f << u.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "t_sim.txt");
-        for (size_t i = 0; i < sim_step; i++)
+        for (auto &t : times)
         {
-            f << times[i] << "\n";
+            f << t << "\n";
         }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(write_timer));

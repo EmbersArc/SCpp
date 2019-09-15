@@ -43,16 +43,16 @@ int main()
 
     {
         std::ofstream f(outputPath / "X.txt");
-        for (size_t i = 0; i < X.size(); i++)
+        for (auto &x : X)
         {
-            f << X.at(i).transpose().format(CSVFormat) << "\n";
+            f << x.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "U.txt");
-        for (size_t i = 0; i < U.size(); i++)
+        for (auto &u : U)
         {
-            f << U.at(i).transpose().format(CSVFormat) << "\n";
+            f << u.transpose().format(CSVFormat) << "\n";
         }
     }
     {
