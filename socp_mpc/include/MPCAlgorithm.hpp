@@ -109,6 +109,10 @@ private:
     op::SecondOrderConeProgram socp;
 
     std::unique_ptr<EcosWrapper> solver;
+
+    bool state_weights_set = false;
+    bool input_weights_set = false;
+    bool initialized = false;
 };
 
 } // namespace mpc

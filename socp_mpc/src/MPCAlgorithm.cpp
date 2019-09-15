@@ -33,6 +33,8 @@ void MPCAlgorithm::loadParameters()
 void MPCAlgorithm::initialize(bool constant_dynamics,
                               bool intermediate_cost_active)
 {
+    assert(state_weights_set and input_weights_set);
+
     print("Initializing model '{}'.\n", Model::getModelName());
 
     X.resize(K);
@@ -79,6 +81,8 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
+
+    initialized = true;
 }
 
 void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)
@@ -96,15 +100,21 @@ void MPCAlgorithm::setStateWeights(const Model::state_vector_t &intermediate,
 {
     state_weights_intermediate = intermediate;
     state_weights_terminal = terminal;
+
+    state_weights_set = true;
 }
 
 void MPCAlgorithm::setInputWeights(const Model::input_vector_t &intermediate)
 {
     input_weights = intermediate;
+
+    input_weights_set = true;
 }
 
 void MPCAlgorithm::solve()
 {
+    assert(initialized);
+
     print("Solving model {}\n", Model::getModelName());
     const double timer_solve = tic();
     if (nondimensionalize)
