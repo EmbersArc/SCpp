@@ -1,5 +1,7 @@
 #include "LQRAlgorithm.hpp"
 
+using fmt::print;
+
 namespace lqr
 {
 
@@ -10,6 +12,8 @@ LQRAlgorithm::LQRAlgorithm(Model::ptr_t model) : model(model)
 
 void LQRAlgorithm::initialize()
 {
+    print("[LQR] Starting controller for model '{}'.\n", Model::getModelName());
+
     assert(state_weights_set and input_weights_set);
 
     model->getOperatingPoint(x_eq, u_eq);
@@ -17,6 +21,7 @@ void LQRAlgorithm::initialize()
     ComputeLQR(Q, R, A, B, K);
 
     initialized = true;
+    print("[LQR] Controller started.\n");
 }
 
 void LQRAlgorithm::solve()

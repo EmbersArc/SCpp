@@ -1,10 +1,7 @@
 #include "MPCAlgorithm.hpp"
 #include "timing.hpp"
 
-using fmt::format;
 using fmt::print;
-using std::string;
-using std::vector;
 
 namespace mpc
 {
@@ -33,26 +30,21 @@ void MPCAlgorithm::loadParameters()
 void MPCAlgorithm::initialize(bool constant_dynamics,
                               bool intermediate_cost_active)
 {
-    assert(state_weights_set and input_weights_set);
+    print("[MPC] Starting controller for model '{}'.\n", Model::getModelName());
 
-    print("Initializing model '{}'.\n", Model::getModelName());
+    assert(state_weights_set and input_weights_set);
 
     X.resize(K);
     U.resize(K - 1);
 
-    print("Computing dynamics.\n");
-    const double timer_dynamics = tic();
-    model->initializeModel();
-    print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
-
-    print("Discretizing.\n");
+    print("[MPC] Discretizing.\n");
     const double timer_discretize = tic();
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
     const double dt = time_horizon / (K - 1);
     discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
-    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer_discretize));
+    print("{:<{}}{:.2f}ms\n", "[MPC] Time, discretization:", 50, toc(timer_discretize));
 
     // to check
     // Model::dynamic_matrix_t X_eq(10, K);
@@ -83,6 +75,7 @@ void MPCAlgorithm::initialize(bool constant_dynamics,
     solver = std::make_unique<EcosWrapper>(socp);
 
     initialized = true;
+    print("[MPC] Controller started.\n");
 }
 
 void MPCAlgorithm::setInitialState(const Model::state_vector_t &x)

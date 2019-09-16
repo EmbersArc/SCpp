@@ -85,7 +85,7 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
                 const Model::control_matrix_t &B,
                 Model::feedback_matrix_t &K)
 {
-    fmt::print("Checking controllability... ");
+    fmt::print("[LQR] Checking controllability...\n");
 
     using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
 
@@ -101,14 +101,14 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
 
     if (lu_decomp.rank() == Model::state_dim)
     {
-        fmt::print("System is controllable.\n");
+        fmt::print("[LQR] System is controllable.\n");
     }
     else
     {
-        fmt::print("WARNING: System is not controllable!\n");
+        fmt::print("[LQR] WARNING: System is not controllable!\n");
     }
 
-    fmt::print("Computing feedback gains.\n");
+    fmt::print("[LQR] Computing feedback gains.\n");
     Model::input_matrix_t R_inverse;
     Model::state_matrix_t P;
     bool success = careSolve(Q, R, A, B, P, R_inverse);
