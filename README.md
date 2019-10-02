@@ -1,5 +1,3 @@
-![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png)
-
 A C++ library implementing various optimal control algorithms.
 
 ## Features
@@ -62,8 +60,13 @@ See existing models in the `socp_mpc/models` folder for some examples.
 
 ## Examples
 
-### Rocket trajectory model with free-final-time:
+### Rocket trajectory model with free-final-time
+
 ![](https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif)
+
+### SpaceX Starship landing trajectory
+
+![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png)
 
 ### 2D rocket landing problem
 
