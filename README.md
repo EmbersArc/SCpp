@@ -1,5 +1,5 @@
 
-# SCpp
+![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057102-6e1f8700-e538-11e9-854f-b9f44a6fd359.png)
 
 A C++ library implementing various optimal control algorithms.
 
