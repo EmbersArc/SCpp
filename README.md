@@ -1,5 +1,5 @@
 
-![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057102-6e1f8700-e538-11e9-854f-b9f44a6fd359.png)
+![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057370-e25a2a80-e538-11e9-8493-e9b92431629d.png)
 
 A C++ library implementing various optimal control algorithms.
 
