@@ -1,10 +1,12 @@
 #include "timing.hpp"
 
+using namespace std::chrono;
+
 double tic()
 {
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    return double(t.tv_sec) * 1000. + double(t.tv_nsec) / 1000000.;
+    const duration<double, std::milli> s = steady_clock::now().time_since_epoch();
+
+    return s.count();
 }
 
 double toc(double start)

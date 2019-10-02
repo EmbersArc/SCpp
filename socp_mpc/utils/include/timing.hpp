@@ -1,6 +1,6 @@
 #pragma once
 
-#include <time.h>
+#include <chrono>
 
 double tic();
 double toc(double start);
