@@ -11,7 +11,7 @@ class MPCAlgorithm
 {
 public:
     /**
-     * @brief Construct a new free Final Time Algorithm solver.
+     * @brief Construct a new MPC solver.
      *
      * @param model     The system model.
      */

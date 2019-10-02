@@ -8,7 +8,7 @@ class LQRAlgorithm
 {
 public:
     /**
-     * @brief Construct a new LQR thingy.
+     * @brief Construct a new LQR solver.
      *
      * @param model     The system model.
      */
@@ -73,7 +73,7 @@ private:
 
     Model::state_vector_t x_eq;
     Model::input_vector_t u_eq;
-    
+
     Model::state_matrix_t A;
     Model::control_matrix_t B;
 
