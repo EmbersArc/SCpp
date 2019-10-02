@@ -93,6 +93,6 @@ gimbal_max  10.
 ; maximum angle
 theta_max   30.
 ; maximum velocity
-v_I_max     5.
+v_I_max     6.
 ; maximum angluar velocity
 w_B_max     60.
