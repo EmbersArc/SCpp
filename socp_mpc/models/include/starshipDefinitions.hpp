@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 
-namespace rocketlanding3d
+namespace starship
 {
 
 enum rocket3d
@@ -12,4 +12,4 @@ enum rocket3d
     PARAM_DIM_ = 10
 };
 
-} // namespace rocketlanding3d
+} // namespace starship

@@ -1,0 +1,100 @@
+; ----- model definitions -----
+g_I
+{
+    (0)   0.0
+    (1)   0.0
+    (2)   -9.81
+}
+
+J_B
+{
+    (0)   27741458.
+    (1)   27741458.
+    (2)   1316250.
+}
+
+r_T_B
+{
+    (0)   0
+    (1)   0
+    (2)   -25.
+}
+
+; ----- initial values -----
+random_initial_state        false
+m_init 140000.
+; position
+r_init
+{
+    (0)    200.
+    (1)    0.
+    (2)    600.
+}
+; velocity
+v_init
+{
+    (0)     -10.
+    (1)     0.
+    (2)     -30.
+}
+; orientation
+rpy_init
+{
+    (0)     0.
+    (1)     -80.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_init
+{
+    (0)    0.
+    (1)    0.
+    (2)    0. ; not controllable
+}
+
+; ----- final values -----
+m_dry       120000.
+; position
+r_final
+{
+    (0)    0.
+    (1)    0.
+    (2)    0.
+}
+; velocity
+v_final
+{
+    (0)     0
+    (1)     0
+    (2)     0.
+}
+; orientation
+rpy_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_final
+{
+    (0)    0.
+    (1)    0.
+    (2)    0. ; not controllable
+}
+
+constrain_initial_final     false
+; thrust
+T_min        800000.
+T_max       2000000.
+I_sp            330.
+
+; maximum gimbal
+gimbal_max  20.
+; maximum angle
+theta_max   90.
+; glideslope angle
+gamma_gs    60.
+; maximum angluar velocity
+w_B_max     45.
+

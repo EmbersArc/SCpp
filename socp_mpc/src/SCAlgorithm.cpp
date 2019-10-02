@@ -7,13 +7,15 @@ using std::string;
 using std::vector;
 
 SCAlgorithm::SCAlgorithm(Model::ptr_t model)
-    : param("../socp_mpc/config/SCParameters.info"), model(model)
 {
+    this->model = model;
     loadParameters();
 }
 
 void SCAlgorithm::loadParameters()
 {
+    ParameterServer param(model->getParameterFolder() + "/SC.info");
+
     param.loadScalar("K", K);
 
     param.loadScalar("free_final_time", free_final_time);

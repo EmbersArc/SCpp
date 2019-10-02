@@ -7,24 +7,21 @@
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 
-#include "rocketLanding3dDefinitions.hpp"
+#include "starshipDefinitions.hpp"
 
-namespace rocketlanding3d
+namespace starship
 {
 
 /**
  * @brief A 3D rocket landing model.
  * 
  */
-class RocketLanding3D : public SystemModel<RocketLanding3D, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class Starship : public SystemModel<Starship, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
 {
 public:
-    RocketLanding3D();
+    Starship();
 
-    static std::string getModelName()
-    {
-        return "RocketLanding3D";
-    }
+    inline static const std::string modelName = "Starship";
 
     void systemFlowMap(
         const state_vector_ad_t &x,
@@ -51,6 +48,8 @@ public:
 
     void getNewModelParameters(param_vector_t &param) override;
 
+    void loadParameters();
+
     struct Parameters
     {
         Eigen::Vector3d g_I;
@@ -69,13 +68,12 @@ public:
 
         state_vector_t x_init;
         state_vector_t x_final;
-        double final_time_guess;
 
         double m_scale, r_scale;
 
         void randomizeInitialState();
 
-        void loadFromFile();
+        void loadFromFile(const std::string &path);
 
         void nondimensionalize();
 
@@ -87,4 +85,4 @@ public:
     } p;
 };
 
-} // namespace rocketlanding3d
+} // namespace starship

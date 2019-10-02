@@ -47,7 +47,7 @@ set(MPC_SOURCES
 
     # models
     socp_mpc/models/src/rocketHover.cpp
-    socp_mpc/models/src/rocketLanding3d.cpp
+    socp_mpc/models/src/starship.cpp
 )
 
 add_library(mpc_lib SHARED ${MPC_SOURCES})

@@ -27,12 +27,12 @@ def key_press_event(event):
 
 
 def my_plot(fig, figures_i):
-    iteration = str(figures_i).zfill(3)
+    iteration = str(figures_i)
 
-    X = np.loadtxt(f"output/RocketLanding3D/{iteration}_X.txt")
-    U = np.loadtxt(f"output/RocketLanding3D/{iteration}_U.txt")
+    X = np.loadtxt(f"output/Starship/{iteration}/X.txt", delimiter=",")
+    U = np.loadtxt(f"output/Starship/{iteration}/U.txt", delimiter=",")
 
-    K = X.shape[1]
+    K = X.shape[0]
 
     # 3D
     ax = fig.add_subplot(1, 1, 1, projection='3d')
@@ -41,9 +41,9 @@ def my_plot(fig, figures_i):
     ax.set_zlabel('Z, up')
 
     for k in range(K):
-        rx, ry, rz = X[1:4, k]
-        # vx, vy, vz = X[4:7, k]
-        qw, qx, qy, qz = X[7:11, k]
+        rx, ry, rz = X[k, 1:4]
+        # vx, vy, vz = X[k, 4:7]
+        qw, qx, qy, qz = X[k, 7:11]
 
         CBI = np.array([
             [1 - 2 * (qy ** 2 + qz ** 2),
@@ -56,32 +56,33 @@ def my_plot(fig, figures_i):
              2 * (qy * qz - qw * qx),
              1 - 2 * (qx ** 2 + qy ** 2)]
         ])
+        CIB = np.transpose(CBI)
 
-        Fx, Fy, Fz = np.dot(np.transpose(CBI), U[0:3, k])
-        dx, dy, dz = np.dot(np.transpose(CBI), np.array([0., 0., 1.]))
-        tx, ty, tz = np.dot(np.transpose(CBI), np.array([1., 0., 0.]))
+        Fx, Fy, Fz = np.dot(CIB, U[k, :])
+        dx, dy, dz = np.dot(CIB, np.array([0., 0., 1.]))
+        # tx, ty, tz = np.dot(CIB, np.array([1., 0., 0.]))
 
         # # speed vector
         # ax.quiver(rx, ry, rz, vx, vy, vz, length=0.1, color='green')
 
         # attitude vector
-        ax.quiver(rx, ry, rz, dx, dy, dz, length=0.04,
+        ax.quiver(rx, ry, rz, dx, dy, dz, length=30,
                   arrow_length_ratio=0.0, color='blue')
 
-        # up vector
-        ax.quiver(rx, ry, rz, tx, ty, tz, length=0.01,
-                  arrow_length_ratio=0.0, color='green')
+        # # up vector
+        # ax.quiver(rx, ry, rz, tx, ty, tz, length=0.01,
+        #           arrow_length_ratio=0.0, color='green')
 
         # thrust vector
-        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=0.1,
+        ax.quiver(rx, ry, rz, -Fx, -Fy, -Fz, length=1/30000,
                   arrow_length_ratio=0.0, color='red')
 
-    scale = np.max(X[1:4, :])
+    scale = np.abs(np.max(X[:, 1:4]))
     ax.set_xlim3d(-scale/2, scale/2)
     ax.set_ylim3d(-scale/2, scale/2)
     ax.set_zlim3d(0, scale)
-    ax.set_aspect('equal')
-    ax.plot(X[1, :], X[2, :], X[3, :], color='black')
+    # ax.set_aspect('equal')
+    ax.plot(X[:, 1], X[:, 2], X[:, 3], color='gray')
 
     fig.suptitle("iter " + str(figures_i), fontsize=14)
 
@@ -89,10 +90,10 @@ def my_plot(fig, figures_i):
 def main():
     global figures_i, figures_N
     figures_N = sum(f.endswith("X.txt")
-                    for f in os.listdir("output/RocketLanding3D/"))
+                    for f in os.listdir("output/Starship/"))
 
     fig = plt.figure(figsize=(10, 10))
-    figures_i = figures_N - 1
+    figures_i = figures_N
     my_plot(fig, figures_i)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
     plt.show()

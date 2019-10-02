@@ -63,8 +63,6 @@ private:
      */
   bool iterate();
 
-  ParameterServer param;
-
   size_t K;
 
   Model::ptr_t model;

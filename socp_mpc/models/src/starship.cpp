@@ -1,21 +1,18 @@
 #include "common.hpp"
-#include "rocketLanding3d.hpp"
+#include "starship.hpp"
 
 using std::string;
 using std::vector;
 
-namespace rocketlanding3d
+namespace starship
 {
 
-RocketLanding3D::RocketLanding3D()
-{
-    p.loadFromFile();
-}
+Starship::Starship() {}
 
-void RocketLanding3D::systemFlowMap(const state_vector_ad_t &x,
-                                    const input_vector_ad_t &u,
-                                    const param_vector_ad_t &par,
-                                    state_vector_ad_t &f)
+void Starship::systemFlowMap(const state_vector_ad_t &x,
+                             const input_vector_ad_t &u,
+                             const param_vector_ad_t &par,
+                             state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
 
@@ -40,8 +37,8 @@ void RocketLanding3D::systemFlowMap(const state_vector_ad_t &x,
     f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
-void RocketLanding3D::getInitializedTrajectory(state_vector_v_t &X,
-                                               input_vector_v_t &U)
+void Starship::getInitializedTrajectory(state_vector_v_t &X,
+                                        input_vector_v_t &U)
 {
     const size_t K = X.size();
 
@@ -68,9 +65,9 @@ void RocketLanding3D::getInitializedTrajectory(state_vector_v_t &X,
     }
 }
 
-void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                                state_vector_v_t &X0,
-                                                input_vector_v_t &U0)
+void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+                                         state_vector_v_t &X0,
+                                         input_vector_v_t &U0)
 {
     const size_t K = X0.size();
 
@@ -86,20 +83,10 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
 
     // Final State
     // mass and roll are free
-    // socp.addConstraint((-1.0) * var("X", {0, K - 1}) + param(p.x_final(0)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {1, K - 1}) + param(p.x_final(1)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {2, K - 1}) + param(p.x_final(2)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {3, K - 1}) + param(p.x_final(3)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {4, K - 1}) + param(p.x_final(4)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {5, K - 1}) + param(p.x_final(5)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {6, K - 1}) + param(p.x_final(6)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {7, K - 1}) + param(p.x_final(7)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {8, K - 1}) + param(p.x_final(8)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {9, K - 1}) + param(p.x_final(9)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {10, K - 1}) + param(p.x_final(10)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {11, K - 1}) + param(p.x_final(11)) == 0.0);
-    socp.addConstraint((-1.0) * var("X", {12, K - 1}) + param(p.x_final(12)) == 0.0);
-    // socp.addConstraint((-1.0) * var("X", {13, K - 1}) + param(p.x_final(13)) == 0.0);
+    for (size_t i : {1, 2, 3, 4, 5, 6, 8, 9, 11, 12})
+    {
+        socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+    }
 
     // Final Input
     socp.addConstraint((1.0) * var("U", {0, K - 1}) == (0.0));
@@ -111,7 +98,8 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
         // Mass
         //     x(0) >= m_dry
         //     for all k
-        socp.addConstraint((1.0) * var("X", {0, k}) + param_fn([this]() { return -p.x_final(0); }) >= (0.0));
+        socp.addConstraint(
+            (1.0) * var("X", {0, k}) + param_fn([this]() { return -p.x_final(0); }) >= (0.0));
 
         // Glide Slope
         socp.addConstraint(
@@ -120,8 +108,10 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
 
         // Max Tilt Angle
         // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::norm2({(1.0) * var("X", {8, k}),
-                                      (1.0) * var("X", {9, k})}) <= param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
+        socp.addConstraint(
+            op::norm2({(1.0) * var("X", {8, k}),
+                       (1.0) * var("X", {9, k})}) <=
+            param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
 
         // Max Rotation Velocity
         socp.addConstraint(
@@ -133,7 +123,6 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
     // Control Constraints
     for (size_t k = 0; k < K; k++)
     {
-
         // Linearized Minimum Thrust
         op::AffineExpression lhs;
         for (size_t i = 0; i < INPUT_DIM_; i++)
@@ -154,38 +143,39 @@ void RocketLanding3D::addApplicationConstraints(op::SecondOrderConeProgram &socp
         // Maximum Gimbal Angle
         socp.addConstraint(
             op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k})}) <= param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
+                       (1.0) * var("U", {1, k})}) <=
+            param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
     }
 }
 
-void RocketLanding3D::nondimensionalize()
+void Starship::nondimensionalize()
 {
     p.nondimensionalize();
 }
 
-void RocketLanding3D::redimensionalize()
+void Starship::redimensionalize()
 {
     p.redimensionalize();
 }
 
-void RocketLanding3D::nondimensionalizeTrajectory(state_vector_v_t &X,
-                                                  input_vector_v_t &U)
+void Starship::nondimensionalizeTrajectory(state_vector_v_t &X,
+                                           input_vector_v_t &U)
 {
     p.nondimensionalizeTrajectory(X, U);
 }
 
-void RocketLanding3D::redimensionalizeTrajectory(state_vector_v_t &X,
-                                                 input_vector_v_t &U)
+void Starship::redimensionalizeTrajectory(state_vector_v_t &X,
+                                          input_vector_v_t &U)
 {
     p.redimensionalizeTrajectory(X, U);
 }
 
-void RocketLanding3D::getNewModelParameters(param_vector_t &param)
+void Starship::getNewModelParameters(param_vector_t &param)
 {
     param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
 }
 
-void RocketLanding3D::Parameters::randomizeInitialState()
+void Starship::Parameters::randomizeInitialState()
 {
     std::mt19937 eng(time(0));
     auto dist = std::uniform_real_distribution<double>(-1., 1.);
@@ -211,11 +201,16 @@ void RocketLanding3D::Parameters::randomizeInitialState()
     x_init.segment(7, 4) << quaternionToVector(eulerToQuaternion(euler));
 }
 
-void RocketLanding3D::Parameters::loadFromFile()
+void Starship::loadParameters()
 {
-    ParameterServer param(fmt::format("../socp_mpc/models/config/{}.info", getModelName()));
+    p.loadFromFile(getParameterFolder() + "/model.info");
+}
 
-    bool randomInitialState;
+void Starship::Parameters::loadFromFile(const std::string &path)
+{
+    ParameterServer param(path);
+
+    bool random_initial_state;
     double I_sp;
     double m_init, m_dry;
     Eigen::Vector3d r_init, v_init, w_init;
@@ -232,7 +227,6 @@ void RocketLanding3D::Parameters::loadFromFile()
     param.loadScalar("m_dry", m_dry);
     param.loadMatrix("r_final", r_final);
     param.loadMatrix("v_final", v_final);
-    param.loadScalar("final_time_guess", final_time_guess);
     param.loadScalar("T_min", T_min);
     param.loadScalar("T_max", T_max);
     param.loadScalar("I_sp", I_sp);
@@ -240,7 +234,7 @@ void RocketLanding3D::Parameters::loadFromFile()
     param.loadScalar("theta_max", theta_max);
     param.loadScalar("gamma_gs", gamma_gs);
     param.loadScalar("w_B_max", w_B_max);
-    param.loadScalar("randomInitialState", randomInitialState);
+    param.loadScalar("random_initial_state", random_initial_state);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);
@@ -253,14 +247,14 @@ void RocketLanding3D::Parameters::loadFromFile()
 
     Eigen::Vector4d q_init = quaternionToVector(eulerToQuaternion(rpy_init));
     x_init << m_init, r_init, v_init, q_init, w_init;
-    if (randomInitialState)
+    if (random_initial_state)
     {
         randomizeInitialState();
     }
     x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
 }
 
-void RocketLanding3D::Parameters::nondimensionalize()
+void Starship::Parameters::nondimensionalize()
 {
     m_scale = x_init(0);
     r_scale = x_init.segment(1, 3).norm();
@@ -282,7 +276,7 @@ void RocketLanding3D::Parameters::nondimensionalize()
     T_max /= m_scale * r_scale;
 }
 
-void RocketLanding3D::Parameters::redimensionalize()
+void Starship::Parameters::redimensionalize()
 {
     alpha_m /= r_scale;
     r_T_B *= r_scale;
@@ -301,8 +295,8 @@ void RocketLanding3D::Parameters::redimensionalize()
     T_max *= m_scale * r_scale;
 }
 
-void RocketLanding3D::Parameters::nondimensionalizeTrajectory(state_vector_v_t &X,
-                                                              input_vector_v_t &U) const
+void Starship::Parameters::nondimensionalizeTrajectory(state_vector_v_t &X,
+                                                       input_vector_v_t &U) const
 {
     const size_t K = X.size();
     for (size_t k = 0; k < K; k++)
@@ -314,8 +308,8 @@ void RocketLanding3D::Parameters::nondimensionalizeTrajectory(state_vector_v_t &
     }
 }
 
-void RocketLanding3D::Parameters::redimensionalizeTrajectory(state_vector_v_t &X,
-                                                             input_vector_v_t &U) const
+void Starship::Parameters::redimensionalizeTrajectory(state_vector_v_t &X,
+                                                      input_vector_v_t &U) const
 {
     const size_t K = X.size();
 
@@ -328,4 +322,4 @@ void RocketLanding3D::Parameters::redimensionalizeTrajectory(state_vector_v_t &X
     }
 }
 
-} // namespace rocketlanding3d
+} // namespace starship
