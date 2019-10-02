@@ -20,6 +20,7 @@ int main()
 {
     auto model = std::make_shared<Model>();
     model->loadParameters();
+    model->initializeModel();
 
     mpc::MPCAlgorithm solver(model);
 
