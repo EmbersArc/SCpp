@@ -1,0 +1,17 @@
+final_time                          10.
+free_final_time                     true
+
+K                                   30
+
+nondimensionalize                   false
+
+weight_trust_region_time            1e1
+weight_trust_region_trajectory      1e1
+weight_virtual_control              1e4
+
+trust_region_factor                 1.3
+
+nu_tol                              1e-5
+delta_tol                           1e-1
+
+max_iterations                      15
