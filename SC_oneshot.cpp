@@ -16,14 +16,14 @@ int main()
 
     solver.initialize();
 
-    Model::state_vector_v_t X;
-    Model::input_vector_v_t U;
-    double t;
+    std::vector<Model::state_vector_v_t> all_X;
+    std::vector<Model::input_vector_v_t> all_U;
+    std::vector<double> all_times;
 
     double timer_run = tic();
 
     solver.solve();
-    solver.getSolution(X, U, t);
+    solver.getAllSolutions(all_X, all_U, all_times);
 
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution:", 50, toc(timer_run));
@@ -31,33 +31,38 @@ int main()
 
     // write solution to files
     double timer = tic();
-    fs::path outputPath = getOutputPath() / std::to_string(0);
-    if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
-    {
-        throw std::runtime_error("Could not create output directory!");
-    }
+    const fs::path outputPath = getOutputPath() / std::to_string(size_t(timer));
 
     const Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
                                     Eigen::DontAlignCols,
                                     ", ", "\n");
 
+    for (size_t k = 0; k < all_X.size(); k++)
     {
-        std::ofstream f(outputPath / "X.txt");
-        for (auto &x : X)
+        const fs::path iterationPath = outputPath / std::to_string(k);
+        if (not fs::exists(iterationPath) and not fs::create_directories(iterationPath))
         {
-            f << x.transpose().format(CSVFormat) << "\n";
+            throw std::runtime_error("Could not create output directory!");
         }
-    }
-    {
-        std::ofstream f(outputPath / "U.txt");
-        for (auto &u : U)
+
         {
-            f << u.transpose().format(CSVFormat) << "\n";
+            std::ofstream f(iterationPath / "X.txt");
+            for (auto &x : all_X.at(k))
+            {
+                f << x.transpose().format(CSVFormat) << "\n";
+            }
         }
-    }
-    {
-        std::ofstream f(outputPath / "t.txt");
-        f << t;
+        {
+            std::ofstream f(iterationPath / "U.txt");
+            for (auto &u : all_U.at(k))
+            {
+                f << u.transpose().format(CSVFormat) << "\n";
+            }
+        }
+        {
+            std::ofstream f(iterationPath / "t.txt");
+            f << all_times.at(k);
+        }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }

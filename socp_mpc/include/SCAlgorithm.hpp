@@ -7,92 +7,107 @@
 class SCAlgorithm
 {
 public:
-   /**
+    /**
      * @brief Construct a new SC solver.
      * 
      * @param model     The system model.
      */
-   explicit SCAlgorithm(Model::ptr_t model);
+    explicit SCAlgorithm(Model::ptr_t model);
 
-   /**
+    /**
      * @brief Initializes the algorithm. Has to be called before solving the problem.
      * 
      */
-   void initialize();
+    void initialize();
 
-   /**
+    /**
      * @brief Solves the system.
      * 
      * @param warm_start    Whether to reuse the last computed trajectory.
      */
-   void solve(bool warm_start = false);
+    void solve(bool warm_start = false);
 
-   /**
+    /**
      * @brief Get the solution variables object.
      * 
      * @param X     The state trajectory.
      * @param U     The input trajectory.
      * @param t     The final time.
      */
-   void getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t);
+    void getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t);
+
+    /**
+     * @brief Get the solution from each iteration
+     * 
+     * @param X 
+     * @param U 
+     * @param t 
+     */
+    void getAllSolutions(std::vector<Model::state_vector_v_t> &X,
+                         std::vector<Model::input_vector_v_t> &U,
+                         std::vector<double> &t);
 
 private:
-   /**
+    /**
      * @brief Saves solution indices for performance.
      * 
      */
-   void cacheIndices();
+    void cacheIndices();
 
-   /**
+    /**
      * @brief Reads the solution variables X, U and sigma.
      * 
      */
-   void readSolution();
+    void readSolution();
 
-   /**
+    /**
      * @brief Loads the parameters from the configuration file.
      * 
      */
-   void loadParameters();
+    void loadParameters();
 
-   /**
+    /**
      * @brief Performs a Successive Convexification iteration.
      * 
      * @return true     If converged.
      * @return false    If not converged.
      */
-   bool iterate();
+    bool iterate();
 
-   size_t K;
+    size_t K;
 
-   Model::ptr_t model;
+    Model::ptr_t model;
 
-   bool free_final_time;
+    bool free_final_time;
 
-   bool nondimensionalize;
-   double weight_trust_region_time;
-   double weight_trust_region_trajectory;
-   double weight_virtual_control;
-   double trust_region_factor;
-   double nu_tol;
-   double delta_tol;
-   size_t max_iterations;
+    bool nondimensionalize;
+    double weight_trust_region_time;
+    double weight_trust_region_trajectory;
+    double weight_virtual_control;
+    double trust_region_factor;
+    double nu_tol;
+    double delta_tol;
+    size_t max_iterations;
 
-   Model::state_matrix_v_t A_bar;
-   Model::control_matrix_v_t B_bar;
-   Model::control_matrix_v_t C_bar;
-   Model::state_vector_v_t S_bar;
-   Model::state_vector_v_t z_bar;
+    Model::state_matrix_v_t A_bar;
+    Model::control_matrix_v_t B_bar;
+    Model::control_matrix_v_t C_bar;
+    Model::state_vector_v_t S_bar;
+    Model::state_vector_v_t z_bar;
 
-   double sigma;
-   Model::state_vector_v_t X;
-   Model::input_vector_v_t U;
+    double sigma = 10.;
+    Model::state_vector_v_t X;
+    Model::input_vector_v_t U;
 
-   size_t sigma_index;
-   Eigen::MatrixXi X_indices;
-   Eigen::MatrixXi U_indices;
+    std::vector<Model::state_vector_v_t> all_X;
+    std::vector<Model::input_vector_v_t> all_U;
+    std::vector<double> all_times;
 
-   op::SecondOrderConeProgram socp;
+    size_t sigma_index = 0;
+    Eigen::MatrixXi X_indices;
+    Eigen::MatrixXi U_indices;
 
-   std::unique_ptr<EcosWrapper> solver;
+    op::SecondOrderConeProgram socp;
+
+    std::unique_ptr<EcosWrapper> solver;
 };

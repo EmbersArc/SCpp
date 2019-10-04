@@ -10,6 +10,10 @@ SCAlgorithm::SCAlgorithm(Model::ptr_t model)
 {
     this->model = model;
     loadParameters();
+
+    all_X.reserve(max_iterations);
+    all_U.reserve(max_iterations);
+    all_times.reserve(max_iterations);
 }
 
 void SCAlgorithm::loadParameters()
@@ -137,12 +141,21 @@ void SCAlgorithm::solve(bool warm_start)
 
     size_t iteration = 0;
     bool converged = false;
+
+    all_X.push_back(X);
+    all_U.push_back(U);
+    all_times.push_back(sigma);
+
     while (iteration < max_iterations)
     {
         iteration++;
         print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
 
         converged = iterate();
+
+        all_X.push_back(X);
+        all_U.push_back(U);
+        all_times.push_back(sigma);
 
         if (converged)
         {
@@ -216,4 +229,13 @@ void SCAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_
     X = this->X;
     U = this->U;
     t = this->sigma;
+}
+
+void SCAlgorithm::getAllSolutions(std::vector<Model::state_vector_v_t> &X,
+                                  std::vector<Model::input_vector_v_t> &U,
+                                  std::vector<double> &t)
+{
+    X = all_X;
+    U = all_U;
+    t = all_times;
 }
