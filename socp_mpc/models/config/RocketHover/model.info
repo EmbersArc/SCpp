@@ -27,22 +27,22 @@ m       1.40
 ; position
 r_init
 {
-    (0)    5.
+    (0)    -5.
     (1)    5.
-    (2)    2.
+    (2)    5.
 }
 ; velocity
 v_init
 {
     (0)     0.
-    (1)     0.
+    (1)     -2.
     (2)     0.
 }
 ; orientation
 rpy_init
 {
-    (0)     0.
-    (1)     0.
+    (0)     45.
+    (1)     -45.
     (2)     0. ; not controllable
 }
 ; angular velocity
@@ -83,7 +83,9 @@ w_final
     (2)    0. ; not controllable
 }
 
-constrain_initial_final     false
+; for successive convexification
+constrain_initial_final     true
+add_slack_variables         false
 
 ; thrust
 T_min       5.
@@ -91,7 +93,7 @@ T_max       20.
 ; maximum gimbal
 gimbal_max  10.
 ; maximum angle
-theta_max   30.
+theta_max   60.
 ; maximum velocity
 v_I_max     6.
 ; maximum angluar velocity

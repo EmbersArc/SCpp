@@ -49,16 +49,20 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
-    size_t total_slack_variables = 3 * (K - 1); // three state constraints per timestep
-    socp.createTensorVariable("epsilon", {total_slack_variables});
-    socp.createTensorVariable("epsilon_norm");
-    std::vector<op::AffineExpression> norm2_terms;
-    for (size_t i = 0; i < total_slack_variables; i++)
+    if (p.add_slack_variables)
     {
-        norm2_terms.push_back(1.0 * var("epsilon", {i}));
+        size_t total_slack_variables = 3 * (K - 1); // three state constraints per timestep
+        socp.createTensorVariable("epsilon", {total_slack_variables});
+        socp.createTensorVariable("epsilon_norm");
+
+        std::vector<op::AffineExpression> norm2_terms;
+        for (size_t i = 0; i < total_slack_variables; i++)
+        {
+            norm2_terms.push_back(1.0 * var("epsilon", {i}));
+        }
+        socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
+        socp.addMinimizationTerm(100. * var("epsilon_norm"));
     }
-    socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
-    socp.addMinimizationTerm(100. * var("epsilon_norm"));
 
     if (p.constrain_initial_final)
     {
@@ -74,24 +78,43 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     size_t slack_index = 0;
     for (size_t k = 1; k < K; k++)
     {
-        // Max Velocity
-        socp.addConstraint(op::norm2({(1.0) * var("X", {3, k}),
-                                      (1.0) * var("X", {4, k}),
-                                      (1.0) * var("X", {5, k})}) <=
-                           param(p.v_I_max) + 1.0 * var("epsilon", {slack_index++}));
 
-        // Max Tilt Angle
-        socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
-                                      (1.0) * var("X", {7, k})}) <=
-                           param(p.theta_max) + 1.0 * var("epsilon", {slack_index++}));
+        { // Max Velocity
+            op::AffineExpression rhs = param(p.v_I_max);
+            if (p.add_slack_variables)
+            {
+                rhs = rhs + 1.0 * var("epsilon", {slack_index++});
+            }
+            socp.addConstraint(op::norm2({(1.0) * var("X", {3, k}),
+                                          (1.0) * var("X", {4, k}),
+                                          (1.0) * var("X", {5, k})}) <= rhs);
+        }
 
-        // Max Rotation Velocity
-        socp.addConstraint(
-            op::norm2({(1.0) * var("X", {8, k}),
-                       (1.0) * var("X", {9, k})}) <=
-            param(p.w_B_max) + 1.0 * var("epsilon", {slack_index++}));
+        { // Max Tilt Angle
+            op::AffineExpression rhs = param(p.theta_max);
+            if (p.add_slack_variables)
+            {
+                rhs = rhs + 1.0 * var("epsilon", {slack_index++});
+            }
+            socp.addConstraint(op::norm2({(1.0) * var("X", {6, k}),
+                                          (1.0) * var("X", {7, k})}) <= rhs);
+        }
+
+        { // Max Rotation Velocity
+            op::AffineExpression rhs = param(p.w_B_max);
+            if (p.add_slack_variables)
+            {
+                rhs = rhs + 1.0 * var("epsilon", {slack_index++});
+            }
+            socp.addConstraint(
+                op::norm2({(1.0) * var("X", {8, k}),
+                           (1.0) * var("X", {9, k})}) <= rhs);
+        }
     }
-    assert(slack_index == total_slack_variables);
+    if (p.add_slack_variables)
+    {
+        assert(slack_index == total_slack_variables);
+    }
 
     // Control Constraints
     for (size_t k = 0; k < K - 1; k++)
@@ -173,6 +196,7 @@ void RocketHover::Parameters::loadFromFile(const std::string &path)
     param.loadScalar("v_I_max", v_I_max);
     param.loadScalar("w_B_max", w_B_max);
     param.loadScalar("constrain_initial_final", constrain_initial_final);
+    param.loadScalar("add_slack_variables", add_slack_variables);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);

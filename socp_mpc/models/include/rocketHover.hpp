@@ -67,6 +67,7 @@ public:
         double m_scale, r_scale;
 
         bool constrain_initial_final;
+        bool add_slack_variables;
 
         void loadFromFile(const std::string &path);
 
