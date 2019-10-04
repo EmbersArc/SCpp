@@ -49,6 +49,8 @@ public:
      */
     SystemModel(){};
 
+    virtual ~SystemModel(){};
+
     /**
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class. Only required for SC models,
      * 
