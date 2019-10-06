@@ -21,8 +21,7 @@ public:
      * @brief Initializes the algorithm. Has to be called before solving the problem.
      *
      */
-    void initialize(bool constant_dynamics = false,
-                    bool intermediate_cost_active = true);
+    void initialize();
 
     /**
      * @brief  Sets a new initial state.
@@ -87,6 +86,8 @@ private:
     double time_horizon;
     size_t K;
     bool nondimensionalize;
+    bool constant_dynamics;
+    bool intermediate_cost_active;
     Model::state_vector_t state_weights_intermediate;
     Model::state_vector_t state_weights_terminal;
     Model::input_vector_t input_weights;

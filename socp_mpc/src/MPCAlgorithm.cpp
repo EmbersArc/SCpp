@@ -18,6 +18,8 @@ void MPCAlgorithm::loadParameters()
 
     param.loadScalar("K", K);
     param.loadScalar("nondimensionalize", nondimensionalize);
+    param.loadScalar("constant_dynamics", constant_dynamics);
+    param.loadScalar("intermediate_cost_active", intermediate_cost_active);
     param.loadScalar("time_horizon", time_horizon);
     param.loadMatrix("state_weights_intermediate", state_weights_intermediate);
     param.loadMatrix("state_weights_terminal", state_weights_terminal);
@@ -27,8 +29,7 @@ void MPCAlgorithm::loadParameters()
     setInputWeights(input_weights);
 }
 
-void MPCAlgorithm::initialize(bool constant_dynamics,
-                              bool intermediate_cost_active)
+void MPCAlgorithm::initialize()
 {
     print("[MPC] Starting controller for model '{}'.\n", Model::getModelName());
 
