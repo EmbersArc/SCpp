@@ -31,7 +31,7 @@ int main()
 
     // write solution to files
     double timer = tic();
-    const fs::path outputPath = getOutputPath() / std::to_string(size_t(timer));
+    const fs::path outputPath = getOutputPath() / "SC" / std::to_string(size_t(timer));
 
     const Eigen::IOFormat CSVFormat(Eigen::StreamPrecision,
                                     Eigen::DontAlignCols,
