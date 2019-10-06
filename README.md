@@ -1,20 +1,22 @@
-A C++ library implementing various optimal control algorithms.
+This library implements various optimal control algorithms that are particularly suited for aerospace applications.
+
+## Guidance and Control Algorithms
+
+ * Efficient Successive Convexification, a real-time guidance algorithm for optimal trajectory planning of constrained dynamical systems
+ * Generic linear receding-horizon SOCP MPC algorithm
+ * Linear Quadratic Regulator
 
 ## Features
 
- * Efficient Successive Convexification algorithm
- * Generic SOCP MPC algorithm
- * LQR algorithm
  * JIT derivative code generation with CppAD
  * Intuitive interface to implement custom models
+ * Rapid iteration with parameters files
  
-
 ## Current Models
 
  * Generic Rocket Model
  * SpaceX Starship Landing Model
  
-
 ## Dependencies
 
  * C++17
