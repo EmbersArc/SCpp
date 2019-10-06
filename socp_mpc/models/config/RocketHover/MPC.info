@@ -1,6 +1,8 @@
-time_horizon        3.
-K                   10
-nondimensionalize   false
+time_horizon                2.
+K                           7
+nondimensionalize           false
+intermediate_cost_active    false
+constant_dynamics           true
 
 state_weights_intermediate
 {
@@ -34,7 +36,7 @@ state_weights_terminal
 
 input_weights
 {
-    scaling 0.3
+    scaling 0.1
     (0)   1.
     (1)   1.
     (2)   1.
