@@ -58,14 +58,14 @@ target_include_directories(mpc_lib SYSTEM PUBLIC ${SOCP_SYSTEM_INCLUDE_DIRECTORI
 
 target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O2 -march=native)
 
-add_executable(mpc_sim MPC_sim.cpp)
+add_executable(mpc_sim src/MPC_sim.cpp)
 target_link_libraries(mpc_sim mpc_lib)
 
-add_executable(lqr_sim LQR_sim.cpp)
+add_executable(lqr_sim src/LQR_sim.cpp)
 target_link_libraries(lqr_sim mpc_lib)
 
-add_executable(sc_sim SC_sim.cpp)
+add_executable(sc_sim src/SC_sim.cpp)
 target_link_libraries(sc_sim mpc_lib)
 
-add_executable(sc_oneshot SC_oneshot.cpp)
+add_executable(sc_oneshot src/SC_oneshot.cpp)
 target_link_libraries(sc_oneshot mpc_lib)
