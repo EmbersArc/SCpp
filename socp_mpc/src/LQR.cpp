@@ -96,7 +96,7 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
         C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim).noalias() =
             A * C.block<Model::state_dim, Model::input_dim>(0, (i - 1) * Model::input_dim);
     }
-    
+
     Eigen::FullPivLU<ctrl_matrix_t> lu_decomp(C);
 
     if (lu_decomp.rank() == Model::state_dim)
@@ -113,6 +113,8 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
     Model::state_matrix_t P;
     bool success = careSolve(Q, R, A, B, P, R_inverse);
     K = (R_inverse * (B.transpose() * P));
+
+    assert(not K.hasNaN());
 
     return success;
 }

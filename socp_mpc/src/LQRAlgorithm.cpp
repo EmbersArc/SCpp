@@ -43,12 +43,14 @@ void LQRAlgorithm::setFinalState(const Model::state_vector_t &x)
 
 void LQRAlgorithm::setStateWeights(const Model::state_vector_t &weights)
 {
+    Q.setZero();
     Q.diagonal() = weights;
     state_weights_set = true;
 }
 
 void LQRAlgorithm::setInputWeights(const Model::input_vector_t &weights)
 {
+    R.setZero();
     R.diagonal() = weights;
     input_weights_set = true;
 }
