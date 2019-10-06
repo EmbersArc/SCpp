@@ -104,7 +104,7 @@ op::SecondOrderConeProgram buildSCOP(
                 op::Parameter x_desired =
                     param_fn([&state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
                 op::AffineTerm x_current =
-                    param(state_weights_intermediate(i)) * var("X", {i, K - 1});
+                    param(state_weights_intermediate(i)) * var("X", {i, k});
                 op::AffineExpression ex = x_desired + x_current;
                 error_norm2_args.push_back(ex);
             }
