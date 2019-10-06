@@ -40,6 +40,8 @@ make
 
 Available executables are:
 
+* **LQR_sim** to simulate a trajectory with the classic MPC controller
+
 * **MPC_sim** to simulate a trajectory with the classic MPC controller
 
 * **SC_oneshot** to calculate one trajectory with Successive Convexification
