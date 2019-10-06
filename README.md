@@ -12,11 +12,13 @@ This library implements various optimal control algorithms that are particularly
  * Intuitive interface to implement custom models
  * Rapid iteration with parameters files
  
+
 ## Current Models
 
  * Generic Rocket Model
  * SpaceX Starship Landing Model
  
+
 ## Dependencies
 
  * C++17
@@ -64,22 +66,34 @@ See existing models in the `socp_mpc/models` folder for some examples.
 
 ## Examples
 
-### Rocket trajectory model with free-final-time
+### Rocket Trajectory Model with Free-Final-Time
 
-![](https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif)
+<p align="center">
+  <img src="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif">
+</p>
 
-### SpaceX Starship landing trajectory
+### SpaceX Starship Landing Trajectory
 
-![StarshipLanding](https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png)
+<p align="center">
+  <img width="400" src="https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png">
+</p>
 
-### 2D rocket landing problem
+### 2D Rocket Landing Problem
 
-[Feed-forward input tested in a box2d physics simulation](https://gfycat.com/DaringPortlyBlacklab)
+feed-forward input tested in a box2d physics simulation
+
+<p align="center">
+  <img width="300" src="https://thumbs.gfycat.com/DaringPortlyBlacklab-small.gif">
+</p>
+
 
 ### Cartpole
 
-![](https://thumbs.gfycat.com/KnobbyFlatCanvasback-small.gif)
+<p align="center">
+  <img src="https://thumbs.gfycat.com/KnobbyFlatCanvasback-small.gif">
+</p>
 
 ## Contributing
 
 I'm looking forward to contributions, both problem formulations and improvements to the core library.
+
