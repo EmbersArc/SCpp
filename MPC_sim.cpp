@@ -16,6 +16,21 @@ double expMovingAverage(double previousAverage, double period, double newValue)
     return result;
 }
 
+template <typename T>
+std::vector<T> reduce_vector(const std::vector<T> &v, size_t steps)
+{
+    const size_t size = v.size();
+
+    std::vector<T> new_vector;
+
+    for (size_t i = 0; i < steps; i++)
+    {
+        const size_t index = size_t(size / steps * i);
+        new_vector.push_back(v.at(index));
+    }
+    return new_vector;
+}
+
 int main()
 {
     auto model = std::make_shared<Model>();
@@ -25,15 +40,16 @@ int main()
     mpc::MPCAlgorithm solver(model);
 
     const double sim_time = 15.;
+    const double write_steps = 30;
 
-    solver.initialize(true, false);
+    solver.initialize();
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
 
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
-    std::vector<double> times;
+    std::vector<double> t_sim;
 
     Model::input_vector_t u;
     u.setZero();
@@ -55,11 +71,8 @@ int main()
         // forward estimation
         // Model::state_vector_t x_expected;
         // sim::simulate(model, avg_solve_time, x, u, u, x_expected);
-        solver.setInitialState(x);
 
-        X_sim.push_back(x);
-        U_sim.push_back(u);
-        times.push_back(t);
+        solver.setInitialState(x);
 
         // solve with current state
         const double t_start_solve = tic();
@@ -76,6 +89,10 @@ int main()
         solver.getSolution(X, U);
         u = U.at(0);
 
+        X_sim.push_back(x);
+        U_sim.push_back(u);
+        t_sim.push_back(t);
+
         sim_step++;
 
         if ((x - model->p.x_final).norm() < 0.02)
@@ -86,14 +103,14 @@ int main()
     fmt::print("\n");
     fmt::print("{:=^{}}\n", fmt::format("<SIMULATION FINISHED>"), 60);
     fmt::print("{:<{}}{:.2f}s\n", "Runtime:", 50, 0.001 * toc(run_timer));
-    fmt::print("{:<{}}{:.2f}s\n", "Simulation time:", 50, t);
+    fmt::print("{:<{}}{:.2f}s\n", "Simulated time:", 50, t);
     const double freq = double(sim_step) / t;
     fmt::print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
     fmt::print("\n");
 
     // write solution to files
     double write_timer = tic();
-    fs::path outputPath = getOutputPath() / std::to_string(0);
+    fs::path outputPath = getOutputPath() / "MPC" / std::to_string(size_t(write_timer)) / "0";
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");
@@ -103,23 +120,26 @@ int main()
                                     Eigen::DontAlignCols,
                                     ", ", "\n");
 
+    X_sim = reduce_vector(X_sim, write_steps);
+    U_sim = reduce_vector(U_sim, write_steps);
+    t_sim = reduce_vector(t_sim, write_steps);
     {
-        std::ofstream f(outputPath / "X_sim.txt");
+        std::ofstream f(outputPath / "X.txt");
         for (auto &x : X_sim)
         {
             f << x.transpose().format(CSVFormat) << "\n";
         }
     }
     {
-        std::ofstream f(outputPath / "U_sim.txt");
+        std::ofstream f(outputPath / "U.txt");
         for (auto &u : U_sim)
         {
             f << u.transpose().format(CSVFormat) << "\n";
         }
     }
     {
-        std::ofstream f(outputPath / "t_sim.txt");
-        for (auto &t : times)
+        std::ofstream f(outputPath / "t.txt");
+        for (auto &t : t_sim)
         {
             f << t << "\n";
         }
