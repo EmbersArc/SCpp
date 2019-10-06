@@ -49,9 +49,10 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
+    size_t total_slack_variables;
     if (p.add_slack_variables)
     {
-        size_t total_slack_variables = 3 * (K - 1); // three state constraints per timestep
+        total_slack_variables = 3 * (K - 1); // three state constraints per timestep
         socp.createTensorVariable("epsilon", {total_slack_variables});
         socp.createTensorVariable("epsilon_norm");
 
