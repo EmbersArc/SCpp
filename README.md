@@ -42,6 +42,8 @@ make
 
 Available executables are:
 
+* **LQR_sim** to simulate a trajectory with the classic MPC controller
+
 * **MPC_sim** to simulate a trajectory with the classic MPC controller
 
 * **SC_oneshot** to calculate one trajectory with Successive Convexification
@@ -80,5 +82,4 @@ See existing models in the `socp_mpc/models` folder for some examples.
 
 ## Contributing
 
-Yes please.
-
+I'm looking forward to contributions, both problem formulations and improvements to the core library.
