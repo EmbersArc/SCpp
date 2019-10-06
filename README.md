@@ -78,5 +78,4 @@ See existing models in the `socp_mpc/models` folder for some examples.
 
 ## Contributing
 
-Yes please.
-
+I'm looking forward to contributions, both problem formulations and improvements to the core library.
