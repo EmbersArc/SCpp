@@ -1,5 +1,5 @@
 <p align="center">
-  <img width=500 src="https://user-images.githubusercontent.com/1352472/66313599-ef995f80-e912-11e9-85fd-fc18f0ed328d.png">
+  <img width=900 src="https://i.imgur.com/lQxRb0Q.png">
 </p>
 
 This library implements various optimal control algorithms that are particularly suited for aerospace applications.
