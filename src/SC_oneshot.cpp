@@ -20,14 +20,8 @@ int main()
     std::vector<Model::input_vector_v_t> all_U;
     std::vector<double> all_times;
 
-    double timer_run = tic();
-
     solver.solve();
     solver.getAllSolutions(all_X, all_U, all_times);
-
-    fmt::print("\n");
-    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution:", 50, toc(timer_run));
-    fmt::print("\n");
 
     // write solution to files
     double timer = tic();
