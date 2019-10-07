@@ -147,5 +147,5 @@ public:
     }
 
 private:
-    std::string param_folder_path = "../socp_mpc/models/config/";
+    std::string param_folder_path = "../scpp_models/config/";
 };
