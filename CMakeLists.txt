@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(socp_mpc)
+project(scpp_mpc)
 
 # OPTIONS
 set(CMAKE_CXX_STANDARD 17)
@@ -16,45 +16,45 @@ add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # SOCP INTERFACE
-add_subdirectory(socp_mpc/socp_interface)
+add_subdirectory(lib/socp_interface)
 
 # INCLUDES
-set(SOCP_SYSTEM_INCLUDE_DIRECTORIES
+set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/external
 )
-set(SOCP_INCLUDE_DIRECTORIES
-    socp_mpc/include
-    socp_mpc/models/include
-    socp_mpc/utils/include
+set(SCPP_INCLUDE_DIRECTORIES
+    scpp_core/include
+    scpp_core/utils/include
+    scpp_models/include
 )
 
 # SOURCES
 # MPC Algorithm
 set(MPC_SOURCES
     # utilities
-    socp_mpc/utils/src/timing.cpp
-    socp_mpc/utils/src/parameterServer.cpp
+    scpp_core/utils/src/timing.cpp
+    scpp_core/utils/src/parameterServer.cpp
 
     # main functionality
-    socp_mpc/src/simulation.cpp
-    socp_mpc/src/discretization.cpp
-    socp_mpc/src/MPCProblem.cpp
-    socp_mpc/src/MPCAlgorithm.cpp
-    socp_mpc/src/SCProblem.cpp
-    socp_mpc/src/SCAlgorithm.cpp
-    socp_mpc/src/LQR.cpp
-    socp_mpc/src/LQRAlgorithm.cpp
+    scpp_core/src/simulation.cpp
+    scpp_core/src/discretization.cpp
+    scpp_core/src/MPCProblem.cpp
+    scpp_core/src/MPCAlgorithm.cpp
+    scpp_core/src/SCProblem.cpp
+    scpp_core/src/SCAlgorithm.cpp
+    scpp_core/src/LQR.cpp
+    scpp_core/src/LQRAlgorithm.cpp
 
     # models
-    socp_mpc/models/src/rocketHover.cpp
-    socp_mpc/models/src/starship.cpp
+    scpp_models/src/rocketHover.cpp
+    scpp_models/src/starship.cpp
 )
 
 add_library(mpc_lib SHARED ${MPC_SOURCES})
 
 target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
-target_include_directories(mpc_lib PUBLIC ${SOCP_INCLUDE_DIRECTORIES})
-target_include_directories(mpc_lib SYSTEM PUBLIC ${SOCP_SYSTEM_INCLUDE_DIRECTORIES})
+target_include_directories(mpc_lib PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
+target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
 target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O2 -march=native)
 
