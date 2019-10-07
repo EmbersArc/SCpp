@@ -107,7 +107,7 @@ bool SCAlgorithm::iterate()
     }
     print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
 
-    print("{:<{}}{: .4f}\n\n", "Trajectory Time", 50, sigma);
+    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, sigma);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
