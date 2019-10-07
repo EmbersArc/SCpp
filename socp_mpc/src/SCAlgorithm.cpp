@@ -235,7 +235,22 @@ void SCAlgorithm::getAllSolutions(std::vector<Model::state_vector_v_t> &X,
                                   std::vector<Model::input_vector_v_t> &U,
                                   std::vector<double> &t)
 {
-    X = all_X;
-    U = all_U;
+    if (nondimensionalize)
+    {
+        auto all_X_redim = all_X;
+        auto all_U_redim = all_U;
+        for (size_t k = 0; k < all_X.size(); k++)
+        {
+            model->redimensionalizeTrajectory(all_X_redim.at(k), all_U_redim.at(k));
+        }
+        X = all_X_redim;
+        U = all_U_redim;
+    }
+    else
+    {
+        X = all_X;
+        U = all_U;
+    }
+
     t = all_times;
 }
