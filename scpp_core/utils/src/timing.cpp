@@ -4,7 +4,7 @@ using namespace std::chrono;
 
 double tic()
 {
-    const duration<double, std::milli> s = steady_clock::now().time_since_epoch();
+    const duration<double, std::milli> s = system_clock::now().time_since_epoch();
 
     return s.count();
 }
