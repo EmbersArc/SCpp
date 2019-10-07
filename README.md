@@ -1,3 +1,7 @@
+<p align="center">
+  <img width=500 src="https://user-images.githubusercontent.com/1352472/66313599-ef995f80-e912-11e9-85fd-fc18f0ed328d.png">
+</p>
+
 This library implements various optimal control algorithms that are particularly suited for aerospace applications.
 
 ## Guidance and Control Algorithms
