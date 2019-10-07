@@ -5,7 +5,7 @@ legacy/
 .vscode
 
 *.mp4
-*.blend
+# *.blend
 *.blend1
 *.blend2
 blender_*
