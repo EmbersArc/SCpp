@@ -2,5 +2,5 @@
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
 [submodule "socp_mpc/socp_interface"]
-	path = socp_mpc/socp_interface
+	path = lib/socp_interface
 	url = https://github.com/EmbersArc/socp_interface.git
