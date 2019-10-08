@@ -31,6 +31,10 @@ std::vector<T> reduce_vector(const std::vector<T> &v, size_t steps)
     return new_vector;
 }
 
+/**
+ * @brief Simulates a trajectory with the MPC controller.
+ * 
+ */
 int main()
 {
     auto model = std::make_shared<Model>();
