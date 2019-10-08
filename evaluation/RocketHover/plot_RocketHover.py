@@ -78,7 +78,7 @@ def my_plot(fig):
     ax.plot(X[:, 0], X[:, 1], X[:, 2], color='gray')
 
     # fig.suptitle(f"Iteration {figures_i}", fontsize=14)
-    # plt.savefig(f"{FOLDER}/{figures_i}.png")
+    plt.savefig(f"{figures_i}.png")
 
 def main():
     global figures_i, figures_N, FOLDER
