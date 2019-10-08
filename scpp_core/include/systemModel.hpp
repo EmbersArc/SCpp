@@ -58,7 +58,8 @@ public:
      * @param U     Input trajectory.
      */
     virtual void getInitializedTrajectory(state_vector_v_t &,
-                                          input_vector_v_t &)
+                                          input_vector_v_t &,
+                                          double &)
     {
         throw std::runtime_error("getInitializedTrajectory: This function has to be implemented by the derived class.");
     };

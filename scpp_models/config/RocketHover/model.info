@@ -54,6 +54,7 @@ w_init
 }
 
 ; ----- final values -----
+final_time      5.
 ; position
 r_final
 {
@@ -91,7 +92,7 @@ add_slack_variables         false
 T_min       5.
 T_max       20.
 ; maximum gimbal
-gimbal_max  10.
+gimbal_max  12.
 ; maximum angle
 theta_max   60.
 ; maximum velocity

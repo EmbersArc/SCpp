@@ -38,7 +38,8 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
 }
 
 void Starship::getInitializedTrajectory(state_vector_v_t &X,
-                                        input_vector_v_t &U)
+                                        input_vector_v_t &U,
+                                        double &t)
 {
     const size_t K = X.size();
 
@@ -63,6 +64,7 @@ void Starship::getInitializedTrajectory(state_vector_v_t &X,
         // input
         U.at(k) << 0, 0, (p.T_max - p.T_min) / 2.;
     }
+    t = p.final_time;
 }
 
 void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -235,6 +237,7 @@ void Starship::Parameters::loadFromFile(const std::string &path)
     param.loadScalar("gamma_gs", gamma_gs);
     param.loadScalar("w_B_max", w_B_max);
     param.loadScalar("random_initial_state", random_initial_state);
+    param.loadScalar("final_time", final_time);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);

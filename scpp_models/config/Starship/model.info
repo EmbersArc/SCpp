@@ -53,6 +53,7 @@ w_init
 }
 
 ; ----- final values -----
+final_time      10.
 m_dry       120000.
 ; position
 r_final

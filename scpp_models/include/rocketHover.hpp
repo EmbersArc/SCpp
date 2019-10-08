@@ -40,7 +40,8 @@ public:
     void redimensionalize() override;
 
     void getInitializedTrajectory(state_vector_v_t &X,
-                                  input_vector_v_t &U) override;
+                                  input_vector_v_t &U,
+                                  double &t) override;
 
     void loadParameters();
 
@@ -63,6 +64,7 @@ public:
 
         state_vector_t x_init;
         state_vector_t x_final;
+        double final_time;
 
         double m_scale, r_scale;
 

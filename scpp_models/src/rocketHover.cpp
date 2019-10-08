@@ -146,7 +146,8 @@ void RocketHover::redimensionalize()
 }
 
 void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
-                                           input_vector_v_t &U)
+                                           input_vector_v_t &U,
+                                           double &t)
 {
     const size_t K = X.size();
 
@@ -161,6 +162,7 @@ void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
         // input
         U.at(k) << 0, 0, -p.g_I.z() * p.m;
     }
+    t = p.final_time;
 }
 
 void RocketHover::loadParameters()
@@ -188,6 +190,7 @@ void RocketHover::Parameters::loadFromFile(const std::string &path)
     param.loadMatrix("v_final", v_final);
     param.loadMatrix("rpy_final", rpy_final);
     param.loadMatrix("w_final", w_final);
+    param.loadScalar("final_time", final_time);
 
     param.loadScalar("m", m);
     param.loadScalar("T_min", T_min);

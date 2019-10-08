@@ -30,7 +30,8 @@ public:
         state_vector_ad_t &f) override;
 
     void getInitializedTrajectory(state_vector_v_t &X,
-                                  input_vector_v_t &U) override;
+                                  input_vector_v_t &U,
+                                  double &t) override;
 
     void addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                    state_vector_v_t &X0,
@@ -68,6 +69,7 @@ public:
 
         state_vector_t x_init;
         state_vector_t x_final;
+        double final_time;
 
         double m_scale, r_scale;
 

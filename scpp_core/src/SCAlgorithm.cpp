@@ -130,7 +130,7 @@ void SCAlgorithm::solve(bool warm_start)
     else
     {
         loadParameters();
-        model->getInitializedTrajectory(X, U);
+        model->getInitializedTrajectory(X, U, sigma);
     }
 
     Model::param_vector_t model_params;

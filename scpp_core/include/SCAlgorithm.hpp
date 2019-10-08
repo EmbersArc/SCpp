@@ -95,7 +95,7 @@ private:
     Model::state_vector_v_t S_bar;
     Model::state_vector_v_t z_bar;
 
-    double sigma = 10.;
+    double sigma;
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
 
