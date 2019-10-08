@@ -7,6 +7,10 @@ namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
 
+/**
+ * @brief Computes a single SC trajectory and saves all intermediate iterations.
+ * 
+ */
 int main()
 {
     auto model = std::make_shared<Model>();
