@@ -3,25 +3,11 @@
 #include "LQRAlgorithm.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
+#include "vectorOperations.hpp"
 
 namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
-
-template <typename T>
-std::vector<T> reduce_vector(const std::vector<T> &v, size_t steps)
-{
-    const size_t size = v.size();
-
-    std::vector<T> new_vector;
-
-    for (size_t i = 0; i < steps; i++)
-    {
-        const size_t index = size_t(size / steps * i);
-        new_vector.push_back(v.at(index));
-    }
-    return new_vector;
-}
 
 int main()
 {
