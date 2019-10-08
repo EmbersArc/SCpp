@@ -1,12 +1,18 @@
 #include <experimental/filesystem>
 
 #include "SCAlgorithm.hpp"
+#include "simulation.hpp"
 #include "timing.hpp"
 
 namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
 
+/**
+ * @brief Simulates a trajectory with the SC controller.
+ * 
+ * (Kind of broken right now)
+ */
 int main()
 {
     auto model = std::make_shared<Model>();
@@ -16,7 +22,8 @@ int main()
 
     solver.initialize();
 
-    const size_t sim_steps = 1;
+    const size_t sim_steps = 100;
+    const double time_step = 0.01;
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
@@ -24,6 +31,7 @@ int main()
     Model::input_vector_v_t U_sim(sim_steps);
 
     double t;
+    Model::state_vector_t x = model->p.x_init;
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
@@ -32,10 +40,19 @@ int main()
         solver.solve(i > 0);
         solver.getSolution(X, U, t);
 
-        X_sim.push_back(X.at(0));
-        U_sim.push_back(U.at(0));
+        // move solve_time forward
+        const Model::input_vector_t u0 = U.at(0);
+        const Model::input_vector_t u1 = U.at(1);
 
-        model->p.x_init = X.at(1);
+        sim::simulate(model, time_step, x, u0, u1, x);
+
+        X_sim.push_back(x);
+        U_sim.push_back(u0);
+
+        if ((x - model->p.x_final).norm() < 0.02)
+        {
+            break;
+        }
     }
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));
