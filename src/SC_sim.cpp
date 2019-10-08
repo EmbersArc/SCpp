@@ -3,6 +3,7 @@
 #include "SCAlgorithm.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
+#include "vectorOperations.hpp"
 
 namespace fs = std::experimental::filesystem;
 
