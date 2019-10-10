@@ -9,6 +9,20 @@ namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
 
+Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double t, double total_time)
+{
+    const size_t K = U.size();
+    const double time_step = total_time / (K - 1);
+    const size_t i0 = t / time_step;
+    const size_t i1 = i0 + 1;
+    const Model::input_vector_t u0 = U.at(i0);
+    const Model::input_vector_t u1 = U.at(i1);
+
+    const double t_intermediate = std::fmod(t, time_step);
+    const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
+    return u;
+}
+
 /**
  * @brief Simulates a trajectory with the SC controller.
  * 
@@ -23,16 +37,16 @@ int main()
 
     solver.initialize();
 
-    const size_t sim_steps = 100;
-    const double time_step = 0.01;
+    const size_t sim_steps = 500;
+    const double time_step = 0.015;
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
-    Model::state_vector_v_t X_sim(sim_steps);
-    Model::input_vector_v_t U_sim(sim_steps);
+    Model::state_vector_v_t X_sim;
+    Model::input_vector_v_t U_sim;
 
     double t;
-    Model::state_vector_t x = model->p.x_init;
+    Model::state_vector_t &x = model->p.x_init;
 
     double timer_run = tic();
     for (size_t i = 0; i < sim_steps; i++)
@@ -40,10 +54,12 @@ int main()
         fmt::print("\nSIMULATION STEP {}:\n", i);
         solver.solve(i > 0);
         solver.getSolution(X, U, t);
+        // const size_t K = X.size();
 
-        // move solve_time forward
         const Model::input_vector_t u0 = U.at(0);
-        const Model::input_vector_t u1 = U.at(1);
+        // const Model::input_vector_t u1 = U.at(1);
+        // const double step_time = (t / (K - 1));
+        // const Model::input_vector_t u = u0 + (u1 - u0) * time_step / step_time;
 
         sim::simulate(model, time_step, x, u0, u0, x);
 
@@ -63,7 +79,7 @@ int main()
 
     // write solution to files
     double timer = tic();
-    fs::path outputPath = getOutputPath() / std::to_string(0);
+    fs::path outputPath = getOutputPath() / "SC_sim" / std::to_string(size_t(timer)) / std::to_string(0);
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");
@@ -74,21 +90,21 @@ int main()
                                     ", ", "\n");
 
     {
-        std::ofstream f(outputPath / "X_sim.txt");
+        std::ofstream f(outputPath / "X.txt");
         for (auto &state : X_sim)
         {
             f << state.transpose().format(CSVFormat) << "\n";
         }
     }
     {
-        std::ofstream f(outputPath / "U_sim.txt");
+        std::ofstream f(outputPath / "U.txt");
         for (auto &input : U_sim)
         {
             f << input.transpose().format(CSVFormat) << "\n";
         }
     }
     {
-        std::ofstream f(outputPath / "t_sim.txt");
+        std::ofstream f(outputPath / "t.txt");
         f << t / (X.size() - 1) * sim_steps;
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
