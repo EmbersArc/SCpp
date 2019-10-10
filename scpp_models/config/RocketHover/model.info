@@ -85,8 +85,8 @@ w_final
 }
 
 ; for successive convexification
-constrain_initial_final     true
-add_slack_variables         false
+constrain_initial_final     false
+add_slack_variables         true
 
 ; thrust
 T_min       5.
