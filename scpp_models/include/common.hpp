@@ -81,7 +81,7 @@ Eigen::Quaternion<T> vectorToQuaternion(const Eigen::Matrix<T, 4, 1> &v)
 template <typename T>
 Eigen::Matrix<T, 3, 3> rotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
 {
-    const T phi = eta.x();
+    // const T phi = eta.x();
     const T theta = eta.y();
     const T psi = eta.z();
 
@@ -96,23 +96,23 @@ Eigen::Matrix<T, 3, 3> rotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
 template <typename T>
 Eigen::Matrix<T, 4, 4> omegaMatrix(const Eigen::Matrix<T, 3, 1> &w)
 {
-    Eigen::Matrix<T, 4, 4> omegaMatrix;
-    omegaMatrix << T(0.), -w(0), -w(1), -w(2),
+    Eigen::Matrix<T, 4, 4> omega;
+    omega << T(0.), -w(0), -w(1), -w(2),
         w(0), T(0.), w(2), -w(1),
         w(1), -w(2), T(0.), w(0),
         w(2), w(1), -w(0), T(0.);
 
-    return omegaMatrix;
+    return omega;
 }
 
 template <typename T>
 Eigen::Matrix<T, 3, 3> omegaMatrixReduced(const Eigen::Matrix<T, 3, 1> &q)
 {
-    Eigen::Matrix<T, 3, 3> omegaMatrix;
+    Eigen::Matrix<T, 3, 3> omega;
     const T qw = sqrt(1. - q.squaredNorm());
-    omegaMatrix << qw, -q(2), q(1),
+    omega << qw, -q(2), q(1),
         q(2), qw, -q(0),
         -q(1), q(0), qw;
 
-    return omegaMatrix;
+    return omega;
 }

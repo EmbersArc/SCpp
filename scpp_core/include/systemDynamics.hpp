@@ -118,18 +118,23 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateParameters(param_vec
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vector_t &x, const input_vector_t &u, state_vector_t &f)
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vector_t &x,
+                                                               const input_vector_t &u,
+                                                               state_vector_t &f)
 {
     assert(initialized);
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
     input << x, u;
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
-    f_map = f_.Forward(0, input);
+    f_map << f_.Forward(0, input);
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B)
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const state_vector_t &x,
+                                                                       const input_vector_t &u,
+                                                                       state_matrix_t &A,
+                                                                       control_matrix_t &B)
 {
     assert(initialized);
     dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
@@ -137,7 +142,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
 
-    J_map = f_.Jacobian(input);
+    J_map << f_.Jacobian(input);
 
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();

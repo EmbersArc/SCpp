@@ -45,7 +45,7 @@ int main()
         const Model::input_vector_t u0 = U.at(0);
         const Model::input_vector_t u1 = U.at(1);
 
-        sim::simulate(model, time_step, x, u0, u1, x);
+        sim::simulate(model, time_step, x, u0, u0, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);
@@ -75,16 +75,16 @@ int main()
 
     {
         std::ofstream f(outputPath / "X_sim.txt");
-        for (auto &x : X_sim)
+        for (auto &state : X_sim)
         {
-            f << x.transpose().format(CSVFormat) << "\n";
+            f << state.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "U_sim.txt");
-        for (auto &u : U_sim)
+        for (auto &input : U_sim)
         {
-            f << u.transpose().format(CSVFormat) << "\n";
+            f << input.transpose().format(CSVFormat) << "\n";
         }
     }
     {

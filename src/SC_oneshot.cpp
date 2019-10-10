@@ -45,16 +45,16 @@ int main()
 
         {
             std::ofstream f(iterationPath / "X.txt");
-            for (auto &x : all_X.at(k))
+            for (auto &state : all_X.at(k))
             {
-                f << x.transpose().format(CSVFormat) << "\n";
+                f << state.transpose().format(CSVFormat) << "\n";
             }
         }
         {
             std::ofstream f(iterationPath / "U.txt");
-            for (auto &u : all_U.at(k))
+            for (auto &input : all_U.at(k))
             {
-                f << u.transpose().format(CSVFormat) << "\n";
+                f << input.transpose().format(CSVFormat) << "\n";
             }
         }
         {

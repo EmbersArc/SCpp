@@ -142,7 +142,7 @@ public:
         param_folder_path = path;
     }
 
-    const std::string getParameterFolder()
+    const std::string getParameterFolder() const
     {
         return param_folder_path + getModelName();
     }

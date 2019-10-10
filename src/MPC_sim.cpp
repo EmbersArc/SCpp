@@ -115,23 +115,23 @@ int main()
     t_sim = reduce_vector(t_sim, write_steps);
     {
         std::ofstream f(outputPath / "X.txt");
-        for (auto &x : X_sim)
+        for (auto &state : X_sim)
         {
-            f << x.transpose().format(CSVFormat) << "\n";
+            f << state.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "U.txt");
-        for (auto &u : U_sim)
+        for (auto &input : U_sim)
         {
-            f << u.transpose().format(CSVFormat) << "\n";
+            f << input.transpose().format(CSVFormat) << "\n";
         }
     }
     {
         std::ofstream f(outputPath / "t.txt");
-        for (auto &t : t_sim)
+        for (auto &time : t_sim)
         {
-            f << t << "\n";
+            f << time << "\n";
         }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(write_timer));
