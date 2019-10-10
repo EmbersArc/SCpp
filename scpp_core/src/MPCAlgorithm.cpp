@@ -47,7 +47,7 @@ void MPCAlgorithm::initialize()
     discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "[MPC] Time, discretization:", 50, toc(timer_discretize));
 
-    // to check
+    // to check against numeric discretization
     // Model::dynamic_matrix_t X_eq(10, K);
     // X_eq.col(0) = x_eq;
     // X_eq.col(1) = x_eq;
