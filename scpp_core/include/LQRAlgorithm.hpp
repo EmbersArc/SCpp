@@ -80,7 +80,7 @@ private:
     Model::state_matrix_t Q;
     Model::input_matrix_t R;
 
-    Model::input_vector_t u;
+    std::optional<Model::input_vector_t> u;
 
     Model::state_vector_t state_weights;
     Model::input_vector_t input_weights;
