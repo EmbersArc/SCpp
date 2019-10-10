@@ -2,6 +2,9 @@
 
 #include "activeModel.hpp"
 
+namespace scpp
+{
+
 namespace discretization
 {
 
@@ -67,4 +70,5 @@ void exactLinearDiscretization(Model::ptr_t model,
                                Model::control_matrix_t &B,
                                Model::state_vector_t &z);
 
-}
+} // namespace discretization
+} // namespace scpp

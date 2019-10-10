@@ -3,7 +3,7 @@
 
 using fmt::print;
 
-namespace mpc
+namespace scpp
 {
 
 MPCAlgorithm::MPCAlgorithm(Model::ptr_t model)
@@ -44,7 +44,7 @@ void MPCAlgorithm::initialize()
     Model::input_vector_t u_eq;
     model->getOperatingPoint(x_eq, u_eq);
     const double dt = time_horizon / (K - 1);
-    discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
+    scpp::discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "[MPC] Time, discretization:", 50, toc(timer_discretize));
 
     // to check against numeric discretization
@@ -59,17 +59,17 @@ void MPCAlgorithm::initialize()
     // Model::control_matrix_v_t C_bar(K);
     // Model::state_vector_v_t z_bar(K);
 
-    // discretization::multipleShooting(model, time_horizon, X_eq, U_eq, A_bar, B_bar, C_bar, z_bar);
+    // scpp::discretization::multipleShooting(model, time_horizon, X_eq, U_eq, A_bar, B_bar, C_bar, z_bar);
     // std::cout << (A_bar[0] - A).cwiseAbs().maxCoeff() << "\n";
     // std::cout << (B_bar[0] + C_bar[0] - B).cwiseAbs().maxCoeff() << "\n";
     // std::cout << (z_bar[0] - z).cwiseAbs().maxCoeff() << "\n";
 
-    socp = mpc::buildSCOP(model,
-                          X, U,
-                          x_init, x_final,
-                          state_weights_intermediate, state_weights_terminal, input_weights,
-                          A, B, z,
-                          constant_dynamics, intermediate_cost_active);
+    socp = scpp::buildSCOP(model,
+                           X, U,
+                           x_init, x_final,
+                           state_weights_intermediate, state_weights_terminal, input_weights,
+                           A, B, z,
+                           constant_dynamics, intermediate_cost_active);
 
     cacheIndices();
 
@@ -181,4 +181,4 @@ void MPCAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v
     U = this->U;
 }
 
-} // namespace mpc
+} // namespace scpp

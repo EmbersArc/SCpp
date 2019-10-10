@@ -5,6 +5,9 @@
 #include "eigenIntegration.hpp"
 #include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
+namespace scpp
+{
+
 namespace discretization
 {
 
@@ -109,8 +112,9 @@ public:
 
         // z_bar
         dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        cols += 1;
 
-        assert(cols + 1 == size_t(dVdt.cols()));
+        assert(cols == size_t(dVdt.cols()));
     }
 };
 
@@ -220,8 +224,9 @@ public:
 
         // z_bar
         dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (f - A_bar * x - B_bar * u);
+        cols += 1;
 
-        assert(cols + 1 == size_t(dVdt.cols()));
+        assert(cols == size_t(dVdt.cols()));
     }
 };
 
@@ -273,3 +278,4 @@ void multipleShooting(
 }
 
 } // namespace discretization
+} // namespace scpp

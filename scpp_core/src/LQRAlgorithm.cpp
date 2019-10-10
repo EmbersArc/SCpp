@@ -1,8 +1,6 @@
 #include "LQRAlgorithm.hpp"
 
-// using fmt::print;
-
-namespace lqr
+namespace scpp
 {
 
 LQRAlgorithm::LQRAlgorithm(Model::ptr_t model) : model(model)
@@ -73,4 +71,4 @@ void LQRAlgorithm::loadParameters()
     setInputWeights(r);
 }
 
-} // namespace lqr
+} // namespace scpp

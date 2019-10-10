@@ -16,7 +16,7 @@ int main()
     auto model = std::make_shared<Model>();
     model->loadParameters();
 
-    SCAlgorithm solver(model);
+    scpp::SCAlgorithm solver(model);
 
     solver.initialize();
 

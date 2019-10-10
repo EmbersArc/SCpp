@@ -1,6 +1,6 @@
 #include "MPCProblem.hpp"
 
-namespace mpc
+namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCOP(
@@ -142,4 +142,4 @@ op::SecondOrderConeProgram buildSCOP(
     return socp;
 }
 
-} // namespace mpc
+} // namespace scpp

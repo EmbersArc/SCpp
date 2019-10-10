@@ -4,7 +4,7 @@
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 
-namespace mpc
+namespace scpp
 {
 
 class MPCAlgorithm
@@ -116,4 +116,4 @@ private:
     bool initialized = false;
 };
 
-} // namespace mpc
+} // namespace scpp

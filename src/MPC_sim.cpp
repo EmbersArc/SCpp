@@ -27,7 +27,7 @@ int main()
     model->loadParameters();
     model->initializeModel();
 
-    mpc::MPCAlgorithm solver(model);
+    scpp::MPCAlgorithm solver(model);
 
     const double sim_time = 15.;
     const double write_steps = 30;
@@ -60,7 +60,7 @@ int main()
 
         // forward estimation
         // Model::state_vector_t x_expected;
-        // sim::simulate(model, avg_solve_time, x, u, u, x_expected);
+        // scpp::simulate(model, avg_solve_time, x, u, u, x_expected);
 
         solver.setInitialState(x);
 
@@ -72,7 +72,7 @@ int main()
         fmt::print("{:<{}}{:.2f}ms\n", "Average solve time:", 50, avg_solve_time * 1000);
 
         // move solve_time forward
-        sim::simulate(model, solve_time, x, u, u, x);
+        scpp::simulate(model, solve_time, x, u, u, x);
         t += solve_time;
 
         // get the calculated input

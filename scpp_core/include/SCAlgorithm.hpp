@@ -4,6 +4,9 @@
 #include "SCProblem.hpp"
 #include "parameterServer.hpp"
 
+namespace scpp
+{
+
 class SCAlgorithm
 {
 public:
@@ -111,3 +114,5 @@ private:
 
     std::unique_ptr<EcosWrapper> solver;
 };
+
+} // namespace scpp

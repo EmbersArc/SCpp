@@ -1,7 +1,7 @@
 #include "LQR.hpp"
 #include "parameterServer.hpp"
 
-namespace lqr
+namespace scpp
 {
 
 class LQRAlgorithm
@@ -93,4 +93,4 @@ private:
     bool initialized = false;
 };
 
-} // namespace lqr
+} // namespace scpp

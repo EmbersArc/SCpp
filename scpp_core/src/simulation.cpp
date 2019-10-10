@@ -4,7 +4,7 @@
 
 #include "eigenIntegration.hpp"
 
-namespace sim
+namespace scpp
 {
 
 ODE::ODE(Model::ptr_t model, double dt, const Model::input_vector_t &u0, const Model::input_vector_t &u1) : model(model), u0(u0), u1(u1), dt(dt) {}
@@ -31,4 +31,4 @@ void simulate(Model::ptr_t model, double dt,
     integrate_adaptive(stepper, ode, x1, 0., dt, dt / 5.);
 }
 
-} // namespace sim
+} // namespace scpp

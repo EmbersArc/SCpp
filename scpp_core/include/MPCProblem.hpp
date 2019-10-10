@@ -3,7 +3,7 @@
 #include "optimizationProblem.hpp"
 #include "activeModel.hpp"
 
-namespace mpc
+namespace scpp
 {
 op::SecondOrderConeProgram buildSCOP(
     Model::ptr_t model,

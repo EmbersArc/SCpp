@@ -32,7 +32,7 @@ int main()
     auto model = std::make_shared<Model>();
     model->loadParameters();
 
-    SCAlgorithm solver(model);
+    scpp::SCAlgorithm solver(model);
 
     solver.initialize();
 
@@ -48,7 +48,7 @@ int main()
 
     double timer_run = tic();
     size_t sim_step = 0;
-    while ((x - model->p.x_final).norm() > 0.02 and sim_step < 500)
+    while ((x - model->p.x_final).norm() > 0.02 and sim_step < 100)
     {
         fmt::print("\nSIMULATION STEP {}:\n", sim_step);
 
@@ -59,7 +59,7 @@ int main()
         const Model::input_vector_t u0 = U.at(0);
         const Model::input_vector_t u1 = interpolatedInput(U, time_step, t);
 
-        sim::simulate(model, time_step, x, u0, u1, x);
+        scpp::simulate(model, time_step, x, u0, u1, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);

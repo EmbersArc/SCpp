@@ -2,7 +2,7 @@
 
 #include "activeModel.hpp"
 
-namespace sim
+namespace scpp
 {
 
 class ODE
@@ -23,4 +23,4 @@ void simulate(Model::ptr_t model, double dt,
               const Model::input_vector_t &u1,
               Model::state_vector_t &x1);
 
-} // namespace sim
+} // namespace scpp

@@ -15,7 +15,7 @@ int main()
     model->loadParameters();
     model->initializeModel();
 
-    lqr::LQRAlgorithm solver(model);
+    scpp::LQRAlgorithm solver(model);
 
     const double sim_time = 15.;
     const double write_steps = 30;
@@ -68,7 +68,7 @@ int main()
         }
 
         // move time forward
-        sim::simulate(model, time_step, x, u, u, x);
+        scpp::simulate(model, time_step, x, u, u, x);
         t += time_step;
 
         X_sim.push_back(x);
