@@ -22,7 +22,6 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
     return u;
 }
 
-
 /**
  * @brief Simulates a trajectory with the SC controller.
  * 
@@ -37,7 +36,6 @@ int main()
 
     solver.initialize();
 
-    const size_t sim_steps = 500;
     const double time_step = 0.015;
 
     Model::state_vector_v_t X;
@@ -49,12 +47,14 @@ int main()
     Model::state_vector_t &x = model->p.x_init;
 
     double timer_run = tic();
-    for (size_t i = 0; i < sim_steps; i++)
+    size_t sim_step = 0;
+    while ((x - model->p.x_final).norm() > 0.02 and sim_step < 500)
     {
-        fmt::print("\nSIMULATION STEP {}:\n", i);
-        solver.solve(i > 0);
+        fmt::print("\nSIMULATION STEP {}:\n", sim_step);
+
+        const bool warm_start = sim_step > 0;
+        solver.solve(warm_start);
         solver.getSolution(X, U, t);
-        // const size_t K = X.size();
 
         const Model::input_vector_t u0 = U.at(0);
         const Model::input_vector_t u1 = interpolatedInput(U, time_step, t);
@@ -64,14 +64,11 @@ int main()
         X_sim.push_back(x);
         U_sim.push_back(u0);
 
-        if ((x - model->p.x_final).norm() < 0.02)
-        {
-            break;
-        }
+        sim_step++;
     }
     fmt::print("\n");
-    fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_steps), 50, toc(timer_run));
-    const double freq = double(sim_steps) / (0.001 * toc(timer_run));
+    fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_step), 50, toc(timer_run));
+    const double freq = double(sim_step) / (0.001 * toc(timer_run));
     fmt::print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
     fmt::print("\n");
 
@@ -103,7 +100,7 @@ int main()
     }
     {
         std::ofstream f(outputPath / "t.txt");
-        f << t / (X.size() - 1) * sim_steps;
+        f << t / (X.size() - 1) * sim_step;
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }
