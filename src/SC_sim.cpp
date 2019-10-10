@@ -13,15 +13,15 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
 {
     const size_t K = U.size();
     const double time_step = total_time / (K - 1);
-    const size_t i0 = t / time_step;
-    const size_t i1 = i0 + 1;
-    const Model::input_vector_t u0 = U.at(i0);
-    const Model::input_vector_t u1 = U.at(i1);
+    const size_t i = std::min(size_t(t / time_step), K - 2);
+    const Model::input_vector_t u0 = U.at(i);
+    const Model::input_vector_t u1 = U.at(i + 1);
 
-    const double t_intermediate = std::fmod(t, time_step);
+    const double t_intermediate = std::fmod(t, time_step) / time_step;
     const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
     return u;
 }
+
 
 /**
  * @brief Simulates a trajectory with the SC controller.
@@ -57,11 +57,9 @@ int main()
         // const size_t K = X.size();
 
         const Model::input_vector_t u0 = U.at(0);
-        // const Model::input_vector_t u1 = U.at(1);
-        // const double step_time = (t / (K - 1));
-        // const Model::input_vector_t u = u0 + (u1 - u0) * time_step / step_time;
+        const Model::input_vector_t u1 = interpolatedInput(U, time_step, t);
 
-        sim::simulate(model, time_step, x, u0, u0, x);
+        sim::simulate(model, time_step, x, u0, u1, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);
