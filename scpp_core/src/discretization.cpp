@@ -60,7 +60,8 @@ private:
     Model::ptr_t model;
 
 public:
-    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim, 1 + Model::state_dim + 2 * Model::input_dim + 2>;
+    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim,
+                                       1 + Model::state_dim + 2 * Model::input_dim + 2>;
 
     ODEMultipleShootingVariableTime(
         const Model::input_vector_t &u_t0,
@@ -118,7 +119,7 @@ public:
     }
 };
 
-void multipleShootingVariableTime(
+void multipleShooting(
     Model::ptr_t model,
     double T,
     const Model::state_vector_v_t &X,
@@ -177,8 +178,7 @@ private:
     Model::ptr_t model;
 
 public:
-    using ode_matrix_t = Eigen::Matrix<double,
-                                       Model::state_dim,
+    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim,
                                        1 + Model::state_dim + 2 * Model::input_dim + 1>;
 
     ODEMultipleShooting(
@@ -278,4 +278,5 @@ void multipleShooting(
 }
 
 } // namespace discretization
+
 } // namespace scpp

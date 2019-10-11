@@ -21,7 +21,7 @@ namespace discretization
  * @param S_bar 
  * @param z_bar 
  */
-void multipleShootingVariableTime(
+void multipleShooting(
     Model::ptr_t model,
     double T,
     const Model::state_vector_v_t &X,
