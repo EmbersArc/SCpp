@@ -56,7 +56,7 @@ target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
 target_include_directories(mpc_lib PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
-target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O2 -march=native)
+target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O3 -march=native)
 
 add_executable(mpc_sim src/MPC_sim.cpp)
 target_link_libraries(mpc_sim mpc_lib)
