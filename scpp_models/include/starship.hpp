@@ -9,7 +9,7 @@
 
 #include "starshipDefinitions.hpp"
 
-namespace starship
+namespace scpp::models
 {
 
 /**
@@ -87,4 +87,4 @@ public:
     } p;
 };
 
-} // namespace starship
+} // namespace scpp::models

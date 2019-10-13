@@ -4,7 +4,7 @@
 using std::string;
 using std::vector;
 
-namespace starship
+namespace scpp::models
 {
 
 Starship::Starship() {}
@@ -315,4 +315,4 @@ void Starship::Parameters::redimensionalize()
     T_max *= m_scale * r_scale;
 }
 
-} // namespace starship
+} // namespace scpp::models

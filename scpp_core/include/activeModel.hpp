@@ -3,9 +3,9 @@
 // --- SC ---
 
 // #include "starship.hpp"
-// using Model = starship::Starship;
+// using Model = scpp::models::Starship;
 
 // --- MPC ---
 
 #include "rocketHover.hpp"
-using Model = rocketHover::RocketHover;
+using Model = scpp::models::RocketHover;

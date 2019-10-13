@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 
-namespace rocketHover
+namespace scpp::models
 {
 
 enum rocketHover
@@ -11,5 +11,4 @@ enum rocketHover
     INPUT_DIM_ = 3,
     PARAM_DIM_ = 10
 };
-
-} // namespace rocketHover
+}

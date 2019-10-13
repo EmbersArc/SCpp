@@ -1,7 +1,7 @@
 #include "rocketHover.hpp"
 #include "common.hpp"
 
-namespace rocketHover
+namespace scpp::models
 {
 
 RocketHover::RocketHover() {}
@@ -285,4 +285,4 @@ void RocketHover::Parameters::redimensionalize()
     T_max *= m_scale * r_scale;
 }
 
-} // namespace rocketHover
+} // namespace scpp::models

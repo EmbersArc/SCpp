@@ -9,7 +9,7 @@
 
 #include "rocketHoverDefinitions.hpp"
 
-namespace rocketHover
+namespace scpp::models
 {
 
 /**
@@ -87,4 +87,4 @@ public:
     } p;
 };
 
-} // namespace rocketHover
+} // namespace scpp::models

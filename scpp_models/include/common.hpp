@@ -3,6 +3,9 @@
 #include <Eigen/Dense>
 #include <iostream>
 
+namespace scpp::models
+{
+
 template <typename T>
 void deg2rad(T &deg)
 {
@@ -116,3 +119,5 @@ Eigen::Matrix<T, 3, 3> omegaMatrixReduced(const Eigen::Matrix<T, 3, 1> &q)
 
     return omega;
 }
+
+} // namespace scpp::models
