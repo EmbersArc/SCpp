@@ -8,7 +8,7 @@ RocketHover::RocketHover() {}
 
 void RocketHover::systemFlowMap(const state_vector_ad_t &x,
                                 const input_vector_ad_t &u,
-                                const param_vector_ad_t &,
+                                const param_vector_ad_t &par,
                                 state_vector_ad_t &f)
 {
     typedef scalar_ad_t T;
@@ -19,16 +19,17 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     Eigen::Matrix<T, 3, 1> w(x(8), x(9), 0);
 
     auto R_I_B = eulerToQuaternion(eta).toRotationMatrix();
-    auto J_B_inv = p.J_B.cast<T>().asDiagonal().inverse();
-    auto g_I_ = p.g_I.cast<T>();
-    auto r_T_B_ = p.r_T_B.cast<T>();
 
-    const Eigen::Matrix<T, 3, 1> thrust = u;
+    auto m = par(0);
+    auto g_I_ = par.segment<3>(1);
+    auto J_B_inv = par.segment<3>(4).asDiagonal().inverse();
+    auto r_T_B_ = par.segment<3>(7);
+    // = 10 parameters
 
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / T(p.m) * (R_I_B * thrust) + g_I_;
+    f.segment<3>(3) << 1. / T(m) * (R_I_B * u) + g_I_;
     f.segment<2>(6) << (rotationJacobian(eta) * w).head<2>();
-    f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(thrust)) - w.cross(w)).head<2>();
+    f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(u)) - w.cross(w)).head<2>();
 }
 
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
@@ -137,28 +138,54 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
 void RocketHover::nondimensionalize()
 {
-    // p.nondimensionalize();
+    p.nondimensionalize();
 }
 
 void RocketHover::redimensionalize()
 {
-    // p.redimensionalize();
+    p.redimensionalize();
+}
+
+void RocketHover::nondimensionalizeTrajectory(state_vector_v_t &X,
+                                              input_vector_v_t &U)
+{
+    for (size_t k = 0; k < X.size(); k++)
+    {
+        X[k].segment<6>(0) /= p.r_scale;
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
+        U[k] /= p.m_scale * p.r_scale;
+    }
+}
+
+void RocketHover::redimensionalizeTrajectory(state_vector_v_t &X,
+                                             input_vector_v_t &U)
+{
+    for (size_t k = 0; k < X.size(); k++)
+    {
+        X[k].segment<6>(0) *= p.r_scale;
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
+        U[k] *= p.m_scale * p.r_scale;
+    }
 }
 
 void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
                                            input_vector_v_t &U,
                                            double &t)
 {
-    const size_t K = X.size();
-
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < X.size(); k++)
     {
-        const double alpha1 = double(K - k) / K;
-        const double alpha2 = double(k) / K;
+        const double alpha1 = double(X.size() - k) / X.size();
+        const double alpha2 = double(k) / X.size();
 
         // mass, position and linear velocity
         X.at(k) = alpha1 * p.x_init + alpha2 * p.x_final;
-
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
         // input
         U.at(k) << 0, 0, -p.g_I.z() * p.m;
     }
@@ -168,6 +195,11 @@ void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
 void RocketHover::loadParameters()
 {
     p.loadFromFile(getParameterFolder() + "/model.info");
+}
+
+void RocketHover::getNewModelParameters(param_vector_t &param)
+{
+    param << p.m, p.g_I, p.J_B, p.r_T_B;
 }
 
 void RocketHover::Parameters::loadFromFile(const std::string &path)
