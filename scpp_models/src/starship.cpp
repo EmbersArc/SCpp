@@ -41,12 +41,10 @@ void Starship::getInitializedTrajectory(state_vector_v_t &X,
                                         input_vector_v_t &U,
                                         double &t)
 {
-    const size_t K = X.size();
-
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < X.size(); k++)
     {
-        const double alpha1 = double(K - k) / K;
-        const double alpha2 = double(k) / K;
+        const double alpha1 = double(X.size() - k) / X.size();
+        const double alpha2 = double(k) / X.size();
 
         // mass, position and linear velocity
         X.at(k)(0) = alpha1 * p.x_init(0) + alpha2 * p.x_final(0);
@@ -60,7 +58,10 @@ void Starship::getInitializedTrajectory(state_vector_v_t &X,
 
         // angular velocity
         X.at(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
+    }
 
+    for (size_t k = 0; k < U.size(); k++)
+    {
         // input
         U.at(k) << 0, 0, (p.T_max - p.T_min) / 2.;
     }
@@ -160,21 +161,37 @@ void Starship::redimensionalize()
     p.redimensionalize();
 }
 
+void Starship::getNewModelParameters(param_vector_t &param)
+{
+    param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
+}
+
 void Starship::nondimensionalizeTrajectory(state_vector_v_t &X,
                                            input_vector_v_t &U)
 {
-    p.nondimensionalizeTrajectory(X, U);
+    for (size_t k = 0; k < X.size(); k++)
+    {
+        X[k](0) /= p.m_scale;
+        X[k].segment<6>(1) /= p.r_scale;
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
+        U[k] /= p.m_scale * p.r_scale;
+    }
 }
 
 void Starship::redimensionalizeTrajectory(state_vector_v_t &X,
                                           input_vector_v_t &U)
 {
-    p.redimensionalizeTrajectory(X, U);
-}
-
-void Starship::getNewModelParameters(param_vector_t &param)
-{
-    param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
+    for (size_t k = 0; k < X.size(); k++)
+    {
+        X[k](0) *= p.m_scale;
+        X[k].segment<6>(1) *= p.r_scale;
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
+        U[k] *= p.m_scale * p.r_scale;
+    }
 }
 
 void Starship::Parameters::randomizeInitialState()
@@ -296,33 +313,6 @@ void Starship::Parameters::redimensionalize()
 
     T_min *= m_scale * r_scale;
     T_max *= m_scale * r_scale;
-}
-
-void Starship::Parameters::nondimensionalizeTrajectory(state_vector_v_t &X,
-                                                       input_vector_v_t &U) const
-{
-    const size_t K = X.size();
-    for (size_t k = 0; k < K; k++)
-    {
-        X[k](0) /= m_scale;
-        X[k].segment<6>(1) /= r_scale;
-
-        U[k] /= m_scale * r_scale;
-    }
-}
-
-void Starship::Parameters::redimensionalizeTrajectory(state_vector_v_t &X,
-                                                      input_vector_v_t &U) const
-{
-    const size_t K = X.size();
-
-    for (size_t k = 0; k < K; k++)
-    {
-        X[k](0) *= m_scale;
-        X[k].segment<6>(1) *= r_scale;
-
-        U[k] *= m_scale * r_scale;
-    }
 }
 
 } // namespace starship
