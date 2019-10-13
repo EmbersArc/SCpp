@@ -15,8 +15,7 @@ op::SecondOrderConeProgram buildSCOP(
     Model::control_matrix_v_t &B_bar,
     Model::control_matrix_v_t &C_bar,
     Model::state_vector_v_t &S_bar,
-    Model::state_vector_v_t &z_bar,
-    bool free_final_time)
+    Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.size();
 
@@ -27,14 +26,14 @@ op::SecondOrderConeProgram buildSCOP(
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
-    socp.createTensorVariable("X", {Model::state_dim, K});            // states
-    socp.createTensorVariable("U", {Model::input_dim, K});            // inputs
-    socp.createTensorVariable("nu", {Model::state_dim, K - 1});       // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1}); // virtual control
-    socp.createTensorVariable("norm1_nu");                            // virtual control norm upper bound
-    socp.createTensorVariable("Delta", {K});                          // squared change of the stacked [ x(k), u(k) ] vector
-    socp.createTensorVariable("norm2_Delta");                         // 2-norm of the Delta(k) variables
-    if (free_final_time)
+    socp.createTensorVariable("X", {Model::state_dim, K});                         // states
+    socp.createTensorVariable("U", {Model::input_dim, C_bar.empty() ? K - 1 : K}); // inputs
+    socp.createTensorVariable("nu", {Model::state_dim, K - 1});                    // virtual control
+    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1});              // virtual control
+    socp.createTensorVariable("norm1_nu");                                         // virtual control norm upper bound
+    socp.createTensorVariable("Delta", {K});                                       // squared change of the stacked [ x(k), u(k) ] vector
+    socp.createTensorVariable("norm2_Delta");                                      // 2-norm of the Delta(k) variables
+    if (not S_bar.empty())
     {
         socp.createTensorVariable("sigma");       // total time
         socp.createTensorVariable("Delta_sigma"); // squared change of sigma
@@ -65,11 +64,14 @@ op::SecondOrderConeProgram buildSCOP(
             for (size_t j = 0; j < Model::input_dim; j++)
                 eq = eq + param(B_bar.at(k)(i, j)) * var("U", {j, k});
 
-            // C * u(k+1)
-            for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + param(C_bar.at(k)(i, j)) * var("U", {j, k + 1});
+            if (not C_bar.empty())
+            {
+                // C * u(k+1)
+                for (size_t j = 0; j < Model::input_dim; j++)
+                    eq = eq + param(C_bar.at(k)(i, j)) * var("U", {j, k + 1});
+            }
 
-            if (free_final_time)
+            if (not S_bar.empty())
             {
                 // Sigma sigma
                 eq = eq + param(S_bar.at(k)(i, 0)) * var("sigma");
@@ -115,7 +117,7 @@ op::SecondOrderConeProgram buildSCOP(
         socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    if (free_final_time)
+    if (not S_bar.empty())
     {
         /**
         *  Build sigma trust region
@@ -163,9 +165,12 @@ op::SecondOrderConeProgram buildSCOP(
         {
             norm2_args.push_back(param(X[k](i)) + (-1.0) * var("X", {i, k}));
         }
-        for (size_t i = 0; i < Model::input_dim; i++)
+        if (not (C_bar.empty() and k == K - 1))
         {
-            norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
+            for (size_t i = 0; i < Model::input_dim; i++)
+            {
+                norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
+            }
         }
         socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }

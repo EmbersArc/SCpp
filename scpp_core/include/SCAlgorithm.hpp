@@ -82,6 +82,7 @@ private:
     Model::ptr_t model;
 
     bool free_final_time;
+    bool interpolate_input;
 
     bool nondimensionalize;
     double weight_trust_region_time;

@@ -37,6 +37,8 @@ void SCAlgorithm::loadParameters()
     param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
 
+    param.loadScalar("interpolate_input", interpolate_input);
+
     if (free_final_time)
     {
         param.loadScalar("weight_trust_region_time", weight_trust_region_time);
@@ -52,16 +54,22 @@ void SCAlgorithm::initialize()
 
     A_bar.resize(K - 1);
     B_bar.resize(K - 1);
-    C_bar.resize(K - 1);
-    S_bar.resize(K - 1);
+    if (interpolate_input)
+    {
+        C_bar.resize(K - 1);
+    }
+    if (free_final_time)
+    {
+        S_bar.resize(K - 1);
+    }
     z_bar.resize(K - 1);
 
     X.resize(K);
-    U.resize(K);
+    U.resize(interpolate_input ? K : K - 1);
 
     socp = sc::buildSCOP(model,
                          weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar, free_final_time);
+                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
 
     cacheIndices();
 
@@ -75,8 +83,8 @@ bool SCAlgorithm::iterate()
     double timer = tic();
     if (free_final_time)
     {
-        scpp::discretization::multipleShootingVariableTime(model, sigma, X, U,
-                                                           A_bar, B_bar, C_bar, S_bar, z_bar);
+        scpp::discretization::multipleShooting(model, sigma, X, U,
+                                               A_bar, B_bar, C_bar, S_bar, z_bar);
     }
     else
     {
@@ -194,13 +202,16 @@ void SCAlgorithm::cacheIndices()
         sigma_index = socp.getTensorVariableIndex("sigma", {});
     }
     X_indices.resize(Model::state_dim, X.size());
-    U_indices.resize(Model::input_dim, X.size());
-    for (size_t k = 0; k < K; k++)
+    U_indices.resize(Model::input_dim, U.size());
+    for (size_t k = 0; k < X.size(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
             X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
         }
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
             U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
@@ -214,12 +225,15 @@ void SCAlgorithm::readSolution()
     {
         sigma = solver->getSolutionValue(sigma_index);
     }
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < X.size(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
             X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
+    }
+    for (size_t k = 0; k < U.size(); k++)
+    {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
             U[k](i) = solver->getSolutionValue(U_indices(i, k));
