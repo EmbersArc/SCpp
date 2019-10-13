@@ -42,7 +42,6 @@ void multipleShooting(
  * @param A_bar 
  * @param B_bar 
  * @param C_bar 
- * @param S_bar 
  * @param z_bar 
  */
 void multipleShooting(

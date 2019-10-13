@@ -11,47 +11,6 @@ namespace scpp
 namespace discretization
 {
 
-void eulerLinearDiscretization(Model::ptr_t model,
-                               double ts,
-                               const Model::state_vector_t &x_eq,
-                               const Model::input_vector_t &u_eq,
-                               Model::state_matrix_t &A,
-                               Model::control_matrix_t &B)
-{
-    Model::state_matrix_t A_c;
-    Model::control_matrix_t B_c;
-    model->computeJacobians(x_eq, u_eq, A_c, B_c);
-
-    A = Model::state_matrix_t::Identity() + ts * A_c;
-    B = ts * B_c;
-}
-
-void exactLinearDiscretization(Model::ptr_t model,
-                               double ts,
-                               const Model::state_vector_t &x_eq,
-                               const Model::input_vector_t &u_eq,
-                               Model::state_matrix_t &A,
-                               Model::control_matrix_t &B,
-                               Model::state_vector_t &z)
-{
-    Model::state_matrix_t A_c;
-    Model::control_matrix_t B_c;
-    Model::state_vector_t f;
-    model->computeJacobians(x_eq, u_eq, A_c, B_c);
-    model->computef(x_eq, u_eq, f);
-
-    Eigen::MatrixXd E;
-    E.resize(Model::state_dim + Model::input_dim, Model::state_dim + Model::input_dim);
-    E.setZero();
-    E.topLeftCorner(Model::state_dim, Model::state_dim) << A_c;
-    E.topRightCorner(Model::state_dim, Model::input_dim) << B_c;
-    Eigen::MatrixXd expE = (E * ts).exp();
-
-    A = expE.topLeftCorner(Model::state_dim, Model::state_dim);
-    B = expE.topRightCorner(Model::state_dim, Model::input_dim);
-    z = ts * f - A * x_eq - B * u_eq;
-}
-
 class ODEMultipleShootingVariableTime
 {
 private:
@@ -150,7 +109,7 @@ void multipleShooting(
 
         ODEMultipleShootingVariableTime odeMultipleShooting(U[k], U[k + 1], T, dt, model);
 
-        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 4.);
+        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
 
         size_t cols = 1;
 
@@ -260,7 +219,7 @@ void multipleShooting(
 
         ODEMultipleShooting odeMultipleShooting(U[k], U[k + 1], dt, model);
 
-        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 4.);
+        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
 
         size_t cols = 1;
 
@@ -275,6 +234,54 @@ void multipleShooting(
 
         z_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
+}
+
+void eulerLinearDiscretization(Model::ptr_t model,
+                               double ts,
+                               const Model::state_vector_t &x_eq,
+                               const Model::input_vector_t &u_eq,
+                               Model::state_matrix_t &A,
+                               Model::control_matrix_t &B)
+{
+    Model::state_matrix_t A_c;
+    Model::control_matrix_t B_c;
+    model->computeJacobians(x_eq, u_eq, A_c, B_c);
+
+    A = Model::state_matrix_t::Identity() + ts * A_c;
+    B = ts * B_c;
+}
+
+void exactLinearDiscretization(Model::ptr_t model,
+                               double ts,
+                               const Model::state_vector_t &x_eq,
+                               const Model::input_vector_t &u_eq,
+                               Model::state_matrix_t &A,
+                               Model::control_matrix_t &B,
+                               Model::state_vector_t &z)
+{
+    Model::state_matrix_t A_c;
+    Model::control_matrix_t B_c;
+    Model::state_vector_t f;
+    model->computeJacobians(x_eq, u_eq, A_c, B_c);
+    model->computef(x_eq, u_eq, f);
+
+    Eigen::MatrixXd E;
+    E.resize(Model::state_dim + Model::input_dim, Model::state_dim + Model::input_dim);
+    E.setZero();
+    E.topLeftCorner<Model::state_dim, Model::state_dim>() = A_c;
+    E.topRightCorner<Model::state_dim, Model::input_dim>() = B_c;
+    Eigen::MatrixXd expE = (E * ts).exp();
+
+    A = expE.topLeftCorner<Model::state_dim, Model::state_dim>();
+    B = expE.topRightCorner<Model::state_dim, Model::input_dim>();
+
+    E.resize(Model::state_dim + 1, Model::state_dim + 1);
+    E.setZero();
+    E.topLeftCorner<Model::state_dim, Model::state_dim>() = A_c;
+    E.topRightCorner<Model::state_dim, 1>() = f - A_c * x_eq - B_c * u_eq;
+    expE = (E * ts).exp();
+
+    z = expE.topRightCorner<Model::state_dim, 1>();
 }
 
 } // namespace discretization
