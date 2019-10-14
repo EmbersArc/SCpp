@@ -38,6 +38,8 @@ void MPCAlgorithm::initialize()
     X.resize(K);
     U.resize(K - 1);
 
+    model->updateModelParameters();
+
     print("[MPC] Discretizing.\n");
     const double timer_discretize = tic();
     Model::state_vector_t x_eq;
@@ -46,23 +48,6 @@ void MPCAlgorithm::initialize()
     const double dt = time_horizon / (K - 1);
     scpp::discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "[MPC] Time, discretization:", 50, toc(timer_discretize));
-
-    // to check against numeric discretization
-    // Model::dynamic_matrix_t X_eq(10, K);
-    // X_eq.col(0) = x_eq;
-    // X_eq.col(1) = x_eq;
-    // Model::dynamic_matrix_t U_eq(3, K);
-    // U_eq.col(0) = u_eq;
-    // U_eq.col(1) = u_eq;
-    // Model::state_matrix_v_t A_bar(K);
-    // Model::control_matrix_v_t B_bar(K);
-    // Model::control_matrix_v_t C_bar(K);
-    // Model::state_vector_v_t z_bar(K);
-
-    // scpp::discretization::multipleShooting(model, time_horizon, X_eq, U_eq, A_bar, B_bar, C_bar, z_bar);
-    // std::cout << (A_bar[0] - A).cwiseAbs().maxCoeff() << "\n";
-    // std::cout << (B_bar[0] + C_bar[0] - B).cwiseAbs().maxCoeff() << "\n";
-    // std::cout << (z_bar[0] - z).cwiseAbs().maxCoeff() << "\n";
 
     socp = scpp::buildSCOP(model,
                            X, U,
@@ -115,6 +100,7 @@ void MPCAlgorithm::solve()
     {
         model->nondimensionalize();
     }
+
     const int exit_flag = solver->solveProblem(false);
     if (exit_flag == -4)
     {

@@ -76,10 +76,21 @@ public:
                                            input_vector_v_t &){};
 
     /**
-     * @brief Updates the parameters in the system flow map.
+     * @brief Gets the new parameters in the system flow map.
      * 
      */
     virtual void getNewModelParameters(param_vector_t &){};
+
+    /**
+     * @brief Updates the parameters in the system flow map.
+     * 
+     */
+    void updateModelParameters()
+    {
+        param_vector_t model_params;
+        getNewModelParameters(model_params);
+        BASE::updateModelParameters(model_params);
+    };
 
     /**
      * @brief Function to remove mass and length dimensions from all function parameters.

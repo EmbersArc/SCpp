@@ -27,7 +27,7 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     // = 10 parameters
 
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / T(m) * (R_I_B * u) + g_I_;
+    f.segment<3>(3) << 1. / m * (R_I_B * u) + g_I_;
     f.segment<2>(6) << (rotationJacobian(eta) * w).head<2>();
     f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(u)) - w.cross(w)).head<2>();
 }
@@ -243,13 +243,13 @@ void RocketHover::Parameters::loadFromFile(const std::string &path)
 
     x_init << r_init, v_init, rpy_init.head<2>(), w_init.head<2>();
     x_final << r_final, v_final, rpy_final.head<2>(), w_final.head<2>();
+
+    m_scale = x_init(0);
+    r_scale = x_init.segment(0, 3).norm();
 }
 
 void RocketHover::Parameters::nondimensionalize()
 {
-    m_scale = x_init(0);
-    r_scale = x_init.segment(0, 3).norm();
-
     m /= m_scale;
     r_T_B /= r_scale;
     g_I /= r_scale;

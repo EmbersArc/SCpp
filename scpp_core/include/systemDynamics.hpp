@@ -42,7 +42,7 @@ public:
      * 
      * @param param 
      */
-    void updateParameters(param_vector_t param);
+    void updateModelParameters(param_vector_t param);
 
     /**
      * @brief The state derivative function. Has to be implemented by the derived class. All types have to be scalar_ad_t.
@@ -112,7 +112,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateParameters(param_vector_t param)
+void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateModelParameters(param_vector_t param)
 {
     f_.new_dynamic(dynamic_vector_t(param));
 }

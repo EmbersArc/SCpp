@@ -14,6 +14,8 @@ void LQRAlgorithm::initialize()
 
     assert(state_weights_set and input_weights_set);
 
+    model->updateModelParameters();
+
     model->getOperatingPoint(x_eq, u_eq);
     model->computeJacobians(x_eq, u_eq, A, B);
     ComputeLQR(Q, R, A, B, K);
@@ -25,6 +27,7 @@ void LQRAlgorithm::initialize()
 void LQRAlgorithm::solve()
 {
     assert(initialized);
+
     const Model::state_vector_t state_error = x_init - x_final;
     u = -K * state_error + u_eq;
 }

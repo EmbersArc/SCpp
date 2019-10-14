@@ -144,9 +144,8 @@ void SCAlgorithm::solve(bool warm_start)
         model->getInitializedTrajectory(X, U, sigma);
     }
 
-    Model::param_vector_t model_params;
-    model->getNewModelParameters(model_params);
-    model->updateParameters(model_params);
+
+    model->updateModelParameters();
 
     const double timer_total = tic();
 
