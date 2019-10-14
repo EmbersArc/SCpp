@@ -40,7 +40,7 @@ void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                             state_vector_v_t &X0,
-                                            input_vector_v_t & /* U0 */)
+                                            input_vector_v_t &U0)
 {
     const size_t K = X0.size();
 
@@ -78,9 +78,8 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
     // State Constraints:
     size_t slack_index = 0;
-    for (size_t k = 1; k < K; k++)
+    for (size_t k = 1; k < X0.size(); k++)
     {
-
         { // Max Velocity
             op::AffineExpression rhs = param(p.v_I_max);
             if (p.add_slack_variables)
@@ -119,7 +118,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 
     // Control Constraints
-    for (size_t k = 0; k < K - 1; k++)
+    for (size_t k = 0; k < U0.size(); k++)
     {
         // Simplified Minimum Thrust
         socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
