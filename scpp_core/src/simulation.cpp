@@ -16,19 +16,16 @@ void ODE::operator()(const Model::state_vector_t &f, Model::state_vector_t &dfdt
 }
 
 void simulate(Model::ptr_t model, double dt,
-              const Model::state_vector_t &x0,
               const Model::input_vector_t &u0,
               const Model::input_vector_t &u1,
-              Model::state_vector_t &x1)
+              Model::state_vector_t &x)
 {
     using namespace boost::numeric::odeint;
     runge_kutta4<Model::state_vector_t, double, Model::state_vector_t, double, vector_space_algebra> stepper;
 
     ODE ode(model, dt, u0, u1);
 
-    x1 = x0;
-
-    integrate_adaptive(stepper, ode, x1, 0., dt, dt / 10.);
+    integrate_adaptive(stepper, ode, x, 0., dt, dt / 10.);
 }
 
 } // namespace scpp

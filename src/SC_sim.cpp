@@ -61,11 +61,12 @@ int main()
         const bool warm_start = sim_step > 0;
         solver.solve(warm_start);
         solver.getSolution(X, U, t);
+        const size_t K = X.size();
 
         const Model::input_vector_t u0 = U.at(0);
         const Model::input_vector_t u1 = interpolatedInput(U, time_step, t);
 
-        scpp::simulate(model, time_step, x, u0, u1, x);
+        scpp::simulate(model, t / (K - 1), u0, u1, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);

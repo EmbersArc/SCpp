@@ -72,7 +72,7 @@ int main()
         fmt::print("{:<{}}{:.2f}ms\n", "Average solve time:", 50, avg_solve_time * 1000);
 
         // move solve_time forward
-        scpp::simulate(model, solve_time, x, u, u, x);
+        scpp::simulate(model, solve_time, u, u, x);
         t += solve_time;
 
         // get the calculated input

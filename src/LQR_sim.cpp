@@ -68,7 +68,7 @@ int main()
         }
 
         // move time forward
-        scpp::simulate(model, time_step, x, u, u, x);
+        scpp::simulate(model, time_step, u, u, x);
         t += time_step;
 
         X_sim.push_back(x);

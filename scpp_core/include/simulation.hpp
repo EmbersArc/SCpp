@@ -18,9 +18,8 @@ private:
 };
 
 void simulate(Model::ptr_t model, double dt,
-              const Model::state_vector_t &x0,
               const Model::input_vector_t &u0,
               const Model::input_vector_t &u1,
-              Model::state_vector_t &x1);
+              Model::state_vector_t &x);
 
 } // namespace scpp
