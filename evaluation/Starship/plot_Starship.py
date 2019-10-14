@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 from matplotlib import collections as mc
 from mpl_toolkits import mplot3d
 
+
 figures_i = 0
-figures_N = 40
+figures_N = 100
+FOLDER = ""
 
 
 def key_press_event(event):
@@ -22,15 +24,14 @@ def key_press_event(event):
         figures_i = (figures_i - 1) % figures_N
 
     fig.clear()
-    my_plot(fig, figures_i)
+    my_plot(fig)
     plt.draw()
 
 
-def my_plot(fig, figures_i):
-    iteration = str(figures_i)
-
-    X = np.loadtxt(f"output/Starship/{iteration}/X.txt", delimiter=",")
-    U = np.loadtxt(f"output/Starship/{iteration}/U.txt", delimiter=",")
+def my_plot(fig):
+    global figures_i
+    X = np.loadtxt(f"{FOLDER}/{figures_i}/X.txt", delimiter=",")
+    U = np.loadtxt(f"{FOLDER}/{figures_i}/U.txt", delimiter=",")
 
     K = X.shape[0]
 
@@ -88,14 +89,19 @@ def my_plot(fig, figures_i):
 
 
 def main():
-    global figures_i, figures_N
-    figures_N = sum(f.endswith("X.txt")
-                    for f in os.listdir("output/Starship/"))
+    global figures_i, figures_N, FOLDER
+    model_folder = "output/Starship/SC"
+    folder_num = sorted(map(int, os.listdir(model_folder)))[-1]
+    print(folder_num)
+    FOLDER = f"{model_folder}/{folder_num}"
 
-    fig = plt.figure(figsize=(10, 10))
-    figures_i = figures_N
-    my_plot(fig, figures_i)
+    figures_N = len(os.listdir(FOLDER))
+
+    fig = plt.figure(figsize=(15, 15))
+    figures_i = figures_N - 1
+    my_plot(fig)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)
+    plt.tight_layout()
     plt.show()
 
 
