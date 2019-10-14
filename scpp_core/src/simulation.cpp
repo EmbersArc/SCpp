@@ -28,7 +28,7 @@ void simulate(Model::ptr_t model, double dt,
 
     x1 = x0;
 
-    integrate_adaptive(stepper, ode, x1, 0., dt, dt / 5.);
+    integrate_adaptive(stepper, ode, x1, 0., dt, dt / 10.);
 }
 
 } // namespace scpp
