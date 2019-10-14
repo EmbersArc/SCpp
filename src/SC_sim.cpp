@@ -18,7 +18,12 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
     const Model::input_vector_t u1 = U.at(i + 1);
 
     const double t_intermediate = std::fmod(t, time_step) / time_step;
+    if (t_intermediate > 1.)
+    {
+        fmt::print("Warning: Interpolation value too high!\n");
+    }
     const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
+
     return u;
 }
 
@@ -37,6 +42,7 @@ int main()
     solver.initialize();
 
     const double time_step = 0.015;
+    const size_t max_steps = 100;
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
@@ -48,7 +54,7 @@ int main()
 
     double timer_run = tic();
     size_t sim_step = 0;
-    while ((x - model->p.x_final).norm() > 0.02 and sim_step < 100)
+    while ((x - model->p.x_final).norm() > 0.02 and sim_step < max_steps)
     {
         fmt::print("\nSIMULATION STEP {}:\n", sim_step);
 
@@ -65,7 +71,14 @@ int main()
         U_sim.push_back(u0);
 
         sim_step++;
+        if (sim_step == max_steps)
+        {
+            // add the planned trajectory
+            X_sim.insert(X_sim.end(), X.begin(), X.end());
+            U_sim.insert(U_sim.end(), U.begin(), U.end());
+        }
     }
+
     fmt::print("\n");
     fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_step), 50, toc(timer_run));
     const double freq = double(sim_step) / (0.001 * toc(timer_run));
