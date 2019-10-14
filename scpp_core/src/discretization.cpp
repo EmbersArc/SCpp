@@ -7,7 +7,6 @@
 
 namespace scpp
 {
-
 namespace discretization
 {
 
@@ -285,5 +284,4 @@ void exactLinearDiscretization(Model::ptr_t model,
 }
 
 } // namespace discretization
-
 } // namespace scpp

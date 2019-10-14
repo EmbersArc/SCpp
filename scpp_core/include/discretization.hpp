@@ -4,7 +4,6 @@
 
 namespace scpp
 {
-
 namespace discretization
 {
 
