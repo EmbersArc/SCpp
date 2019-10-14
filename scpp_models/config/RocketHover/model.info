@@ -17,7 +17,7 @@ r_T_B
 {
     (0)   0
     (1)   0
-    (2)   -0.33
+    (2)   -0.5
 }
 
 m       1.40
@@ -54,7 +54,7 @@ w_init
 }
 
 ; ----- final values -----
-final_time      5.
+final_time      8.
 ; position
 r_final
 {
