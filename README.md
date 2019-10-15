@@ -82,7 +82,7 @@ See existing models in the `socp_mpc/models` folder for some examples.
   <img width="400" src="https://thumbs.gfycat.com/RecklessBountifulKillifish-small.gif">
 </p>
 <p align="center">
-  <img width="400" src="https://thumbs.gfycat.com/LastingCanineIcelandicsheepdog-small.gif">
+  <img width="400" src="https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png">
 </p>
 
 ### 2D Rocket Landing Problem
