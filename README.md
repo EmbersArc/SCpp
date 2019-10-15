@@ -69,9 +69,9 @@ See existing models in the `socp_mpc/models` folder for some examples.
 * [Successive Convexification for 6-DoF Mars Rocket Powered Landing with Free-Final-Time](https://arxiv.org/abs/1802.03827)
 
 ## Examples
+(click on videos for higher quality versions)
 
 ### Rocket Trajectory Model with Free-Final-Time
-
 <p align="center">
 <a href="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-mobile.mp4">
   <img width="400" src="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif">
@@ -95,7 +95,7 @@ feed-forward input tested in a box2d physics simulation
 
 <p align="center">
 <a href="https://thumbs.gfycat.com/DaringPortlyBlacklab-mobile.mp4">
-  <img width="300" src="https://thumbs.gfycat.com/DaringPortlyBlacklab-small.gif">
+  <img width="400" src="https://thumbs.gfycat.com/DaringPortlyBlacklab-small.gif">
 </a>
 </p>
 
