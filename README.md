@@ -73,13 +73,17 @@ See existing models in the `socp_mpc/models` folder for some examples.
 ### Rocket Trajectory Model with Free-Final-Time
 
 <p align="center">
-  <img src="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif">
+<a href="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-mobile.mp4">
+  <img width="400" src="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif">
+</a>
 </p>
 
 ### SpaceX Starship Landing Trajectory
 
 <p align="center">
+<a href="https://giant.gfycat.com/RecklessBountifulKillifish.webm">
   <img width="400" src="https://thumbs.gfycat.com/RecklessBountifulKillifish-small.gif">
+</a>
 </p>
 <p align="center">
   <img width="400" src="https://user-images.githubusercontent.com/1352472/66057427-f736be00-e538-11e9-8078-727282910f54.png">
@@ -90,14 +94,17 @@ See existing models in the `socp_mpc/models` folder for some examples.
 feed-forward input tested in a box2d physics simulation
 
 <p align="center">
+<a href="https://thumbs.gfycat.com/DaringPortlyBlacklab-mobile.mp4">
   <img width="300" src="https://thumbs.gfycat.com/DaringPortlyBlacklab-small.gif">
+</a>
 </p>
-
 
 ### Cartpole
 
 <p align="center">
+<a href="https://thumbs.gfycat.com/KnobbyFlatCanvasback-mobile.mp4">
   <img src="https://thumbs.gfycat.com/KnobbyFlatCanvasback-small.gif">
+</a>
 </p>
 
 ## Contributing
