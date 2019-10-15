@@ -5,6 +5,7 @@ namespace sc
 
 op::SecondOrderConeProgram buildSCOP(
     Model::ptr_t model,
+    double &weight_time,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,
@@ -38,7 +39,7 @@ op::SecondOrderConeProgram buildSCOP(
         socp.createTensorVariable("sigma");       // total time
         socp.createTensorVariable("Delta_sigma"); // squared change of sigma
         // minimize total time
-        socp.addMinimizationTerm(1.0 * var("sigma"));
+        socp.addMinimizationTerm(param(weight_time) * var("sigma"));
         // Total time must not be negative
         socp.addConstraint((1.0) * var("sigma") + (-0.01) >= (0.0));
     }

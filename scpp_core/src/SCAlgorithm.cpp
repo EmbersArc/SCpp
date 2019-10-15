@@ -33,6 +33,7 @@ void SCAlgorithm::loadParameters()
     param.loadScalar("max_iterations", max_iterations);
     param.loadScalar("nu_tol", nu_tol);
 
+    param.loadScalar("weight_time", weight_time);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
     param.loadScalar("trust_region_factor", trust_region_factor);
     param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
@@ -68,7 +69,7 @@ void SCAlgorithm::initialize()
     U.resize(interpolate_input ? K : K - 1);
 
     socp = sc::buildSCOP(model,
-                         weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
+                         weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
                          X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
 
     cacheIndices();
@@ -175,7 +176,7 @@ void SCAlgorithm::solve(bool warm_start)
         else if (iteration > 2)
         {
             // else increase trust region weight
-            weight_trust_region_time *= trust_region_factor;
+            // weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
         }
     }

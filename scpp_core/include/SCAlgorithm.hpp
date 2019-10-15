@@ -85,6 +85,7 @@ private:
     bool interpolate_input;
 
     bool nondimensionalize;
+    double weight_time;
     double weight_trust_region_time;
     double weight_trust_region_trajectory;
     double weight_virtual_control;
