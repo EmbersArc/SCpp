@@ -5,6 +5,8 @@
 #include "timing.hpp"
 #include "vectorOperations.hpp"
 
+using fmt::format;
+using fmt::print;
 namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
@@ -18,10 +20,6 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
     const Model::input_vector_t u1 = U.at(i + 1);
 
     const double t_intermediate = std::fmod(t, time_step) / time_step;
-    if (t_intermediate > 1.)
-    {
-        fmt::print("Warning: Interpolation value too high!\n");
-    }
     const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
 
     return u;
@@ -41,8 +39,8 @@ int main()
 
     solver.initialize();
 
-    const double time_step = 0.015;
-    const size_t max_steps = 100;
+    const double time_step = 0.05;
+    const size_t max_steps = 40;
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
@@ -56,7 +54,7 @@ int main()
     size_t sim_step = 0;
     while ((x - model->p.x_final).norm() > 0.02 and sim_step < max_steps)
     {
-        fmt::print("\nSIMULATION STEP {}:\n", sim_step);
+        print("\n{:*^{}}\n\n", format("<SIMULATION STEP {}>", sim_step), 60);
 
         const bool warm_start = sim_step > 0;
         solver.solve(warm_start);
@@ -72,19 +70,21 @@ int main()
         U_sim.push_back(u0);
 
         sim_step++;
-        if (sim_step == max_steps)
-        {
+        // if (sim_step == max_steps)
+        // {
+            // X_sim = reduce_vector(X_sim, X_sim.size() / 10);
+            // U_sim = reduce_vector(U_sim, U_sim.size() / 10);
             // add the planned trajectory
-            X_sim.insert(X_sim.end(), X.begin(), X.end());
-            U_sim.insert(U_sim.end(), U.begin(), U.end());
-        }
+            // X_sim.insert(X_sim.end(), X.begin(), X.end());
+            // U_sim.insert(U_sim.end(), U.begin(), U.end());
+        // }
     }
 
-    fmt::print("\n");
-    fmt::print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_step), 50, toc(timer_run));
+    print("\n");
+    print("{:<{}}{:.2f}ms\n", fmt::format("Time, {} steps:", sim_step), 50, toc(timer_run));
     const double freq = double(sim_step) / (0.001 * toc(timer_run));
-    fmt::print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
-    fmt::print("\n");
+    print("{:<{}}{:.2f}Hz\n", "Average frequency:", 50, freq);
+    print("\n");
 
     // write solution to files
     double timer = tic();
@@ -116,5 +116,5 @@ int main()
         std::ofstream f(outputPath / "t.txt");
         f << t / (X.size() - 1) * sim_step;
     }
-    fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
+    print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }
