@@ -4,15 +4,14 @@ from os import listdir
 
 scene = bpy.context.scene
 
-PATH = bpy.path.abspath("//../../output/Starship/")
+PATH = bpy.path.abspath("//../../output/Starship/SC")
+path = PATH + "/" + sorted(listdir(PATH))[-1]
+path += "/" + sorted(listdir(path))[-1]
+print(path)
+
 FPS = scene.render.fps
-
-
 scene.frame_current = 0
 
-
-path = PATH + sorted(listdir(PATH))[-1]
-print(path)
 try:
     X = np.genfromtxt(path+"/X.txt", delimiter=',')
     U = np.genfromtxt(path+"/U.txt", delimiter=',')
@@ -32,6 +31,8 @@ eng3_ob = bpy.data.objects.get("Engine3")
 fir1_ob = bpy.data.objects.get("Fire1")
 fir2_ob = bpy.data.objects.get("Fire2")
 fir3_ob = bpy.data.objects.get("Fire3")
+light_ob = bpy.data.lights.get("Point")
+
 body_ob.animation_data_clear()
 eng1_ob.animation_data_clear()
 eng2_ob.animation_data_clear()
@@ -39,6 +40,7 @@ eng3_ob.animation_data_clear()
 fir1_ob.animation_data_clear()
 fir2_ob.animation_data_clear()
 fir3_ob.animation_data_clear()
+light_ob.animation_data_clear()
 
 T_max = np.max(np.linalg.norm(U, axis=1))
 
@@ -61,10 +63,15 @@ for k in range(K):
     for fir in [fir1_ob, fir2_ob, fir3_ob]:
         fir.scale[2] = l
         fir.keyframe_insert(data_path='scale')
+    light_ob.energy = fir1_ob.scale[2] * 50
+    light_ob.keyframe_insert(data_path='energy')
         
 scene.frame_current += 5
 for fir in [fir1_ob, fir2_ob, fir3_ob]:
     fir.scale[2] = 0
     fir.keyframe_insert(data_path='scale')
+    
+light_ob.energy = 0
+light_ob.keyframe_insert(data_path='energy')
 
 scene.frame_current = 0
