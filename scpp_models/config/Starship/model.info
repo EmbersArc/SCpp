@@ -85,12 +85,12 @@ w_final
 }
 
 ; thrust
-T_min       2000000.
+T_min       1500000.
 T_max       3000000.
 I_sp            330.
 
 ; maximum gimbal
-gimbal_max  20.
+gimbal_max  15.
 ; maximum angle
 theta_max   90.
 ; glideslope angle
