@@ -42,8 +42,6 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                             state_vector_v_t &X0,
                                             input_vector_v_t &U0)
 {
-    const size_t K = X0.size();
-
     auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) {
         return socp.getVariable(name, indices);
     };
@@ -53,7 +51,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     size_t total_slack_variables;
     if (p.add_slack_variables)
     {
-        total_slack_variables = 3 * (K - 1); // three state constraints per timestep
+        total_slack_variables = 3 * (X0.size() - 1); // three state constraints per timestep
         socp.createTensorVariable("epsilon", {total_slack_variables});
         socp.createTensorVariable("epsilon_norm");
 
@@ -72,7 +70,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         for (size_t i = 0; i < STATE_DIM_; i++)
         {
             socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
-            socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+            socp.addConstraint((-1.0) * var("X", {i, X0.size() - 1}) + param(p.x_final(i)) == 0.0);
         }
     }
 
@@ -186,7 +184,7 @@ void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
     for (size_t k = 0; k < U.size(); k++)
     {
         // input
-        U.at(k) << 0, 0, -p.g_I.z() * p.m;
+        U.at(k) = -p.g_I * p.m;
     }
     t = p.final_time;
 }
