@@ -1,0 +1,16 @@
+K                                   30
+
+rho_0                               0.0
+rho_1                               0.25
+rho_2                               0.9
+alpha                               2.0
+beta                                3.2
+
+change_threshold                    1e-3
+weight_virtual_control              1e4
+trust_region                        5.
+
+nondimensionalize                   true
+interpolate_input                   true
+
+max_iterations                      30
