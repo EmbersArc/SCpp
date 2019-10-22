@@ -91,12 +91,8 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
     }
 
-    // Final Input
-    socp.addConstraint((1.0) * var("U", {0, K - 1}) == (0.0));
-    socp.addConstraint((1.0) * var("U", {1, K - 1}) == (0.0));
-
     // State Constraints:
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < X0.size(); k++)
     {
         // Mass
         //     x(0) >= m_dry
@@ -124,7 +120,12 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 
     // Control Constraints
-    for (size_t k = 0; k < K; k++)
+
+    // Final Input
+    socp.addConstraint((1.0) * var("U", {0, U0.size() - 1}) == (0.0));
+    socp.addConstraint((1.0) * var("U", {1, U0.size() - 1}) == (0.0));
+
+    for (size_t k = 0; k < U0.size(); k++)
     {
         if (p.exact_minimum_thrust)
         {
