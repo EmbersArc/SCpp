@@ -53,6 +53,8 @@ public:
 
     struct Parameters
     {
+        bool exact_minimum_thrust;
+        
         Eigen::Vector3d g_I;
         Eigen::Vector3d J_B;
         Eigen::Vector3d r_T_B;
