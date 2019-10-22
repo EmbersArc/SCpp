@@ -74,7 +74,14 @@ bool SCvxAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
 
-    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+    if (interpolate_input)
+    {
+        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+    }
+    else
+    {
+        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
+    }
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
@@ -296,7 +303,7 @@ double SCvxAlgorithm::getNonlinearCost()
     {
         Model::state_vector_t x = X.at(k);
         const Model::input_vector_t u0 = U.at(k);
-        const Model::input_vector_t u1 = U.at(k + 1);
+        const Model::input_vector_t u1 = interpolate_input ? U.at(k + 1) : U.at(k);
 
         simulate(model, sigma / (K - 1), u0, u1, x);
 
