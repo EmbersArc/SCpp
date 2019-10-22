@@ -27,10 +27,10 @@ private:
     Model::ptr_t model;
 
 public:
-    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim,
-                                       1 + Model::state_dim + Model::input_dim +
-                                           INPUT_TYPE * Model::input_dim +
-                                           TIME_TYPE + 1>;
+    using ode_matrix_t = typename Eigen::Matrix<double, Model::state_dim,
+                                                1 + Model::state_dim + Model::input_dim +
+                                                    INPUT_TYPE * Model::input_dim +
+                                                    TIME_TYPE + 1>;
 
     ODE(const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
@@ -144,6 +144,7 @@ void doMultipleShooting(
     const size_t K = X.size();
 
     using ODEFun = ODE<INPUT_TYPE, TIME_TYPE>;
+    using ode_matrix_t = typename ODEFun::ode_matrix_t;
 
     double dt = 1. / double(K - 1);
 
@@ -153,11 +154,11 @@ void doMultipleShooting(
     }
 
     using namespace boost::numeric::odeint;
-    runge_kutta4<typename ODEFun::ode_matrix_t, double, typename ODEFun::ode_matrix_t, double, vector_space_algebra> stepper;
+    runge_kutta4<ode_matrix_t, double, ode_matrix_t, double, vector_space_algebra> stepper;
 
     for (size_t k = 0; k < K - 1; k++)
     {
-        typename ODEFun::ode_matrix_t V;
+        ode_matrix_t V;
         V.template setZero();
         V.col(0) = X.at(k);
         V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
@@ -189,6 +190,6 @@ void doMultipleShooting(
         z_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, 1>(0, cols);
         cols += 1;
 
-        assert(cols == ODEFun::ode_matrix_t::ColsAtCompileTime);
+        assert(cols == ode_matrix_t::ColsAtCompileTime);
     }
 }
