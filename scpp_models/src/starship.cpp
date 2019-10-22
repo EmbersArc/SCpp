@@ -14,7 +14,7 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
                              const param_vector_ad_t &par,
                              state_vector_ad_t &f)
 {
-    typedef scalar_ad_t T;
+    using T = scalar_ad_t;
 
     auto alpha_m_ = par(0);
     auto g_I_ = par.segment<3>(1);
@@ -126,16 +126,21 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     // Control Constraints
     for (size_t k = 0; k < K; k++)
     {
-        // Linearized Minimum Thrust
-        op::AffineExpression lhs;
-        for (size_t i = 0; i < INPUT_DIM_; i++)
+        if (p.exact_minimum_thrust)
         {
-            lhs = lhs + param_fn([&U0, i, k]() { return (U0.at(k)(i) / sqrt(U0.at(k)(0) * U0.at(k)(0) + U0.at(k)(1) * U0.at(k)(1) + U0.at(k)(2) * U0.at(k)(2))); }) * var("U", {i, k});
+            // Linearized Minimum Thrust
+            op::AffineExpression lhs;
+            for (size_t i = 0; i < INPUT_DIM_; i++)
+            {
+                lhs = lhs + param_fn([&U0, i, k]() { return (U0.at(k).normalized()(i)); }) * var("U", {i, k});
+            }
+            socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
         }
-        socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
-
-        // Simplified Minimum Thrust
-        // socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        else
+        {
+            // Simplified Minimum Thrust
+            socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        }
 
         // Maximum Thrust
         socp.addConstraint(
@@ -255,6 +260,7 @@ void Starship::Parameters::loadFromFile(const std::string &path)
     param.loadScalar("w_B_max", w_B_max);
     param.loadScalar("random_initial_state", random_initial_state);
     param.loadScalar("final_time", final_time);
+    param.loadScalar("exact_minimum_thrust", exact_minimum_thrust);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);

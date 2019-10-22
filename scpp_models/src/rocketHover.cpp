@@ -11,7 +11,7 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
                                 const param_vector_ad_t &par,
                                 state_vector_ad_t &f)
 {
-    typedef scalar_ad_t T;
+    using T = scalar_ad_t;
 
     // state variables
     Eigen::Matrix<T, 3, 1> v(x(3), x(4), x(5));

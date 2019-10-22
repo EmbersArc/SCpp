@@ -70,7 +70,7 @@ void ParameterServer::loadMatrix(
     const std::string &matrixName,
     Eigen::MatrixBase<T> &matrix)
 {
-    typedef typename Eigen::MatrixBase<T>::Scalar scalar_t;
+    using scalar_t = typename Eigen::MatrixBase<T>::Scalar;
 
     const scalar_t scaling = pt.get<scalar_t>(matrixName + ".scaling", 1);
 
