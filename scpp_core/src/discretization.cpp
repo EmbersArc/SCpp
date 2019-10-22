@@ -1,4 +1,5 @@
 #include "discretization.hpp"
+#include "discretitation_ode.hpp"
 
 #include <boost/numeric/odeint.hpp>
 
@@ -9,73 +10,6 @@ namespace scpp
 {
 namespace discretization
 {
-
-class ODEMultipleShootingVariableTime
-{
-private:
-    Model::input_vector_t u_t0, u_t1;
-    double T, dt;
-    Model::ptr_t model;
-
-public:
-    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim,
-                                       1 + Model::state_dim + 2 * Model::input_dim + 2>;
-
-    ODEMultipleShootingVariableTime(
-        const Model::input_vector_t &u_t0,
-        const Model::input_vector_t &u_t1,
-        const double &T,
-        double dt,
-        Model::ptr_t model)
-        : u_t0(u_t0), u_t1(u_t1), T(T), dt(dt), model(model) {}
-
-    void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
-    {
-        const Model::state_vector_t &x = V.col(0);
-        const Model::input_vector_t u = u_t0 + t / dt * (u_t1 - u_t0);
-
-        Model::state_vector_t f;
-        Model::state_matrix_t A_bar;
-        Model::control_matrix_t B_bar;
-        model->computef(x, u, f);
-        model->computeJacobians(x, u, A_bar, B_bar);
-        A_bar *= T;
-        B_bar *= T;
-
-        const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim, Model::state_dim>(0, 1);
-        const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
-
-        size_t cols = 0;
-
-        // state
-        dVdt.block<Model::state_dim, 1>(0, cols) = T * f;
-        cols += 1;
-
-        // A_bar
-        dVdt.block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A_bar * Phi_A_xi;
-        cols += Model::state_dim;
-
-        // B_bar
-        const double alpha = (dt - t) / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * alpha;
-        cols += Model::input_dim;
-
-        // C_bar
-        const double beta = t / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * beta;
-        cols += Model::input_dim;
-
-        // S_bar
-        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * f;
-        cols += 1;
-
-        // z_bar
-        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
-        cols += 1;
-
-        assert(cols == size_t(dVdt.cols()));
-    }
-};
 
 void multipleShooting(
     Model::ptr_t model,
@@ -89,6 +23,8 @@ void multipleShooting(
     Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.size();
+
+    using ODEMultipleShootingVariableTime = ODE<InputType::interpolated, TimeType::variable>;
 
     const double dt = 1. / double(K - 1);
     using namespace boost::numeric::odeint;
@@ -128,66 +64,6 @@ void multipleShooting(
     }
 }
 
-class ODEMultipleShooting
-{
-private:
-    Model::input_vector_t u_t0, u_t1;
-    double dt;
-    Model::ptr_t model;
-
-public:
-    using ode_matrix_t = Eigen::Matrix<double, Model::state_dim,
-                                       1 + Model::state_dim + 2 * Model::input_dim + 1>;
-
-    ODEMultipleShooting(
-        const Model::input_vector_t &u_t0,
-        const Model::input_vector_t &u_t1,
-        double dt,
-        Model::ptr_t model)
-        : u_t0(u_t0), u_t1(u_t1), dt(dt), model(model) {}
-
-    void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t)
-    {
-        const Model::state_vector_t &x = V.col(0);
-        const Model::input_vector_t u = u_t0 + t / dt * (u_t1 - u_t0);
-
-        Model::state_vector_t f;
-        Model::state_matrix_t A_bar;
-        Model::control_matrix_t B_bar;
-        model->computef(x, u, f);
-        model->computeJacobians(x, u, A_bar, B_bar);
-
-        const Model::state_matrix_t Phi_A_xi = V.block<Model::state_dim, Model::state_dim>(0, 1);
-        const Model::state_matrix_t Phi_A_xi_inverse = Phi_A_xi.inverse();
-
-        size_t cols = 0;
-
-        // state
-        dVdt.block<Model::state_dim, 1>(0, cols) = f;
-        cols += 1;
-
-        // A_bar
-        dVdt.block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A_bar * Phi_A_xi;
-        cols += Model::state_dim;
-
-        // B_bar
-        const double alpha = (dt - t) / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * alpha;
-        cols += Model::input_dim;
-
-        // C_bar
-        const double beta = t / dt;
-        dVdt.block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * beta;
-        cols += Model::input_dim;
-
-        // z_bar
-        dVdt.block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (f - A_bar * x - B_bar * u);
-        cols += 1;
-
-        assert(cols == size_t(dVdt.cols()));
-    }
-};
-
 void multipleShooting(
     Model::ptr_t model,
     double T,
@@ -199,6 +75,8 @@ void multipleShooting(
     Model::state_vector_v_t &z_bar)
 {
     const size_t K = X.size();
+
+    using ODEMultipleShooting = ODE<InputType::interpolated, TimeType::fixed>;
 
     const double dt = T / double(K - 1);
     using namespace boost::numeric::odeint;
@@ -233,21 +111,6 @@ void multipleShooting(
 
         z_bar[k].noalias() = A_bar[k] * V.block<Model::state_dim, 1>(0, cols);
     }
-}
-
-void eulerLinearDiscretization(Model::ptr_t model,
-                               double ts,
-                               const Model::state_vector_t &x_eq,
-                               const Model::input_vector_t &u_eq,
-                               Model::state_matrix_t &A,
-                               Model::control_matrix_t &B)
-{
-    Model::state_matrix_t A_c;
-    Model::control_matrix_t B_c;
-    model->computeJacobians(x_eq, u_eq, A_c, B_c);
-
-    A = Model::state_matrix_t::Identity() + ts * A_c;
-    B = ts * B_c;
 }
 
 void exactLinearDiscretization(Model::ptr_t model,
