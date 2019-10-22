@@ -1,8 +1,8 @@
 #include "discretization.hpp"
+#include "discretization_impl.hpp"
 
 namespace scpp::discretization
 {
-
 void exactLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
@@ -34,6 +34,62 @@ void exactLinearDiscretization(Model::ptr_t model,
     expE = (E * ts).exp();
 
     z = expE.topRightCorner<Model::state_dim, 1>();
+}
+
+void multipleShooting(
+    Model::ptr_t model,
+    double T,
+    const Model::state_vector_v_t &X,
+    const Model::input_vector_v_t &U,
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::state_vector_v_t &z_bar)
+{
+    Model::control_matrix_v_t C_bar;
+    Model::state_vector_v_t S_bar;
+    doMultipleShooting<InputType::constant, TimeType::fixed>(model, T, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+}
+
+void multipleShooting(
+    Model::ptr_t model,
+    double T,
+    const Model::state_vector_v_t &X,
+    const Model::input_vector_v_t &U,
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &z_bar)
+{
+    Model::state_vector_v_t S_bar;
+    doMultipleShooting<InputType::interpolated, TimeType::fixed>(model, T, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+}
+
+void multipleShooting(
+    Model::ptr_t model,
+    double T,
+    const Model::state_vector_v_t &X,
+    const Model::input_vector_v_t &U,
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::state_vector_v_t &S_bar,
+    Model::state_vector_v_t &z_bar)
+{
+    Model::control_matrix_v_t C_bar;
+    doMultipleShooting<InputType::constant, TimeType::variable>(model, T, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
+}
+
+void multipleShooting(
+    Model::ptr_t model,
+    double T,
+    const Model::state_vector_v_t &X,
+    const Model::input_vector_v_t &U,
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &S_bar,
+    Model::state_vector_v_t &z_bar)
+{
+    doMultipleShooting<InputType::interpolated, TimeType::variable>(model, T, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
 }
 
 } // namespace scpp::discretization

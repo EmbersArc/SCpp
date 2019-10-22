@@ -1,9 +1,9 @@
 #pragma once
 
-#include "activeModel.hpp"
+#include <boost/numeric/odeint.hpp>
 
-namespace scpp::discretization
-{
+#include "eigenIntegration.hpp"
+#include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
 enum InputType : size_t
 {
@@ -129,4 +129,66 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
     assert(cols == ode_matrix_t::ColsAtCompileTime);
 }
 
-} // namespace scpp::discretization
+template <InputType INPUT_TYPE, TimeType TIME_TYPE>
+void doMultipleShooting(
+    Model::ptr_t model,
+    double T,
+    const Model::state_vector_v_t &X,
+    const Model::input_vector_v_t &U,
+    Model::state_matrix_v_t &A_bar,
+    Model::control_matrix_v_t &B_bar,
+    Model::control_matrix_v_t &C_bar,
+    Model::state_vector_v_t &S_bar,
+    Model::state_vector_v_t &z_bar)
+{
+    const size_t K = X.size();
+
+    using ODEFun = ODE<INPUT_TYPE, TIME_TYPE>;
+
+    double dt = 1. / double(K - 1);
+
+    if constexpr (TIME_TYPE == TimeType::fixed)
+    {
+        dt *= T;
+    }
+
+    using namespace boost::numeric::odeint;
+    runge_kutta4<typename ODEFun::ode_matrix_t, double, typename ODEFun::ode_matrix_t, double, vector_space_algebra> stepper;
+
+    for (size_t k = 0; k < K - 1; k++)
+    {
+        typename ODEFun::ode_matrix_t V;
+        V.template setZero();
+        V.col(0) = X.at(k);
+        V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
+
+        ODEFun odeMultipleShooting(U[k], U[k + 1], T, dt, model);
+
+        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
+
+        size_t cols = 1;
+
+        A_bar[k] = V.template block<Model::state_dim, Model::state_dim>(0, cols);
+        cols += Model::state_dim;
+
+        B_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+        cols += Model::input_dim;
+
+        if constexpr (INPUT_TYPE == InputType::interpolated)
+        {
+            C_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+            cols += Model::input_dim;
+        }
+
+        if constexpr (TIME_TYPE == TimeType::variable)
+        {
+            S_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, 1>(0, cols);
+            cols += 1;
+        }
+
+        z_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, 1>(0, cols);
+        cols += 1;
+
+        assert(cols == ODEFun::ode_matrix_t::ColsAtCompileTime);
+    }
+}

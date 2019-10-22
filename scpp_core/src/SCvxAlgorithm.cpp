@@ -37,7 +37,7 @@ void SCvxAlgorithm::loadParameters()
     param.loadScalar("change_threshold", change_threshold);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
     param.loadScalar("trust_region", trust_region);
-    
+
     param.loadScalar("interpolate_input", interpolate_input);
 }
 
@@ -73,8 +73,8 @@ bool SCvxAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    scpp::discretization::multipleShooting(model, sigma, X, U,
-                                           A_bar, B_bar, C_bar, z_bar);
+
+    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
