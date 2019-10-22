@@ -2,9 +2,7 @@
 
 #include "activeModel.hpp"
 
-namespace scpp
-{
-namespace discretization
+namespace scpp::discretization
 {
 
 enum InputType : size_t
@@ -34,30 +32,6 @@ public:
                                            INPUT_TYPE * Model::input_dim +
                                            TIME_TYPE + 1>;
 
-    ODE(const Model::input_vector_t &u_t0, double dt, Model::ptr_t model)
-        : u_t0(u_t0), u_t1(0), T(0), dt(dt), model(model)
-    {
-        static_assert(INPUT_TYPE == InputType::constant and TIME_TYPE == TimeType::fixed);
-    }
-
-    ODE(const Model::input_vector_t &u_t0,
-        const double &T,
-        double dt,
-        Model::ptr_t model)
-        : u_t0(u_t0), u_t1(0), T(T), dt(dt), model(model)
-    {
-        static_assert(INPUT_TYPE == InputType::constant and TIME_TYPE == TimeType::variable);
-    }
-
-    ODE(const Model::input_vector_t &u_t0,
-        const Model::input_vector_t &u_t1,
-        double dt,
-        Model::ptr_t model)
-        : u_t0(u_t0), u_t1(u_t1), T(0), dt(dt), model(model)
-    {
-        static_assert(INPUT_TYPE == InputType::fixed and TIME_TYPE == TimeType::fixed);
-    }
-
     ODE(const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
         const double &T,
@@ -65,7 +39,6 @@ public:
         Model::ptr_t model)
         : u_t0(u_t0), u_t1(u_t1), T(T), dt(dt), model(model)
     {
-        static_assert(INPUT_TYPE == InputType::interpolated and TIME_TYPE == TimeType::variable);
     }
 
     void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t);
@@ -153,8 +126,7 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
         cols += 1;
     }
 
-    assert(cols == size_t(dVdt.cols()));
+    assert(cols == ode_matrix_t::ColsAtCompileTime);
 }
 
-} // namespace discretization
-} // namespace scpp
+} // namespace scpp::discretization
