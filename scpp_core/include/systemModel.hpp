@@ -11,7 +11,7 @@ template <typename DERIVED, size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM
 class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    typedef SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM> BASE;
+    using BASE = SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>;
 
     using ptr_t = std::shared_ptr<DERIVED>;
 
