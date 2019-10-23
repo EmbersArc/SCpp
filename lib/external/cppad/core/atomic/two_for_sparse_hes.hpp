@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_ATOMIC_TWO_FOR_SPARSE_HES_HPP
 # define CPPAD_CORE_ATOMIC_TWO_FOR_SPARSE_HES_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -194,8 +194,6 @@ bool atomic_base<Base>::for_sparse_hes(
 {   return false; }
 /*!
 Link, before case split, from for_hes_sweep to atomic_base.
-2DO: move this functiton outside this file so can change
-developer documentation to omhelp formating.
 
 \tparam InternalSparsity
 Is the used internaly for sparsity calculations; i.e.,
@@ -233,14 +231,11 @@ bool atomic_base<Base>::for_sparse_hes(
     const vector<Base>&              x                ,
     const local::pod_vector<size_t>& x_index          ,
     const local::pod_vector<size_t>& y_index          ,
-    size_t                           np1              ,
-    size_t                           numvar           ,
+    const InternalSparsity&          for_jac_sparsity ,
     const InternalSparsity&          rev_jac_sparsity ,
-    InternalSparsity&                for_sparsity     )
+    InternalSparsity&                for_hes_sparsity )
 {   typedef typename InternalSparsity::const_iterator const_iterator;
     CPPAD_ASSERT_UNKNOWN( rev_jac_sparsity.end() == 1 );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.end() == np1 );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.n_set() == np1 + numvar );
     size_t n      = x_index.size();
     size_t m      = y_index.size();
     bool   ok     = false;
@@ -257,9 +252,9 @@ bool atomic_base<Base>::for_sparse_hes(
     bool_r.resize(n);
     for(size_t j = 0; j < n; j++)
     {   // check if we must compute row and column j of h
-        const_iterator itr(for_sparsity, np1 + x_index[j]);
+        const_iterator itr(for_jac_sparsity, x_index[j]);
         size_t i = *itr;
-        bool_r[j] = i < np1;
+        bool_r[j] = i < for_jac_sparsity.end();
     }
     //
     // bool s
@@ -329,19 +324,19 @@ bool atomic_base<Base>::for_sparse_hes(
                     break;
                 }
                 if( flag )
-                {   const_iterator itr_i(for_sparsity, np1 + x_index[i]);
+                {   const_iterator itr_i(for_jac_sparsity, x_index[i]);
                     size_t i_x = *itr_i;
-                    while( i_x < np1 )
-                    {   for_sparsity.binary_union(
-                            i_x, i_x, np1 + x_index[j], for_sparsity
+                    while( i_x < for_jac_sparsity.end() )
+                    {   for_hes_sparsity.binary_union(
+                            i_x, i_x, x_index[j], for_jac_sparsity
                         );
                         i_x = *(++itr_i);
                     }
-                    const_iterator itr_j(for_sparsity, np1 + x_index[j]);
+                    const_iterator itr_j(for_jac_sparsity, x_index[j]);
                     size_t j_x = *itr_j;
-                    while( j_x < np1 )
-                    {   for_sparsity.binary_union(
-                            j_x, j_x, np1 + x_index[i], for_sparsity
+                    while( j_x < for_jac_sparsity.end() )
+                    {   for_hes_sparsity.binary_union(
+                            j_x, j_x, x_index[i], for_jac_sparsity
                         );
                         j_x = *(++itr_j);
                     }

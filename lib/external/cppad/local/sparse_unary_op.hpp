@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_SPARSE_UNARY_OP_HPP
 # define CPPAD_LOCAL_SPARSE_UNARY_OP_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -12,8 +12,7 @@ in the Eclipse Public License, Version 2.0 are satisfied:
       GNU General Public License, Version 2.0 or later.
 ---------------------------------------------------------------------------- */
 
-// BEGIN_CPPAD_LOCAL_SPARSE_NAMESPACE
-namespace CppAD { namespace local { namespace sparse {
+namespace CppAD { namespace local { // BEGIN_CPPAD_LOCAL_NAMESPACE
 /*!
 \file sparse_unary_op.hpp
 Forward and reverse mode sparsity patterns for unary operators.
@@ -35,7 +34,7 @@ where op is a C++ binary unary operator and q is a parameter.
 
 \tparam Vector_set
 is the type used for vectors of sets. It can be either
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 \param i_z
 variable index corresponding to the result for this operation;
@@ -64,7 +63,7 @@ depends on.
 */
 
 template <class Vector_set>
-void for_jac_unary_op(
+void forward_sparse_jacobian_unary_op(
     size_t            i_z           ,
     size_t            i_x           ,
     Vector_set&       sparsity      )
@@ -96,7 +95,7 @@ and it uses them to compute the sparsity patterns for
 
 \tparam Vector_set
 is the type used for vectors of sets. It can be either
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 
 \param i_z
@@ -125,7 +124,7 @@ is the sparsity bit pattern for H with respect to the variable x.
 */
 
 template <class Vector_set>
-void rev_jac_unary_op(
+void reverse_sparse_jacobian_unary_op(
     size_t     i_z                     ,
     size_t     i_x                     ,
     Vector_set&            sparsity    )
@@ -154,7 +153,7 @@ where op is a C++ binary operator and q is a parameter.
 \copydetails CppAD::local::reverse_sparse_hessian_unary_op
 */
 template <class Vector_set>
-void rev_hes_lin_unary_op(
+void reverse_sparse_hessian_linear_unary_op(
     size_t              i_z               ,
     size_t              i_x               ,
     bool*               rev_jacobian      ,
@@ -191,7 +190,7 @@ where q is a parameter.
 \copydetails CppAD::local::reverse_sparse_hessian_unary_op
 */
 template <class Vector_set>
-void rev_hes_nl_unary_op(
+void reverse_sparse_hessian_nonlinear_unary_op(
     size_t              i_z               ,
     size_t              i_x               ,
     bool*               rev_jacobian      ,
@@ -211,107 +210,48 @@ void rev_hes_nl_unary_op(
     rev_jacobian[i_x] = true;
     return;
 }
+
 // ---------------------------------------------------------------------------
-/*
-$begin for_hes_nl_unary_op$$
-$spell
-    hes
-    nl
-    op
-    np
-    numvar
-    Jacobian
-$$
+/*!
+Forward mode Hessian sparsity pattern for non-linear unary operators.
 
-$section Forward Hessian Sparsity for Non-linear Unary Operators$$
-
-$head Syntax$$
-$codei%local::for_hes_nl_unary_op(
-    %np1%, %numvar%, %i_v%, %for_sparsity%
-)%$$
-
-$head Prototype$$
-$srcfile%include/cppad/local/sparse/unary_op.hpp%
-    0%// BEGIN_for_hes_nl_unary_op%// END_for_hes_nl_unary_op%1
-%$$
-
-$head C++ Source$$
 The C++ source code corresponding to this operation is
-$codei%
-        %w% = %fun%( %v% )
-%$$
-where $icode fun$$ is a non-linear function.
+\verbatim
+        w(x) = fun( v(x) )
+\endverbatim
+where fun is a non-linear function.
 
-$head np1$$
-This is the number of independent variables plus one;
-i.e. size of $icode x$$ plus one.
+\param i_v
+is the index of the argument variable v
 
-$head numvar$$
-This is the total number of variables in the tape.
+\param for_jac_sparsity
+for_jac_sparsity(i_v) constains the Jacobian sparsity for v(x).
 
-$head i_w$$
-is the index of the variable corresponding to the result $icode w$$.
-
-$head i_v$$
-is the index of the variable corresponding to the argument $icode v$$.
-
-$head for_sparsity$$
-We have the conditions $icode%np1% = %for_sparsity%.end()%$$
-and $icode%for_sparsity%.n_set() = %np1% + %numvar%$$.
-
-$subhead Input Jacobian Sparsity$$
-For $icode%i%= 0, ..., %i_w%-1%$$,
-the $icode%np1%+%i%$$ row of $icode for_sparsity$$ is the Jacobian sparsity
-for the $th i$$ variable. These values do not change.
-Note that $icode%i%=0%$$ corresponds to a parameter and
-the corresponding Jacobian sparsity is empty.
-
-$subhead Input Hessian Sparsity$$
-For $icode%j%=1, ..., %n%$$,
-the $th j$$ row of $icode for_sparsity$$ is the Hessian sparsity
-before including the function $latex w(x)$$.
-
-$subhead Output Jacobian Sparsity$$
-the $icode i_w$$ row of $icode for_sparsity$$ is the Jacobian sparsity
-for the variable $icode w$$.
-
-$subhead Output Hessian Sparsity$$
-For $icode%j%=1, ..., %n%$$,
-the $th j$$ row of $icode for_sparsity$$ is the Hessian sparsity
-after including the function $latex w(x)$$.
-
-$end
+\param for_hes_sparsity
+On input, for_hes_sparsity includes the Hessian sparsity for v(x); i.e.,
+the sparsity can be a super set.
+Upon return it includes the Hessian sparsity for  w(x)
 */
-// BEGIN_for_hes_nl_unary_op
 template <class Vector_set>
-void for_hes_nl_unary_op(
-    size_t              np1            ,
-    size_t              numvar         ,
-    size_t              i_w            ,
-    size_t              i_v            ,
-    Vector_set&         for_sparsity   )
-// END_for_hes_nl_unary_op
-{   CPPAD_ASSERT_UNKNOWN( i_v < i_w );
-    CPPAD_ASSERT_UNKNOWN( i_w < numvar );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.end() == np1 );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.n_set() == np1 + numvar );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.number_elements(np1) == 0 );
-
-    // set Jacobian sparsity J(i_w)
-    for_sparsity.assignment(np1 + i_w, np1 + i_v, for_sparsity);
-
+void forward_sparse_hessian_nonlinear_unary_op(
+    size_t              i_v               ,
+    const Vector_set&   for_jac_sparsity  ,
+    Vector_set&         for_hes_sparsity  )
+{
     // set of independent variables that v depends on
-    typename Vector_set::const_iterator itr(for_sparsity, i_v + np1);
+    typename Vector_set::const_iterator itr(for_jac_sparsity, i_v);
 
-    // loop over independent variables with non-zero partial for v
+    // next independent variables that v depends on
     size_t i_x = *itr;
-    while( i_x < np1 )
-    {   // N(i_x) = N(i_x) union J(i_v)
-        for_sparsity.binary_union(i_x, i_x, i_v + np1, for_sparsity);
+
+    // loop over dependent variables with non-zero partial
+    while( i_x < for_jac_sparsity.end() )
+    {   // N(i_x) = N(i_x) union L(i_v)
+        for_hes_sparsity.binary_union(i_x, i_x, i_v, for_jac_sparsity);
         i_x = *(++itr);
     }
     return;
 }
 
-} } } // END_CPPAD_LOCAL_SPARSE_NAMESPACE
+} } // END_CPPAD_LOCAL_NAMESPACE
 # endif

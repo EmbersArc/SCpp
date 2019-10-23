@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_ATOMIC_ATOMIC_THREE_HPP
 # define CPPAD_CORE_ATOMIC_ATOMIC_THREE_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -350,13 +350,12 @@ public:
     template <class InternalSparsity>
     bool for_hes_sparsity(
         const vector<Base>&              parameter_x      ,
-        const vector<ad_type_enum>&      type_x           ,
+        const vector<ad_type_enum>&      type_x       ,
         const local::pod_vector<size_t>& x_index          ,
         const local::pod_vector<size_t>& y_index          ,
-        size_t                           np1              ,
-        size_t                           numvar           ,
+        const InternalSparsity&          for_jac_sparsity ,
         const InternalSparsity&          rev_jac_sparsity ,
-        InternalSparsity&                for_sparsity
+        InternalSparsity&                hes_sparsity
     );
     template <class InternalSparsity>
     bool rev_hes_sparsity(

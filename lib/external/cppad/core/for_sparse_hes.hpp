@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_FOR_SPARSE_HES_HPP
 # define CPPAD_CORE_FOR_SPARSE_HES_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -205,26 +205,41 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         "range dimension for ADFun object."
     );
     //
-    // select_domain corresponding to r
-    local::pod_vector<bool> select_domain(n);
-    for(size_t j = 0; j < n; ++j)
-    {   select_domain[j] = r[j];
-        CPPAD_ASSERT_UNKNOWN( ind_taddr_[j]  == j + 1);
-        CPPAD_ASSERT_UNKNOWN( play_.GetOp(j + 1) == local::InvOp );
+    // sparsity pattern corresponding to r
+    local::sparse_pack for_jac_pattern;
+    for_jac_pattern.resize(num_var_tape_, n + 1);
+    for(size_t i = 0; i < n; i++)
+    {   CPPAD_ASSERT_UNKNOWN( ind_taddr_[i] < n + 1 );
+        // ind_taddr_[i] is operator taddr for i-th independent variable
+        CPPAD_ASSERT_UNKNOWN( play_.GetOp( ind_taddr_[i] ) == local::InvOp );
+        //
+        // Use add_element when only adding one element per set is added.
+        if( r[i] )
+            for_jac_pattern.add_element( ind_taddr_[i], ind_taddr_[i] );
     }
+    // compute forward Jacobiain sparsity pattern
+    bool dependency = false;
+    local::sweep::for_jac<addr_t>(
+        &play_,
+        dependency,
+        n,
+        num_var_tape_,
+        for_jac_pattern,
+        not_used_rec_base
+
+    );
     // sparsity pattern correspnding to s
-    local::sparse::pack_setvec rev_jac_pattern;
+    local::sparse_pack rev_jac_pattern;
     rev_jac_pattern.resize(num_var_tape_, 1);
     for(size_t i = 0; i < m; i++)
     {   CPPAD_ASSERT_UNKNOWN( dep_taddr_[i] < num_var_tape_ );
         //
-        // Not using post_element because only adding one element per set
+        // Use add_element when only adding one element per set is added.
         if( s[i] )
             rev_jac_pattern.add_element( dep_taddr_[i], 0);
     }
     // compute reverse sparsity pattern for dependency analysis
     // (note that we are only want non-zero derivatives not true dependency)
-    bool dependency = false;
     local::sweep::rev_jac<addr_t>(
         &play_,
         dependency,
@@ -232,17 +247,18 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         num_var_tape_,
         rev_jac_pattern,
         not_used_rec_base
+
     );
     // vector of sets that will hold the forward Hessain values
-    local::sparse::pack_setvec for_hes_pattern;
-    for_hes_pattern.resize(n+1+num_var_tape_, n+1);
+    local::sparse_pack for_hes_pattern;
+    for_hes_pattern.resize(n+1, n+1);
     //
     // compute the Hessian sparsity patterns
     local::sweep::for_hes<addr_t>(
         &play_,
         n,
         num_var_tape_,
-        select_domain,
+        for_jac_pattern,
         rev_jac_pattern,
         for_hes_pattern,
         not_used_rec_base
@@ -262,7 +278,7 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         CPPAD_ASSERT_UNKNOWN( play_.GetOp( ind_taddr_[i] ) == local::InvOp );
 
         // extract the result from for_hes_pattern
-        local::sparse::pack_setvec::const_iterator itr(for_hes_pattern, ind_taddr_[i] );
+        local::sparse_pack::const_iterator itr(for_hes_pattern, ind_taddr_[i] );
         size_t j = *itr;
         while( j < for_hes_pattern.end() )
         {   CPPAD_ASSERT_UNKNOWN( 0 < j )
@@ -321,20 +337,32 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         "ForSparseHes: size of s is not equal to one."
     );
     //
-    // select_domain corresponding to r
-    local::pod_vector<bool> select_domain(n);
-    for(size_t j = 0; j < n; ++j)
-    {   select_domain[j] = false;
-        CPPAD_ASSERT_UNKNOWN( ind_taddr_[j]  == j + 1);
-        CPPAD_ASSERT_UNKNOWN( play_.GetOp(j + 1) == local::InvOp );
-    }
+    // sparsity pattern corresponding to r
+    local::sparse_list for_jac_pattern;
+    for_jac_pattern.resize(num_var_tape_, n + 1);
     itr_1 = r[0].begin();
     while( itr_1 != r[0].end() )
-    {   size_t j = *itr_1++;
-        select_domain[j] = true;
+    {   size_t i = *itr_1++;
+        CPPAD_ASSERT_UNKNOWN( ind_taddr_[i] < n + 1 );
+        // ind_taddr_[i] is operator taddr for i-th independent variable
+        CPPAD_ASSERT_UNKNOWN( play_.GetOp( ind_taddr_[i] ) == local::InvOp );
+        //
+        // Use add_element when only adding one element per set is added.
+        for_jac_pattern.add_element( ind_taddr_[i], ind_taddr_[i] );
     }
+    // compute forward Jacobiain sparsity pattern
+    bool dependency = false;
+    local::sweep::for_jac<addr_t>(
+        &play_,
+        dependency,
+        n,
+        num_var_tape_,
+        for_jac_pattern,
+        not_used_rec_base
+
+    );
     // sparsity pattern correspnding to s
-    local::sparse::list_setvec rev_jac_pattern;
+    local::sparse_list rev_jac_pattern;
     rev_jac_pattern.resize(num_var_tape_, 1);
     itr_1 = s[0].begin();
     while( itr_1 != s[0].end() )
@@ -346,13 +374,12 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         );
         CPPAD_ASSERT_UNKNOWN( dep_taddr_[i] < num_var_tape_ );
         //
-        // Not using post_element because only adding one element per set
+        // Use add_element when only adding one element per set is added.
         rev_jac_pattern.add_element( dep_taddr_[i], 0);
     }
     //
     // compute reverse sparsity pattern for dependency analysis
     // (note that we are only want non-zero derivatives not true dependency)
-    bool dependency = false;
     local::sweep::rev_jac<addr_t>(
         &play_,
         dependency,
@@ -360,18 +387,19 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         num_var_tape_,
         rev_jac_pattern,
         not_used_rec_base
+
     );
     //
     // vector of sets that will hold reverse Hessain values
-    local::sparse::list_setvec for_hes_pattern;
-    for_hes_pattern.resize(n+1+num_var_tape_, n+1);
+    local::sparse_list for_hes_pattern;
+    for_hes_pattern.resize(n+1, n+1);
     //
     // compute the Hessian sparsity patterns
     local::sweep::for_hes<addr_t>(
         &play_,
         n,
         num_var_tape_,
-        select_domain,
+        for_jac_pattern,
         rev_jac_pattern,
         for_hes_pattern,
         not_used_rec_base
@@ -386,7 +414,7 @@ void ADFun<Base,RecBase>::ForSparseHesCase(
         CPPAD_ASSERT_UNKNOWN( play_.GetOp( ind_taddr_[i] ) == local::InvOp );
 
         // extract the result from for_hes_pattern
-        local::sparse::list_setvec::const_iterator itr_2(for_hes_pattern, ind_taddr_[i] );
+        local::sparse_list::const_iterator itr_2(for_hes_pattern, ind_taddr_[i] );
         size_t j = *itr_2;
         while( j < for_hes_pattern.end() )
         {   CPPAD_ASSERT_UNKNOWN( 0 < j )
@@ -490,7 +518,7 @@ template <class Base, class RecBase>
 void ADFun<Base,RecBase>::ForSparseHesCheckpoint(
     vector<bool>&                 r         ,
     vector<bool>&                 s         ,
-    local::sparse::list_setvec&   h         )
+    local::sparse_list&           h         )
 {
     // used to identify the RecBase type in calls to sweeps
     RecBase not_used_rec_base;
@@ -515,8 +543,8 @@ void ADFun<Base,RecBase>::ForSparseHesCheckpoint(
     }
 
     // holds forward Hessian sparsity pattern for all variables
-    local::sparse::list_setvec for_hes_pattern;
-    for_hes_pattern.resize(n+1+num_var_tape_, n+1);
+    local::sparse_list for_hes_pattern;
+    for_hes_pattern.resize(n+1, n+1);
 
     // compute Hessian sparsity pattern for all variables
     local::sweep::for_hes<addr_t>(
@@ -546,7 +574,7 @@ void ADFun<Base,RecBase>::ForSparseHesCheckpoint(
 
         // extract the result from for_hes_pattern
         CPPAD_ASSERT_UNKNOWN( for_hes_pattern.end() == q );
-        local::sparse::list_setvec::const_iterator itr(for_hes_pattern, .j + 1);
+        local::sparse_list::const_iterator itr(for_hes_pattern, .j + 1);
         size_t i = *itr;
         while( i < q )
         {   if( transpose )

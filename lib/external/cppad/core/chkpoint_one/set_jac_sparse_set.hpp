@@ -1,7 +1,7 @@
 # ifndef CPPAD_CORE_CHKPOINT_ONE_SET_JAC_SPARSE_SET_HPP
 # define CPPAD_CORE_CHKPOINT_ONE_SET_JAC_SPARSE_SET_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -28,10 +28,10 @@ void checkpoint<Base>::set_jac_sparse_set(void)
     // Use the choice for forward / reverse that results in smaller
     // size for the sparsity pattern of all variables in the tape.
     if( n <= m )
-    {   local::sparse::list_setvec identity;
+    {   local::sparse_list identity;
         identity.resize(n, n);
         for(size_t j = 0; j < n; j++)
-        {   // Not using post_element because only adding one element per set
+        {   // use add_element because only adding one element per set
             identity.add_element(j, j);
         }
         member_[thread]->f_.ForSparseJacCheckpoint(
@@ -40,10 +40,10 @@ void checkpoint<Base>::set_jac_sparse_set(void)
         member_[thread]->f_.size_forward_set(0);
     }
     else
-    {   local::sparse::list_setvec identity;
+    {   local::sparse_list identity;
         identity.resize(m, m);
         for(size_t i = 0; i < m; i++)
-        {   // Not using post_element because only adding one element per set
+        {   // use add_element because only adding one element per set
             identity.add_element(i, i);
         }
         member_[thread]->f_.RevSparseJacCheckpoint(

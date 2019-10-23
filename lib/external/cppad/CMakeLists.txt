@@ -221,10 +221,9 @@ ENDFOREACH( cmake_var )
 # -----------------------------------------------------------------------------
 # check that cppad_max_num_threads is >= 4
 #
-SET(CMAKE_REQUIRED_DERINITIONS "")
-SET(CMAKE_REQUIRED_INCLUDES    "")
-SET(CMAKE_REQUIRED_LIBRARIES   "")
-SET(CMAKE_REQUIRED_FLAGS       "")
+SET(CMAKE_REQUIRED_INCLUDES  "")
+SET(CMAKE_REQUIRED_LIBRARIES "")
+SET(CMAKE_REQUIRED_FLAGS     )
 SET(source "
 int main(void)
 {   const char* number = \"${cppad_max_num_threads}\";
@@ -245,12 +244,7 @@ int main(void)
 }
 " )
 # Using CHECK_CXX_SOURCE_RUNS directly (instead of check_source_runs).
-IF( DEFINED cppad_max_num_threads_is_integer_ge_4 )
-    MESSAGE( ERROR
-        "cppad_max_num_threads_is_integer_ge_4 is defined before expected"
-    )
-ENDIF( DEFINED cppad_max_num_threads_is_integer_ge_4 )
-CHECK_CXX_SOURCE_RUNS("${source}" cppad_max_num_threads_is_integer_ge_4 )
+CHECK_CXX_SOURCE_RUNS("${source}" cppad_max_num_threads_is_integer_ge_4)
 IF( NOT cppad_max_num_threads_is_integer_ge_4 )
     MESSAGE(FATAL_ERROR
     "cppad_max_num_threads is not an integer greater than or equal 4"

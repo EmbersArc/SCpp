@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_SWEEP_FOR_JAC_HPP
 # define CPPAD_LOCAL_SWEEP_FOR_JAC_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -41,7 +41,7 @@ this operation sequence was recorded using AD<Base>.
 
 \tparam Vector_set
 is the type used for vectors of sets. It can be either
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 \param dependency
 Are the derivatives with respect to left and right of the expression below
@@ -182,7 +182,7 @@ void for_jac(
         {
             case AbsOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -190,7 +190,7 @@ void for_jac(
 
             case AddvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;
@@ -198,7 +198,7 @@ void for_jac(
 
             case AddpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -207,7 +207,7 @@ void for_jac(
             case AcosOp:
             // sqrt(1 - x * x), acos(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -217,7 +217,7 @@ void for_jac(
             case AcoshOp:
             // sqrt(x * x - 1), acosh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -227,7 +227,7 @@ void for_jac(
             case AsinOp:
             // sqrt(1 - x * x), asin(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -237,7 +237,7 @@ void for_jac(
             case AsinhOp:
             // sqrt(1 + x * x), asinh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -247,7 +247,7 @@ void for_jac(
             case AtanOp:
             // 1 + x * x, atan(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -257,7 +257,7 @@ void for_jac(
             case AtanhOp:
             // 1 - x * x, atanh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -287,7 +287,7 @@ void for_jac(
             case CosOp:
             // sin(x), cos(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -296,7 +296,7 @@ void for_jac(
             case CoshOp:
             // sinh(x), cosh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -305,7 +305,7 @@ void for_jac(
             case DisOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
             // derivative is identically zero but dependency is not
-            if( dependency ) sparse::for_jac_unary_op(
+            if( dependency ) forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             else
@@ -315,7 +315,7 @@ void for_jac(
 
             case DivvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;
@@ -323,7 +323,7 @@ void for_jac(
 
             case DivpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -331,7 +331,7 @@ void for_jac(
 
             case DivvpOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -344,11 +344,10 @@ void for_jac(
             // -------------------------------------------------
 
             case ErfOp:
-            case ErfcOp:
             // arg[1] is always the parameter 0
             // arg[0] is always the parameter 2 / sqrt(pi)
             CPPAD_ASSERT_NARG_NRES(op, 3, 5);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -356,7 +355,7 @@ void for_jac(
 
             case ExpOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -365,7 +364,7 @@ void for_jac(
 # if CPPAD_USE_CPLUSPLUS_2011
             case Expm1Op:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -426,7 +425,7 @@ void for_jac(
 
             case LogOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -435,7 +434,7 @@ void for_jac(
 # if CPPAD_USE_CPLUSPLUS_2011
             case Log1pOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -444,7 +443,7 @@ void for_jac(
 
             case MulpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -452,7 +451,7 @@ void for_jac(
 
             case MulvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;
@@ -466,7 +465,7 @@ void for_jac(
 
             case PowvpOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -474,7 +473,7 @@ void for_jac(
 
             case PowpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -482,7 +481,7 @@ void for_jac(
 
             case PowvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;
@@ -496,7 +495,7 @@ void for_jac(
             case SignOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
             // derivative is identically zero but dependency is not
-            if( dependency ) sparse::for_jac_unary_op(
+            if( dependency ) forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             else
@@ -507,7 +506,7 @@ void for_jac(
             case SinOp:
             // cos(x), sin(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -516,7 +515,7 @@ void for_jac(
             case SinhOp:
             // cosh(x), sinh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -524,7 +523,7 @@ void for_jac(
 
             case SqrtOp:
             CPPAD_ASSERT_NARG_NRES(op, 1, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -579,7 +578,7 @@ void for_jac(
 
             case SubvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;
@@ -587,7 +586,7 @@ void for_jac(
 
             case SubpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -595,7 +594,7 @@ void for_jac(
 
             case SubvpOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -604,7 +603,7 @@ void for_jac(
             case TanOp:
             // tan(x)^2, tan(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -613,7 +612,7 @@ void for_jac(
             case TanhOp:
             // tanh(x)^2, tanh(x)
             CPPAD_ASSERT_NARG_NRES(op, 1, 2);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -732,7 +731,7 @@ void for_jac(
 
             case ZmulpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[1]), var_sparsity
             );
             break;
@@ -740,7 +739,7 @@ void for_jac(
 
             case ZmulvpOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_unary_op(
+            forward_sparse_jacobian_unary_op(
                 i_var, size_t(arg[0]), var_sparsity
             );
             break;
@@ -748,7 +747,7 @@ void for_jac(
 
             case ZmulvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-            sparse::for_jac_binary_op(
+            forward_sparse_jacobian_binary_op(
                 i_var, arg, var_sparsity
             );
             break;

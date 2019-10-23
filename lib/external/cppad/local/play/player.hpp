@@ -296,6 +296,7 @@ public:
                 case InvOp:
                 case LdpOp:
                 case LeppOp:
+                case LtppOp:
                 case NeppOp:
                 case ParOp:
                 case AFunOp:
@@ -317,7 +318,6 @@ public:
                 case CoshOp:
                 case DivvpOp:
                 case ErfOp:
-                case ErfcOp:
                 case ExpOp:
                 case Expm1Op:
                 case LevpOp:
@@ -344,7 +344,6 @@ public:
                 case EqpvOp:
                 case LdvOp:
                 case LepvOp:
-                case LtppOp:
                 case LtpvOp:
                 case MulpvOp:
                 case NepvOp:

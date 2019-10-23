@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_SWEEP_FOR_HES_HPP
 # define CPPAD_LOCAL_SWEEP_FOR_HES_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -14,178 +14,134 @@ in the Eclipse Public License, Version 2.0 are satisfied:
 
 # include <cppad/local/play/atom_op_info.hpp>
 
-/*
-$begin local_sweep_for_hes$$
-$spell
-    hes
-    numvar
-    jac
-    Jacobian
-    num_var
-    Addr
-    InvOp
-    setvec
-$$
-
-$section Forward Mode Hessian Sparsity Patterns$$
-
-$head Syntax$$
-$codei%local::sweep::for_hes(
-    %play%              ,
-    %n%                 ,
-    %numvar%            ,
-    %select_domain%     ,
-    %rev_jac_sparse%    ,
-    %for_hes_sparse%    ,
-    %not_used_rec_base
-)%$$
-
-$head Prototype$$
-$srcfile%include/cppad/local/sweep/for_hes.hpp%
-    0%// BEGIN PROTOTYPE%// END PROTOTYPE%1
-%$$
-
-
-$head Purpose$$
-Given the forward Jacobian sparsity pattern for all the variables,
-and the reverse Jacobian sparsity pattern for the dependent variables,
-$code for_hes$$ computes the Hessian sparsity pattern for all the independent
-variables.
-
-$head Tracing$$
-This value is either zero or one.  Zero is the normal operational value.
-If it is one, a trace of Jacobian and Hessian sparsity result for every
-operation for every $code for_hes$$ sweep is printed.
-The sparsity patterns are printed as binary numbers with 1 (0) meaning that
-the corresponding index is (is not) in the set.
-$codep */
-# define CPPAD_FOR_HES_TRACE 0
-/* $$
-
-$head Addr$$
-Is the type used to record address on this tape
-This is allows for smaller tapes when address are smaller.
-
-$head Base$$
-The operation sequence in $icode play$$ was recorded using
-$codei%AD<%Base%>%$$.
-
-$head RecBase$$
-Is the base type when this function was recorded.
-This is different from $icode Base$$ if
-this function object was created by $cref base2ad$$.
-
-$head SetVector$$
-This is a $cref SetVector$$ type.
-
-$head play$$
-The information stored in play
-is a recording of the operations corresponding to a function
-$latex F : \B{R}^n \rightarrow \B{R}^m$$
-where $icode m$$ is the number of dependent variables.
-
-$head n$$
-is the number of independent variables in the tape.
-
-$head numvar$$
-is the total number of variables in the tape; i.e.,
-$icode%play%->num_var_rec()%$$.
-This is also the number of sets in all the sparsity patterns.
-
-$head select_domain$$
-is a vector with size $icode n$$ that specifies
-which components of the domain to include in the Hessian sparsity pattern.
-For $icode%j%= 0, ..., %n%-1%$$, the $th j$$ independent variable
-will be included if and only if $icode%select_domain%[%j%]%$$ is true.
-This assumes that the order of the independent variables is the same
-as the order of the InvOp operators.
-
-$head rev_jac_sparse$$
-Is a sparsity pattern with size $icode numvar$$ by one.
-For $icode%i%=1, %...%, %numvar%-1%$$,
-the if the function we are computing the Hessian for has a non-zero
-derivative w.r.t. variable with index $icode i$$,
-the set with index $icode i$$ has the element zero.
-Otherwise it has no elements.
-
-$head for_hes_sparse$$
-Is a sparsity pattern with size $icode%n%+1+%numvar%$$ by $icode%n%+1%$$.
-The set with index zero and the element zero are not used.
-The sets with index greater than $icode n$$
-are used for forward Jacobian sparsity.
-The forward Hessian sparsity pattern for the variable with index $icode i$$
-corresponds to the set with index $icode i$$ in $icode for_hes_sparse$$.
-The number of sets in this sparsity pattern is $icode%n%+1%$$ and the set
-with index zero is not used.
-
-$subhead On Input$$
-For $icode%j%=1, %...%, %n%$$,
-the forward Hessian sparsity pattern for the variable with index
-$icode i$$ is empty.
-
-$subhead On Output$$
-For $icode%j%=1, %...%, %n%$$,
-the forward Hessian sparsity pattern for the independent dependent variable
-with index $icode%j%-1%$$ is given by the set with index $icode j$$
-in $icode for_hes_sparse$$.
-
-$head not_used_rec_base$$
-This argument is only used to specify the type $icode RecBase$$ for this call.
-
-$end
-*/
-
 // BEGIN_CPPAD_LOCAL_SWEEP_NAMESPACE
 namespace CppAD { namespace local { namespace sweep {
+/*!
+\file sweep/for_hes.hpp
+Compute Forward mode Hessian sparsity patterns.
+*/
 
-// BEGIN PROTOTYPE
-template <class Addr, class Base, class SetVector, class RecBase>
+/*!
+\def CPPAD_FOR_HES_TRACE
+This value is either zero or one.
+Zero is the normal operational value.
+If it is one, a trace of every rev_hes_sweep computation is printed.
+*/
+# define CPPAD_FOR_HES_TRACE 0
+
+/*!
+Given the forward Jacobian sparsity pattern for all the variables,
+and the reverse Jacobian sparsity pattern for the dependent variables,
+ForHesSweep computes the Hessian sparsity pattern for all the independent
+variables.
+
+\tparam Base
+this operation sequence was recorded using AD<Base>.
+
+\tparam Vector_set
+is the type used for vectors of sets. It can be either
+sparse_pack or sparse_list.
+
+\param n
+is the number of independent variables on the tape.
+
+\param numvar
+is the total number of variables on the tape; i.e.,
+ play->num_var_rec().
+This is also the number of rows in the entire sparsity pattern
+ for_hes_sparse.
+
+\param play
+The information stored in play
+is a recording of the operations corresponding to a function
+\f[
+    F : {\bf R}^n \rightarrow {\bf R}^m
+\f]
+where \f$ n \f$ is the number of independent variables
+and \f$ m \f$ is the number of dependent variables.
+
+\param for_jac_sparse
+For i = 0 , ... , numvar - 1,
+(for all the variables on the tape),
+the forward Jacobian sparsity pattern for the variable with index i
+corresponds to the set with index i in for_jac_sparse.
+
+\param rev_jac_sparse
+\b Input:
+For i = 0, ... , numvar - 1
+the if the function we are computing the Hessian for has a non-zero
+derivative w.r.t. variable with index i,
+the set with index i has element zero.
+Otherwise it has no elements.
+
+\param for_hes_sparse
+The forward Hessian sparsity pattern for the variable with index i
+corresponds to the set with index i in for_hes_sparse.
+The number of rows in this sparsity patter is n+1 and the row
+with index zero is not used.
+\n
+\n
+\b Input: For i = 1 , ... , n
+the forward Hessian sparsity pattern for the variable with index i is empty.
+\n
+\n
+\b Output: For j = 1 , ... , n,
+the forward Hessian sparsity pattern for the independent dependent variable
+with index (j-1) is given by the set with index j
+in for_hes_sparse.
+
+\param not_used_rec_base
+Specifies RecBase for this call.
+*/
+
+template <class Addr, class Base, class Vector_set, class RecBase>
 void for_hes(
-    const local::player<Base>* play                ,
-    size_t                     n                   ,
-    size_t                     numvar              ,
-    const pod_vector<bool>&    select_domain       ,
-    const SetVector&           rev_jac_sparse      ,
-    SetVector&                 for_hes_sparse      ,
-    const RecBase&             not_used_rec_base   )
-// END PROTOTYPE
+    const local::player<Base>* play,
+    size_t                     n,
+    size_t                     numvar,
+    const Vector_set&          for_jac_sparse,
+    const Vector_set&          rev_jac_sparse,
+    Vector_set&                for_hes_sparse,
+    const RecBase&             not_used_rec_base
+)
 {
     // length of the parameter vector (used by CppAD assert macros)
     const size_t num_par = play->num_par_rec();
 
-    // check arguments
-    size_t np1 = n+1;
-    CPPAD_ASSERT_UNKNOWN( select_domain.size()   == n );
+    size_t             i, j, k;
+
+    // check numvar argument
+    size_t limit = n+1;
     CPPAD_ASSERT_UNKNOWN( play->num_var_rec()    == numvar );
-    CPPAD_ASSERT_UNKNOWN( rev_jac_sparse.n_set() == numvar );
-    CPPAD_ASSERT_UNKNOWN( for_hes_sparse.n_set() == np1+numvar );
-    //
-    CPPAD_ASSERT_UNKNOWN( rev_jac_sparse.end()   == 1   );
-    CPPAD_ASSERT_UNKNOWN( for_hes_sparse.end()   == np1 );
-    //
+    CPPAD_ASSERT_UNKNOWN( for_jac_sparse.n_set() == numvar );
+    CPPAD_ASSERT_UNKNOWN( for_hes_sparse.n_set() == limit );
     CPPAD_ASSERT_UNKNOWN( numvar > 0 );
-    //
+
+    // upper limit exclusive for set elements
+    CPPAD_ASSERT_UNKNOWN( for_jac_sparse.end() == limit );
+    CPPAD_ASSERT_UNKNOWN( for_hes_sparse.end() == limit );
+
     // vecad_sparsity contains a sparsity pattern for each VecAD object.
     // vecad_ind maps a VecAD index (beginning of the VecAD object)
     // to the index for the corresponding set in vecad_sparsity.
     size_t num_vecad_ind   = play->num_vec_ind_rec();
     size_t num_vecad_vec   = play->num_vecad_vec_rec();
-    SetVector vecad_sparse;
+    Vector_set vecad_sparse;
     pod_vector<size_t> vecad_ind;
     pod_vector<bool>   vecad_jac;
     if( num_vecad_vec > 0 )
     {   size_t length;
-        vecad_sparse.resize(num_vecad_vec, np1);
+        vecad_sparse.resize(num_vecad_vec, limit);
         vecad_ind.extend(num_vecad_ind);
         vecad_jac.extend(num_vecad_vec);
-        size_t j  = 0;
-        for(size_t i = 0; i < num_vecad_vec; i++)
+        j             = 0;
+        for(i = 0; i < num_vecad_vec; i++)
         {   // length of this VecAD
             length   = play->GetVecInd(j);
             // set vecad_ind to proper index for this VecAD
             vecad_ind[j] = i;
             // make all other values for this vector invalid
-            for(size_t k = 1; k <= length; k++)
+            for(k = 1; k <= length; k++)
                 vecad_ind[j+k] = num_vecad_vec;
             // start of next VecAD
             j       += length + 1;
@@ -225,14 +181,13 @@ void for_hes(
     itr.op_info(op, arg, i_var);
     CPPAD_ASSERT_UNKNOWN( op == BeginOp );
 # if CPPAD_FOR_HES_TRACE
-    vector<Addr> atom_funrp; // parameter index for FunrpOp operators
+    vector<size_t> atom_funrp; // parameter index for FunrpOp operators
     std::cout << std::endl;
-    CppAD::vectorBool zf_value(np1);
-    CppAD::vectorBool zh_value(np1 * np1);
+    CppAD::vectorBool zf_value(limit);
+    CppAD::vectorBool zh_value(limit * limit);
 # endif
-    bool   flag; // temporary for use in switch cases below
-    bool   more_operators = true;
-    size_t count_independent = 0;
+    bool flag; // temporary for use in switch cases below
+    bool more_operators = true;
     while(more_operators)
     {
         // next op
@@ -257,13 +212,19 @@ void for_hes(
         if( include ) switch( op )
         {   // operators that should not occurr
             // case BeginOp
+            // -------------------------------------------------
 
-            // operators that do not affect Jacobian or Hessian
-            // and where with a fixed number of arguments and results
+            // operators that do not affect hessian
+            case AbsOp:
+            case AddvvOp:
+            case AddpvOp:
             case CExpOp:
             case DisOp:
+            case DivvpOp:
+            case InvOp:
             case LdpOp:
             case LdvOp:
+            case MulpvOp:
             case ParOp:
             case PriOp:
             case SignOp:
@@ -271,55 +232,13 @@ void for_hes(
             case StpvOp:
             case StvpOp:
             case StvvOp:
-            break;
-            // -------------------------------------------------
-
-            // independent variable operator: set J(i_var) = { i_var }
-            case InvOp:
-            CPPAD_ASSERT_UNKNOWN( for_hes_sparse.number_elements(i_var) == 0 );
-            if( select_domain[count_independent] )
-            {   // Not using post_element becasue only adding one element
-                // per set
-                for_hes_sparse.add_element(np1 + i_var, i_var);
-            }
-            ++count_independent;
-            break;
-
-            // -------------------------------------------------
-            // linear operators where arg[0] is the only variable
-            // only assign Jacobian term J(i_var)
-            case AbsOp:
-            case DivvpOp:
-            case SubvpOp:
-            case ZmulvpOp:
-            for_hes_sparse.assignment(
-                np1 + i_var, np1 + size_t(arg[0]), for_hes_sparse
-            );
-            break;
-
-            // -------------------------------------------------
-            // linear operators where arg[1] is the only variable
-            // only assign Jacobian term J(i_var)
-            case AddpvOp:
-            case MulpvOp:
-            case SubpvOp:
-            for_hes_sparse.assignment(
-                np1 + i_var, np1 + size_t(arg[1]), for_hes_sparse
-            );
-            break;
-
-            // -------------------------------------------------
-            // linear operators where arg[0] and arg[1] are variables
-            // only assign Jacobian term J(i_var)
-            case AddvvOp:
             case SubvvOp:
-            for_hes_sparse.binary_union(
-                np1 + i_var          ,
-                np1 + size_t(arg[0]) ,
-                np1 + size_t(arg[1]) ,
-                for_hes_sparse
-            );
+            case SubpvOp:
+            case SubvpOp:
+            case ZmulpvOp:
+            case ZmulvpOp:
             break;
+            // -------------------------------------------------
 
             // nonlinear unary operators
             case AcosOp:
@@ -342,8 +261,8 @@ void for_hes(
             case Log1pOp:
 # endif
             CPPAD_ASSERT_UNKNOWN( NumArg(op) == 1 )
-            sparse::for_hes_nl_unary_op(
-                np1, numvar, i_var, size_t(arg[0]), for_hes_sparse
+            forward_sparse_hessian_nonlinear_unary_op(
+                size_t(arg[0]), for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
@@ -360,16 +279,16 @@ void for_hes(
 
             case DivvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1)
-            sparse::for_hes_div_op(
-                np1, numvar, i_var, arg, for_hes_sparse
+            forward_sparse_hessian_div_op(
+                arg, for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
 
             case DivpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1)
-            sparse::for_hes_nl_unary_op(
-                np1, numvar, i_var, size_t(arg[1]), for_hes_sparse
+            forward_sparse_hessian_nonlinear_unary_op(
+                size_t(arg[1]), for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
@@ -381,12 +300,11 @@ void for_hes(
             // -------------------------------------------------
 
             case ErfOp:
-            case ErfcOp:
             // arg[1] is always the parameter 0
             // arg[2] is always the parameter 2 / sqrt(pi)
             CPPAD_ASSERT_NARG_NRES(op, 3, 5);
-            sparse::for_hes_nl_unary_op(
-                np1, numvar, i_var, size_t(arg[0]), for_hes_sparse
+            forward_sparse_hessian_nonlinear_unary_op(
+                size_t(arg[0]), for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
@@ -413,32 +331,32 @@ void for_hes(
 
             case MulvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1)
-            sparse::for_hes_mul_op(
-                np1, numvar, i_var, arg, for_hes_sparse
+            forward_sparse_hessian_mul_op(
+                arg, for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
 
             case PowpvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3)
-            sparse::for_hes_nl_unary_op(
-                np1, numvar, i_var, size_t(arg[1]), for_hes_sparse
+            forward_sparse_hessian_nonlinear_unary_op(
+                size_t(arg[1]), for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
 
             case PowvpOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3)
-            sparse::for_hes_nl_unary_op(
-                np1, numvar, i_var, size_t(arg[0]), for_hes_sparse
+            forward_sparse_hessian_nonlinear_unary_op(
+                size_t(arg[0]), for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
 
             case PowvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 3)
-            sparse::for_hes_pow_op(
-                np1, numvar, i_var, arg, for_hes_sparse
+            forward_sparse_hessian_pow_op(
+                arg, for_jac_sparse, for_hes_sparse
             );
             break;
             // -------------------------------------------------
@@ -472,7 +390,7 @@ void for_hes(
                 //
                 call_atomic_for_hes_sparsity<Base,RecBase>(
                     atom_index, atom_old, atom_x, type_x, atom_ix, atom_iy,
-                    np1, numvar, rev_jac_sparse, for_hes_sparse
+                    for_jac_sparse, rev_jac_sparse, for_hes_sparse
                 );
             }
             break;
@@ -550,8 +468,8 @@ void for_hes(
 
             case ZmulvvOp:
             CPPAD_ASSERT_NARG_NRES(op, 2, 1)
-            sparse::for_hes_mul_op(
-                np1, numvar, i_var, arg, for_hes_sparse
+            forward_sparse_hessian_mul_op(
+                arg, for_jac_sparse, for_hes_sparse
             );
             break;
 
@@ -561,7 +479,7 @@ void for_hes(
             CPPAD_ASSERT_UNKNOWN(0);
         }
 # if CPPAD_FOR_HES_TRACE
-        typedef typename SetVector::const_iterator const_iterator;
+        typedef typename Vector_set::const_iterator const_iterator;
         if( op == AFunOp && atom_state == start_atom )
         {   // print operators that have been delayed
             CPPAD_ASSERT_UNKNOWN( atom_m == atom_iy.size() );
@@ -569,25 +487,25 @@ void for_hes(
             CPPAD_ASSERT_NARG_NRES(FunrpOp, 1, 0);
             CPPAD_ASSERT_NARG_NRES(FunrvOp, 0, 1);
             addr_t arg_tmp[1];
-            for(size_t k = 0; k < atom_m; k++)
+            for(k = 0; k < atom_m; k++)
             {   size_t k_var = atom_iy[k];
                 // value for this variable
-                for(size_t i = 0; i < np1; i++)
+                for(i = 0; i < limit; i++)
                 {   zf_value[i] = false;
-                    for(size_t j = 0; j < np1; j++)
-                        zh_value[i * np1 + j] = false;
+                    for(j = 0; j < limit; j++)
+                        zh_value[i * limit + j] = false;
                 }
-                const_iterator itr_1(for_hes_sparse, np1 + i_var);
-                size_t j = *itr_1;
-                while( j < np1 )
+                const_iterator itr_1(for_jac_sparse, i_var);
+                j = *itr_1;
+                while( j < limit )
                 {   zf_value[j] = true;
                     j = *(++itr_1);
                 }
-                for(size_t i = 0; i < np1; i++)
+                for(i = 0; i < limit; i++)
                 {   const_iterator itr_2(for_hes_sparse, i);
                     j = *itr_2;
-                    while( j < np1 )
-                    {   zh_value[i * np1 + j] = true;
+                    while( j < limit )
+                    {   zh_value[i * limit + j] = true;
                         j = *(++itr_2);
                     }
                 }
@@ -615,22 +533,22 @@ void for_hes(
                 std::cout << std::endl;
             }
         }
-        for(size_t i = 0; i < np1; i++)
+        for(i = 0; i < limit; i++)
         {   zf_value[i] = false;
-            for(size_t j = 0; j < np1; j++)
-                zh_value[i * np1 + j] = false;
+            for(j = 0; j < limit; j++)
+                zh_value[i * limit + j] = false;
         }
-        const_iterator itr_1(for_hes_sparse, np1 + i_var);
-        size_t j = *itr_1;
-        while( j < np1 )
+        const_iterator itr_1(for_jac_sparse, i_var);
+        j = *itr_1;
+        while( j < limit )
         {   zf_value[j] = true;
             j = *(++itr_1);
         }
-        for(size_t i = 0; i < np1; i++)
+        for(i = 0; i < limit; i++)
         {   const_iterator itr_2(for_hes_sparse, i);
             j = *itr_2;
-            while( j < np1 )
-            {   zh_value[i * np1 + j] = true;
+            while( j < limit )
+            {   zh_value[i * limit + j] = true;
                 j = *(++itr_2);
             }
         }

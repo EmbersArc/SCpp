@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_SWEEP_CALL_ATOMIC_HPP
 # define CPPAD_LOCAL_SWEEP_CALL_ATOMIC_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -247,7 +247,7 @@ and to this atomic function.
 
 \tparam InternalSparsity
 is the internal type used to represent sparsity; i.e.,
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 \param atom_index [in]
 is the index, in local::atomic_index, corresponding to this atomic function.
@@ -358,7 +358,7 @@ and to this atomic function.
 
 \tparam InternalSparsity
 is the internal type used to represent sparsity; i.e.,
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 \param atom_index [in]
 is the index, in local::atomic_index, corresponding to this atomic function.
@@ -460,114 +460,53 @@ void call_atomic_rev_jac_sparsity(
 # endif
 }
 // ----------------------------------------------------------------------------
-/*
-$begin call_atomic_for_hes_sparsiy$$
-$spell
-    hes
-    np
-    numvar
-    jac
-    Jacobian
-    afun
-    setvec
-$$
+/*!
+Forward Hessian sparsity callback to atomic functions.
 
-$section Forward Hessian Sparsity Callback to Atomic Functions.$$
-
-$head Syntax$$
-$codei%call_atomic_for_hes_sparsity(
-    %atom_index%, %atom_old%, %parameter_x%, %type_x%, %x_index%, %y_index%,
-    %np1%, %numvar%, %rev_jac_sparsity%, %for_sparsity%
-)%$$
-
-$head Prototype$$
-$srcfile%include/cppad/local/sweep/call_atomic.hpp%
-0%// BEGIN_call_atomic_for_hes_sparsity%// END_call_atomic_for_hes_sparsity%1
-%$$
-
-$head C++ Source$$
-The C++ source code corresponding to this operation is a
-$cref/atomic function call/atomic_three/Syntax/Use Atomic Function/$$
-$codei%
-    %afun%(%ax%, %ay%)
-%$$
-We refer to the corresponding function using $latex y = f(x)$$.
-
-$head Base$$
-is the type corresponding to $icode parameter_x$$
+\tparam Base
+is the type corresponding to parameter_x
 and to this atomic function.
 
-$head InternalSparsity$$
+\tparam InternalSparsity
 is the internal type used to represent sparsity; i.e.,
-$code sparse::pack_setvec$$ or $code sparse::list_setvec$$.
+sparse_pack or sparse_list.
 
-$head atom_index$$
+\param atom_index [in]
 is the index, in local::atomic_index, corresponding to this atomic function.
 
-$head atom_old$$
+\param atom_old [in]
 is the extra id information for this atomic function in the atomic_one case.
 
-$head parameter_x$$
+\param parameter_x [in]
 value of the parameter arguments to the atomic function
 (other arguments have the value nan).
 
-$head type_x$$
+\param type_x [in]
 type for each component of x (not used by atomic_two interface).
 
-$head x_index$$
+\param x_index [in]
 is a mapping from the index of an atomic function argument
 to the corresponding variable on the tape.
-We use $icode m_x$$ to denote the maximum value w.r.t $icode i$$ of
-$icode%x_index%[%i%]%$$.
 
-$head y_index$$
+\param y_index [in]
 is a mapping from the index of an atomic function result
 to the corresponding variable on the tape.
-It should hold that $icode%m_i% < y_index%[%i%]%$$ for all $icode i$$.
 
-$head np1$$
-This is the number of independent variables plus one;
-i.e. size of $icode x$$ plus one.
+\param for_jac_sparsity
+For j = 0, ... , n-1, the sparsity pattern with index x_index[j],
+is the forward Jacobian sparsity for the j-th argument to this atomic function.
 
-$head numvar$$
-This is the total number of variables in the tape.
-
-$head rev_jac_sparsity$$
+\param rev_jac_sparsity
 For i = 0, ... , m-1, the sparsity pattern with index y_index[i],
 is the reverse Jacobian sparsity for the i-th result to this atomic function.
 This shows which components of the result affect the function we are
 computing the Hessian of.
 
-$head for_sparsity$$
-We have the conditions $icode%np1% = %for_sparsity%.end()%$$
-and $icode%for_sparsity%.n_set() = %np1% + %numvar%$$.
-
-$subhead Input Jacobian Sparsity$$
-For $icode%i%= 0, ..., %m_x%$$,
-the $icode%np1%+%i%$$ row of $icode for_sparsity$$ is the Jacobian sparsity
-for the $th i$$ variable. These values do not change.
-Note that $icode%i%=0%$$ corresponds to a parameter and
-the corresponding Jacobian sparsity is empty.
-
-$subhead Input Hessian Sparsity$$
-For $icode%i%=1, ..., %n%$$,
-the $th i$$ row of $icode for_sparsity$$ is the Hessian sparsity
-before including the function $latex y = f(x)$$.
-
-$subhead Output Jacobian Sparsity$$
-For $icode%i%=0, ..., %y_index%.size()%$$,
-row $icode%np1%+%y_index%[%i%]%$$
-of $icode for_sparsity$$ is the Jacobian sparsity
-for the variable with index $icode%y_index%[%i%]%$$.
-
-$subhead Output Hessian Sparsity$$
-For $icode%i%=1, ..., %n%$$,
-the $th i$$ row of $icode for_sparsity$$ is the Hessian sparsity
-after including the function $latex y = f(x)$$.
-
-$end
+\param for_hes_sparsity
+This is the sparsity pattern for the Hessian. On input, the non-linear
+terms in the atomic fuction have not been included. Upon return, they
+have been included.
 */
-// BEGIN_call_atomic_for_hes_sparsity
 template <class Base, class RecBase, class InternalSparsity>
 void call_atomic_for_hes_sparsity(
     size_t                       atom_index        ,
@@ -576,15 +515,10 @@ void call_atomic_for_hes_sparsity(
     const vector<ad_type_enum>&  type_x            ,
     const pod_vector<size_t>&    x_index           ,
     const pod_vector<size_t>&    y_index           ,
-    size_t                       np1               ,
-    size_t                       numvar            ,
+    const InternalSparsity&      for_jac_sparsity  ,
     const InternalSparsity&      rev_jac_sparsity  ,
-    InternalSparsity&            for_sparsity      )
-// END_call_atomic_for_hes_sparsity
+    InternalSparsity&            for_hes_sparsity  )
 {   CPPAD_ASSERT_UNKNOWN( 0 < atom_index );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.end() == np1 );
-    CPPAD_ASSERT_UNKNOWN( for_sparsity.n_set() == np1 + numvar );
-
     bool         set_null = false;
     size_t       type     = 0;          // set to avoid warning
     std::string* name_ptr = CPPAD_NULL;
@@ -602,10 +536,9 @@ void call_atomic_for_hes_sparsity(
                 parameter_x,
                 x_index,
                 y_index,
-                np1,
-                numvar,
+                for_jac_sparsity,
                 rev_jac_sparsity,
-                for_sparsity
+                for_hes_sparsity
             );
         }
         else
@@ -617,10 +550,9 @@ void call_atomic_for_hes_sparsity(
                 type_x,
                 x_index,
                 y_index,
-                np1,
-                numvar,
+                for_jac_sparsity,
                 rev_jac_sparsity,
-                for_sparsity
+                for_hes_sparsity
             );
         }
     }
@@ -646,10 +578,9 @@ void call_atomic_for_hes_sparsity(
             parameter_x,
             x_index,
             y_index,
-            np1,
-            numvar,
+            for_jac_sparsity,
             rev_jac_sparsity,
-            for_sparsity
+            for_hes_sparsity
         );
     }
     else
@@ -661,10 +592,9 @@ void call_atomic_for_hes_sparsity(
             type_x,
             x_index,
             y_index,
-            np1,
-            numvar,
+            for_jac_sparsity,
             rev_jac_sparsity,
-            for_sparsity
+            for_hes_sparsity
         );
     }
 # endif
@@ -679,7 +609,7 @@ and to this atomic function.
 
 \tparam InternalSparsity
 is the internal type used to represent sparsity; i.e.,
-sparse::pack_setvec or sparse::list_setvec.
+sparse_pack or sparse_list.
 
 \param atom_index [in]
 is the index, in local::atomic_index, corresponding to this atomic function.

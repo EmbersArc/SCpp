@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_GET_DYN_PREVIOUS_HPP
 # define CPPAD_LOCAL_OPTIMIZE_GET_DYN_PREVIOUS_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -180,7 +180,7 @@ void get_dyn_previous(
     // ----------------------------------------------------------------------
     // compute dyn_previous
     // ----------------------------------------------------------------------
-    sparse::list_setvec  hash_table_dyn;
+    sparse_list  hash_table_dyn;
     hash_table_dyn.resize(CPPAD_HASH_TABLE_SIZE, num_dynamic_par);
     //
     // Initialize in dyn_par_arg
@@ -245,7 +245,6 @@ void get_dyn_previous(
             case cos_dyn:
             case cosh_dyn:
             case erf_dyn:
-            case erfc_dyn:
             case exp_dyn:
             case expm1_dyn:
             case fabs_dyn:
@@ -277,7 +276,7 @@ void get_dyn_previous(
                 );
                 //
                 // iterator for the set with this hash code
-                sparse::list_setvec_const_iterator itr(hash_table_dyn, code);
+                sparse_list_const_iterator itr(hash_table_dyn, code);
                 //
                 // check for a match
                 count = 0;
@@ -308,9 +307,7 @@ void get_dyn_previous(
                     {   // restart list for this hash code
                         hash_table_dyn.clear(code);
                     }
-                    // Add this entry to hash table.
-                    // Not using post_element becasue we need to iterate for
-                    // this code before adding another element for this code.
+                    // add the entry to hash table
                     hash_table_dyn.add_element(code, i_dyn);
                 }
             }
@@ -345,7 +342,7 @@ void get_dyn_previous(
                 );
                 //
                 // iterator for the set with this hash code
-                sparse::list_setvec_const_iterator itr(hash_table_dyn, code);
+                sparse_list_const_iterator itr(hash_table_dyn, code);
                 //
                 // check for a match
                 count = 0;
@@ -380,7 +377,7 @@ void get_dyn_previous(
                 );
                 //
                 // iterator for the set with this hash code
-                sparse::list_setvec_const_iterator itr(hash_table_dyn, code_swp);
+                sparse_list_const_iterator itr(hash_table_dyn, code_swp);
                 //
                 // check for a match
                 while( ! match && *itr != num_dynamic_par )
@@ -410,9 +407,7 @@ void get_dyn_previous(
                 {   // restart list for this hash code
                     hash_table_dyn.clear(code);
                 }
-                // Add the entry to hash table
-                // Not using post_element becasue we need to iterate for
-                // this code before adding another element for this code.
+                // add the entry to hash table
                 hash_table_dyn.add_element(code, i_dyn);
             }
 

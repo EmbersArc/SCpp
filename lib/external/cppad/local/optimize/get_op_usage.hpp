@@ -1,7 +1,7 @@
 # ifndef CPPAD_LOCAL_OPTIMIZE_GET_OP_USAGE_HPP
 # define CPPAD_LOCAL_OPTIMIZE_GET_OP_USAGE_HPP
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-19 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-18 Bradley M. Bell
 
 CppAD is distributed under the terms of the
              Eclipse Public License Version 2.0.
@@ -57,11 +57,9 @@ do not need to call op_add_or_sub for result).
 
 \param i_result
 is the operator index for the result operator.
-There are no posting waiting to be processed for the corresponding cexp_set.
 
 \param i_arg
 is the operator index for the argument to the result operator.
-There may be postings waiting to be processed for the corresponding cexp_set.
 
 \param op_usage
 structure that holds the information for each of the operators.
@@ -96,7 +94,7 @@ void op_inc_arg_usage(
     size_t                      i_result       ,
     size_t                      i_arg          ,
     pod_vector<usage_t>&        op_usage       ,
-    sparse::list_setvec&        cexp_set       )
+    sparse_list&                cexp_set       )
 {   // value of argument input on input to this routine
     enum_usage arg_usage = enum_usage( op_usage[i_arg] );
     //
@@ -117,13 +115,10 @@ void op_inc_arg_usage(
     //
     if( arg_usage == no_usage )
     {   // set[i_arg] = set[i_result]
-        // not necessary to process posts for set i_result
         cexp_set.assignment(i_arg, i_result, cexp_set);
     }
     else
     {   // set[i_arg] = set[i_arg] intersect set[i_result]
-        // is necessary to process postts for set i_arg
-        cexp_set.process_post(i_arg);
         cexp_set.binary_intersection(i_arg, i_arg, i_result, cexp_set);
     }
     //
@@ -211,7 +206,7 @@ void get_op_usage(
     const play::const_random_iterator<Addr>&    random_itr          ,
     const pod_vector<size_t>&                   dep_taddr           ,
     pod_vector<addr_t>&                         cexp2op             ,
-    sparse::list_setvec&                        cexp_set            ,
+    sparse_list&                                cexp_set            ,
     pod_vector<bool>&                           vecad_used          ,
     pod_vector<usage_t>&                        op_usage            )
 {
@@ -320,10 +315,6 @@ void get_op_usage(
     i_op = num_op;
     while(i_op != 0 )
     {   --i_op;
-        if( num_set > 0 )
-        {   // no more elements will be added to this set
-            cexp_set.process_post(i_op);
-        }
         //
         // this operator information
         random_itr.op_info(i_op, op, arg, i_var);
@@ -354,7 +345,6 @@ void get_op_usage(
             case CoshOp:
             case DivvpOp:
             case ErfOp:
-            case ErfcOp:
             case ExpOp:
             case Expm1Op:
             case LogOp:
@@ -457,7 +447,7 @@ void get_op_usage(
                         // comparison result is true. It can be skipped when
                         // the comparison is false (0).
                         size_t element = 2 * cexp_index + 0;
-                        cexp_set.post_element(j_op, element);
+                        cexp_set.add_element(j_op, element);
                         //
                         op_usage[j_op] = usage_t(yes_usage);
                     }
@@ -476,7 +466,7 @@ void get_op_usage(
                         // comparison result is false. It can be skipped when
                         // the comparison is true (0).
                         size_t element = 2 * cexp_index + 1;
-                        cexp_set.post_element(j_op, element);
+                        cexp_set.add_element(j_op, element);
                         //
                         op_usage[j_op] = usage_t(yes_usage);
                     }
@@ -656,10 +646,8 @@ void get_op_usage(
                 );
 # ifndef NDEBUG
                 if( cexp_set.n_set() > 0 )
-                {   cexp_set.process_post(last_atom_i_op);
-                    CPPAD_ASSERT_UNKNOWN(
-                        cexp_set.number_elements(last_atom_i_op) == 0
-                    );
+                {   sparse_list_const_iterator itr(cexp_set, last_atom_i_op);
+                    CPPAD_ASSERT_UNKNOWN( *itr == cexp_set.end() );
                 }
 # endif
                 //
@@ -707,9 +695,7 @@ void get_op_usage(
                 }
                 // copy set infomation from last to first
                 if( cexp_set.n_set() > 0 )
-                {   cexp_set.process_post(last_atom_i_op);
                     cexp_set.assignment(i_op, last_atom_i_op, cexp_set);
-                }
                 // copy usage information from last to first
                 op_usage[i_op] = op_usage[last_atom_i_op];
             }
