@@ -5,7 +5,6 @@
 namespace scpp
 {
 op::SecondOrderConeProgram buildMPCProblem(
-    Model::ptr_t model,
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
     Model::state_vector_t &x_init,

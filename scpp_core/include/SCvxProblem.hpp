@@ -6,7 +6,6 @@ namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCvxProblem(
-    Model::ptr_t model,
     double &trust_region,
     double &weight_virtual_control,
     Model::state_vector_v_t &X,

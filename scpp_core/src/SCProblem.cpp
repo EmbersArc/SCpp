@@ -5,7 +5,6 @@ namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCProblem(
-    Model::ptr_t model,
     double &weight_time,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
@@ -195,7 +194,6 @@ op::SecondOrderConeProgram buildSCProblem(
         socp.addMinimizationTerm(param(weight_trust_region_trajectory) * var("norm2_Delta"));
     }
 
-    model->addApplicationConstraints(socp, X, U);
     return socp;
 }
 

@@ -68,10 +68,9 @@ void SCAlgorithm::initialize()
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
-    socp = buildSCProblem(model,
-                          weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
+    socp = buildSCProblem(weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
                           X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
-
+    model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);

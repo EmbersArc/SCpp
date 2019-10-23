@@ -49,13 +49,12 @@ void MPCAlgorithm::initialize()
     scpp::discretization::exactLinearDiscretization(model, dt, x_eq, u_eq, A, B, z);
     print("{:<{}}{:.2f}ms\n", "[MPC] Time, discretization:", 50, toc(timer_discretize));
 
-    socp = buildMPCProblem(model,
-                           X, U,
+    socp = buildMPCProblem(X, U,
                            x_init, x_final,
                            state_weights_intermediate, state_weights_terminal, input_weights,
                            A, B, z,
                            constant_dynamics, intermediate_cost_active);
-
+    model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);

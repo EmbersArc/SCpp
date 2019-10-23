@@ -5,7 +5,6 @@ namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCvxProblem(
-    Model::ptr_t model,
     double &trust_region,
     double &weight_virtual_control,
     Model::state_vector_v_t &X,
@@ -112,7 +111,6 @@ op::SecondOrderConeProgram buildSCvxProblem(
         socp.addConstraint(op::norm2(norm2_args) <= param(trust_region));
     }
 
-    model->addApplicationConstraints(socp, X, U);
     return socp;
 }
 

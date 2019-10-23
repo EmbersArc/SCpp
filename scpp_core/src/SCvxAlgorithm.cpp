@@ -59,10 +59,9 @@ void SCvxAlgorithm::initialize()
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
-    socp = buildSCvxProblem(model,
-                            trust_region, weight_virtual_control,
+    socp = buildSCvxProblem(trust_region, weight_virtual_control,
                             X, U, A_bar, B_bar, C_bar, z_bar);
-
+    model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
