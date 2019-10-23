@@ -1,7 +1,7 @@
-free_final_time                     true
-interpolate_input                   true
+free_final_time                     false
+interpolate_input                   false
 
-K                                   20
+K                                   30
 
 nondimensionalize                   false
 

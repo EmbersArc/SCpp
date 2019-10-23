@@ -54,7 +54,7 @@ w_init
 }
 
 ; ----- final values -----
-final_time      8.
+final_time      10.
 ; position
 r_final
 {
@@ -85,8 +85,8 @@ w_final
 }
 
 ; for successive convexification
-constrain_initial_final     false
-add_slack_variables         true
+constrain_initial_final     true
+add_slack_variables         false
 
 ; thrust
 T_min       5.
