@@ -26,8 +26,8 @@ op::SecondOrderConeProgram buildSCOP(
     socp.createTensorVariable("X", {Model::state_dim, K});                         // states
     socp.createTensorVariable("U", {Model::input_dim, C_bar.empty() ? K - 1 : K}); // inputs
     socp.createTensorVariable("nu", {Model::state_dim, K - 1});                    // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1});              // virtual control
-    socp.createTensorVariable("norm1_nu");                                         // virtual control norm upper bound
+    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1});              // virtual control lower/upper bound
+    socp.createTensorVariable("norm1_nu");                                         // virtual control norm
 
     for (size_t k = 0; k < K - 1; k++)
     {
@@ -90,14 +90,14 @@ op::SecondOrderConeProgram buildSCOP(
                 bound_sum = bound_sum + (-1.0) * var("nu_bound", {i, k});
             }
         }
-        // sum(-nu_bound) <= norm1_nu
+        // sum(nu_bound) <= norm1_nu
         socp.addConstraint((1.0) * var("norm1_nu") + bound_sum >= (0.0));
 
         // Minimize the virtual control
         socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    for (size_t k = 0; k < K; k++)
+    for (size_t k = 0; k < U.size(); k++)
     {
         /**
          * Build input trust region:
@@ -106,13 +106,9 @@ op::SecondOrderConeProgram buildSCOP(
          */
 
         std::vector<op::AffineExpression> norm2_args;
-
-        if (not(C_bar.empty() and k == K - 1))
+        for (size_t i = 0; i < Model::input_dim; i++)
         {
-            for (size_t i = 0; i < Model::input_dim; i++)
-            {
-                norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
-            }
+            norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
         }
         socp.addConstraint(op::norm2(norm2_args) <= param(trust_region));
     }
