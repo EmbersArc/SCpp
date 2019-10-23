@@ -76,11 +76,11 @@ bool SCvxAlgorithm::iterate()
 
     if (interpolate_input)
     {
-        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
     }
     else
     {
-        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
+    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
@@ -100,8 +100,8 @@ bool SCvxAlgorithm::iterate()
         const double nonlinear_cost_constraints = 0.;
         const double linear_cost_constraints = 0.;
 
-        const double linear_cost = linear_cost_dynamics + linear_cost_constraints;          // J
-        const double nonlinear_cost = nonlinear_cost_dynamics + nonlinear_cost_constraints; // L
+        const double nonlinear_cost = nonlinear_cost_dynamics + nonlinear_cost_constraints; // J
+        const double linear_cost = linear_cost_dynamics + linear_cost_constraints;          // L
 
         if (not last_nonlinear_cost)
         {
@@ -303,7 +303,7 @@ double SCvxAlgorithm::getNonlinearCost()
     {
         Model::state_vector_t x = X.at(k);
         const Model::input_vector_t u0 = U.at(k);
-        const Model::input_vector_t u1 = interpolate_input ? U.at(k + 1) : U.at(k);
+        const Model::input_vector_t u1 = interpolate_input ? U.at(k + 1) : u0;
 
         simulate(model, sigma / (K - 1), u0, u1, x);
 
