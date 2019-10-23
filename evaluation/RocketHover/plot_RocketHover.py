@@ -10,6 +10,7 @@ figures_i = 0
 figures_N = 100
 FOLDER = ""
 
+
 def key_press_event(event):
     global figures_i
     fig = event.canvas.figure
@@ -32,6 +33,9 @@ def my_plot(fig):
     global figures_i
     X = np.loadtxt(f"{FOLDER}/{figures_i}/X.txt", delimiter=",")
     U = np.loadtxt(f"{FOLDER}/{figures_i}/U.txt", delimiter=",")
+
+    if U.shape[0] == X.shape[0] - 1:
+        U = np.vstack((U, U[-1, :]))
 
     K = X.shape[0]
 
@@ -80,9 +84,10 @@ def my_plot(fig):
     # fig.suptitle(f"Iteration {figures_i}", fontsize=14)
     plt.savefig(f"{figures_i}.png")
 
+
 def main():
     global figures_i, figures_N, FOLDER
-    model_folder = "output/RocketHover/MPC"
+    model_folder = "output/RocketHover/SC"
     folder_num = sorted(map(int, os.listdir(model_folder)))[-1]
     print(folder_num)
     FOLDER = f"{model_folder}/{folder_num}"
