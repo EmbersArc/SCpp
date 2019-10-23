@@ -2,8 +2,9 @@
 
 #include "activeModel.hpp"
 
-namespace sc
+namespace scpp
 {
+
 op::SecondOrderConeProgram buildSCvxProblem(
     Model::ptr_t model,
     double &trust_region,

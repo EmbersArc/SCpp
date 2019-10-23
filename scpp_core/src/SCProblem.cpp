@@ -1,7 +1,7 @@
 #include "optimizationProblem.hpp"
 #include "SCProblem.hpp"
 
-namespace sc
+namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCProblem(
@@ -167,7 +167,7 @@ op::SecondOrderConeProgram buildSCProblem(
         {
             norm2_args.push_back(param(X[k](i)) + (-1.0) * var("X", {i, k}));
         }
-        if (not (C_bar.empty() and k == K - 1))
+        if (not(C_bar.empty() and k == K - 1))
         {
             for (size_t i = 0; i < Model::input_dim; i++)
             {
@@ -199,4 +199,4 @@ op::SecondOrderConeProgram buildSCProblem(
     return socp;
 }
 
-} // namespace sc
+} // namespace scpp

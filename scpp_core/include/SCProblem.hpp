@@ -2,7 +2,7 @@
 
 #include "activeModel.hpp"
 
-namespace sc
+namespace scpp
 {
 op::SecondOrderConeProgram buildSCProblem(
     Model::ptr_t model,

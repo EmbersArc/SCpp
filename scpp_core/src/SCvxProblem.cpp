@@ -1,7 +1,7 @@
 #include "optimizationProblem.hpp"
 #include "SCvxProblem.hpp"
 
-namespace sc
+namespace scpp
 {
 
 op::SecondOrderConeProgram buildSCvxProblem(
@@ -116,4 +116,4 @@ op::SecondOrderConeProgram buildSCvxProblem(
     return socp;
 }
 
-} // namespace sc
+} // namespace scpp

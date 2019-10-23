@@ -59,9 +59,9 @@ void SCvxAlgorithm::initialize()
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
-    socp = sc::buildSCvxProblem(model,
-                                trust_region, weight_virtual_control,
-                                X, U, A_bar, B_bar, C_bar, z_bar);
+    socp = buildSCvxProblem(model,
+                            trust_region, weight_virtual_control,
+                            X, U, A_bar, B_bar, C_bar, z_bar);
 
     cacheIndices();
 
