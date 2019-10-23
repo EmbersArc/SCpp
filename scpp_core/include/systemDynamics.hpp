@@ -90,6 +90,8 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
         return;
     }
 
+    CppAD::thread_alloc::hold_memory(true);
+
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
     dynamic_vector_ad_t param(PARAM_DIM);
     x.setOnes();
