@@ -59,9 +59,9 @@ void SCvxAlgorithm::initialize()
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
-    socp = sc::buildSCOP(model,
-                         trust_region, weight_virtual_control,
-                         X, U, A_bar, B_bar, C_bar, z_bar);
+    socp = sc::buildSCvxProblem(model,
+                                trust_region, weight_virtual_control,
+                                X, U, A_bar, B_bar, C_bar, z_bar);
 
     cacheIndices();
 
@@ -177,7 +177,7 @@ bool SCvxAlgorithm::iterate()
 void SCvxAlgorithm::solve(bool warm_start)
 {
     const double timer_total = tic();
-    
+
     print("Solving model {}\n", Model::getModelName());
 
     if (nondimensionalize)

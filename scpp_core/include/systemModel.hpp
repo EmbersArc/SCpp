@@ -7,6 +7,9 @@
 #include "optimizationProblem.hpp"
 #include "systemDynamics.hpp"
 
+namespace scpp
+{
+
 template <typename DERIVED, size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
@@ -161,3 +164,5 @@ public:
 private:
     std::string param_folder_path = "../scpp_models/config/";
 };
+
+} // namespace scpp

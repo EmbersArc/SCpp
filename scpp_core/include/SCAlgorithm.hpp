@@ -1,3 +1,5 @@
+#pragma once
+
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"

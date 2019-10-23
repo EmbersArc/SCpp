@@ -1,3 +1,5 @@
+#pragma once
+
 #include "LQR.hpp"
 #include "parameterServer.hpp"
 

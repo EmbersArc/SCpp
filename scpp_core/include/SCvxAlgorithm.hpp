@@ -1,3 +1,5 @@
+#pragma once
+
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
@@ -49,8 +51,6 @@ public:
                          std::vector<Model::input_vector_v_t> &U,
                          std::vector<double> &t);
 
-    double getNonlinearCost();
-
 private:
     /**
      * @brief Saves solution indices for performance.
@@ -75,6 +75,13 @@ private:
      * 
      */
     bool iterate();
+
+    /**
+     * @brief Get the nonlinear cost by integrating the dynamics
+     * 
+     * @return double 
+     */
+    double getNonlinearCost();
 
     size_t K;
 

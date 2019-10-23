@@ -1,4 +1,9 @@
+#pragma once
+
 #include <cppad/cppad.hpp>
+
+namespace scpp
+{
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemDynamics
@@ -149,3 +154,5 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
     A = J.template leftCols<STATE_DIM>();
     B = J.template rightCols<INPUT_DIM>();
 }
+
+} // namespace scpp

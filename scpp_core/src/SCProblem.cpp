@@ -1,9 +1,10 @@
+#include "optimizationProblem.hpp"
 #include "SCProblem.hpp"
 
 namespace sc
 {
 
-op::SecondOrderConeProgram buildSCOP(
+op::SecondOrderConeProgram buildSCProblem(
     Model::ptr_t model,
     double &weight_time,
     double &weight_trust_region_time,

@@ -68,9 +68,9 @@ void SCAlgorithm::initialize()
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
-    socp = sc::buildSCOP(model,
-                         weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                         X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
+    socp = sc::buildSCProblem(model,
+                              weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
+                              X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
 
     cacheIndices();
 

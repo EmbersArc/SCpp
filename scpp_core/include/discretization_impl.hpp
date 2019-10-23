@@ -1,4 +1,5 @@
 #pragma once
+
 #include <boost/numeric/odeint.hpp>
 
 #include "eigenIntegration.hpp"

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "MPCProblem.hpp"
 #include "activeModel.hpp"
 #include "discretization.hpp"

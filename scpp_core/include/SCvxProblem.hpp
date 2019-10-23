@@ -1,11 +1,10 @@
 #pragma once
 
-#include "optimizationProblem.hpp"
 #include "activeModel.hpp"
 
 namespace sc
 {
-op::SecondOrderConeProgram buildSCOP(
+op::SecondOrderConeProgram buildSCvxProblem(
     Model::ptr_t model,
     double &trust_region,
     double &weight_virtual_control,

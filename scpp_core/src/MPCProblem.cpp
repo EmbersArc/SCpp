@@ -1,9 +1,10 @@
+#include "optimizationProblem.hpp"
 #include "MPCProblem.hpp"
 
 namespace scpp
 {
 
-op::SecondOrderConeProgram buildSCOP(
+op::SecondOrderConeProgram buildMPCProblem(
     Model::ptr_t model,
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
