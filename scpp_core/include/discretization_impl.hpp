@@ -151,7 +151,7 @@ void doMultipleShooting(
     }
 
     using namespace boost::numeric::odeint;
-    runge_kutta4<ode_matrix_t, double, ode_matrix_t, double, vector_space_algebra> stepper;
+    runge_kutta_fehlberg78<ode_matrix_t, double, ode_matrix_t, double, vector_space_algebra> stepper;
 
     for (size_t k = 0; k < K - 1; k++)
     {

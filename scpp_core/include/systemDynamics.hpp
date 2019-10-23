@@ -139,7 +139,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
                                                                        control_matrix_t &B)
 {
     assert(initialized);
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
     input << x, u;
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
     dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
