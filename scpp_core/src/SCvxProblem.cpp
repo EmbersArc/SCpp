@@ -14,8 +14,6 @@ op::SecondOrderConeProgram buildSCOP(
     Model::control_matrix_v_t &C_bar,
     Model::state_vector_v_t &z_bar)
 {
-    const size_t K = X.size();
-
     op::SecondOrderConeProgram socp;
 
     // shortcuts to access solver variables and create parameters
@@ -23,13 +21,13 @@ op::SecondOrderConeProgram buildSCOP(
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
-    socp.createTensorVariable("X", {Model::state_dim, K});                         // states
-    socp.createTensorVariable("U", {Model::input_dim, C_bar.empty() ? K - 1 : K}); // inputs
-    socp.createTensorVariable("nu", {Model::state_dim, K - 1});                    // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, K - 1});              // virtual control lower/upper bound
-    socp.createTensorVariable("norm1_nu");                                         // virtual control norm
+    socp.createTensorVariable("X", {Model::state_dim, X.size()});            // states
+    socp.createTensorVariable("U", {Model::input_dim, U.size()});            // inputs
+    socp.createTensorVariable("nu", {Model::state_dim, X.size() - 1});       // virtual control
+    socp.createTensorVariable("nu_bound", {Model::state_dim, X.size() - 1}); // virtual control lower/upper bound
+    socp.createTensorVariable("norm1_nu");                                   // virtual control norm
 
-    for (size_t k = 0; k < K - 1; k++)
+    for (size_t k = 0; k < X.size() - 1; k++)
     {
         /**
          * Build linearized model equality constraint
@@ -77,7 +75,7 @@ op::SecondOrderConeProgram buildSCOP(
      */
     {
         op::AffineExpression bound_sum;
-        for (size_t k = 0; k < K - 1; k++)
+        for (size_t k = 0; k < X.size() - 1; k++)
         {
             for (size_t i = 0; i < Model::state_dim; i++)
             {

@@ -156,9 +156,9 @@ void doMultipleShooting(
     for (size_t k = 0; k < K - 1; k++)
     {
         ode_matrix_t V;
-        V.template setZero();
         V.col(0) = X.at(k);
         V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
+        V.template rightCols<ode_matrix_t::ColsAtCompileTime - 1 - Model::state_dim>().setZero();
 
         ODEFun odeMultipleShooting(U[k], U[k + 1], time, dt, model);
 

@@ -76,11 +76,11 @@ bool SCvxAlgorithm::iterate()
 
     if (interpolate_input)
     {
-    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
+        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
     }
     else
     {
-    discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
+        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
     }
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
@@ -89,14 +89,29 @@ bool SCvxAlgorithm::iterate()
 
     while (true)
     {
+        // solve problem
         timer = tic();
+
+        const Model::state_vector_v_t old_X = X;
+        const Model::input_vector_v_t old_U = U;
+
         solver->solveProblem(false);
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
         readSolution();
 
+        // check feasibility
+        timer = tic();
+        if (!socp.feasibilityCheck(solver->getSolutionVector()))
+        {
+            throw std::runtime_error("Solver produced an invalid solution.\n");
+        }
+        print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
+
+        // compare linear and nonlinear costs
         const double nonlinear_cost_dynamics = getNonlinearCost();
         const double linear_cost_dynamics = solver->getSolutionValue("norm1_nu", {});
 
+        // TODO: Consider linearized model constraints
         const double nonlinear_cost_constraints = 0.;
         const double linear_cost_constraints = 0.;
 
@@ -117,49 +132,36 @@ bool SCvxAlgorithm::iterate()
         print("{:<{}}{:.5f}\n", "Actual change:", 50, actual_change);
         print("{:<{}}{:.5f}\n", "Predicted change:", 50, predicted_change);
 
-        old_X = X;
-        old_U = U;
-
-        // check feasibility
-        timer = tic();
-        if (!socp.feasibilityCheck(solver->getSolutionVector()))
-        {
-            throw std::runtime_error("Solver produced an invalid solution.\n");
-        }
-        print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
-
         if (std::abs(predicted_change) < change_threshold)
         {
             converged = true;
             break;
         }
+
+        const double rho = actual_change / predicted_change;
+        if (rho < rho_0)
+        {
+            trust_region /= alpha;
+            print("Trust region too large. Solving again with radius={}\n", trust_region);
+            print("--------------------------------------------------\n");
+            X = old_X;
+            U = old_U;
+        }
         else
         {
-            const double rho = actual_change / predicted_change;
-            if (rho < rho_0)
-            {
-                trust_region /= alpha;
-                print("Trust region too large. Solving again with radius={}\n", trust_region);
-                print("--------------------------------------------------\n");
-                X = old_X;
-                U = old_U;
-            }
-            else
-            {
-                print("Solution accepted.\n");
+            print("Solution accepted.\n");
 
-                if (rho < rho_1)
-                {
-                    print("Decreasing radius.\n");
-                    trust_region /= alpha;
-                }
-                else if (rho >= rho_2)
-                {
-                    print("Increasing radius.\n");
-                    trust_region *= beta;
-                }
-                break;
+            if (rho < rho_1)
+            {
+                print("Decreasing radius.\n");
+                trust_region /= alpha;
             }
+            else if (rho >= rho_2)
+            {
+                print("Increasing radius.\n");
+                trust_region *= beta;
+            }
+            break;
         }
     }
 
@@ -174,6 +176,8 @@ bool SCvxAlgorithm::iterate()
 
 void SCvxAlgorithm::solve(bool warm_start)
 {
+    const double timer_total = tic();
+    
     print("Solving model {}\n", Model::getModelName());
 
     if (nondimensionalize)
@@ -191,8 +195,6 @@ void SCvxAlgorithm::solve(bool warm_start)
     }
 
     model->updateModelParameters();
-
-    const double timer_total = tic();
 
     size_t iteration = 0;
 
@@ -307,8 +309,10 @@ double SCvxAlgorithm::getNonlinearCost()
 
         simulate(model, sigma / (K - 1), u0, u1, x);
 
-        nonlinear_cost_dynamics += (x - X.at(k + 1)).cwiseAbs().sum();
+        const double virtual_control_cost = (x - X.at(k + 1)).lpNorm<1>();
+        nonlinear_cost_dynamics += virtual_control_cost;
     }
+
     return nonlinear_cost_dynamics;
 }
 

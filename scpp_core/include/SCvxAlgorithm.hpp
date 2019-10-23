@@ -107,9 +107,6 @@ private:
     std::vector<Model::state_vector_v_t> all_X;
     std::vector<Model::input_vector_v_t> all_U;
 
-    Model::state_vector_v_t old_X;
-    Model::input_vector_v_t old_U;
-
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;
 
