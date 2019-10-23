@@ -1,5 +1,4 @@
 #pragma once
-
 #include <boost/numeric/odeint.hpp>
 
 #include "eigenIntegration.hpp"
@@ -22,7 +21,7 @@ class ODE
 {
 private:
     Model::input_vector_t u_t0, u_t1;
-    double T;
+    double time;
     double dt;
     Model::ptr_t model;
 
@@ -34,12 +33,10 @@ public:
 
     ODE(const Model::input_vector_t &u_t0,
         const Model::input_vector_t &u_t1,
-        const double &T,
+        const double &time,
         double dt,
         Model::ptr_t model)
-        : u_t0(u_t0), u_t1(u_t1), T(T), dt(dt), model(model)
-    {
-    }
+        : u_t0(u_t0), u_t1(u_t1), time(time), dt(dt), model(model) {}
 
     void operator()(const ode_matrix_t &V, ode_matrix_t &dVdt, const double t);
 };
@@ -67,8 +64,8 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
 
     if constexpr (TIME_TYPE == TimeType::variable)
     {
-        A_bar *= T;
-        B_bar *= T;
+        A_bar *= time;
+        B_bar *= time;
     }
 
     const Model::state_matrix_t Phi_A_xi = V.template block<Model::state_dim, Model::state_dim>(0, 1);
@@ -83,7 +80,7 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
     }
     else
     {
-        dVdt.template block<Model::state_dim, 1>(0, cols) = T * f;
+        dVdt.template block<Model::state_dim, 1>(0, cols) = time * f;
     }
     cols += 1;
 
@@ -132,7 +129,7 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
 template <InputType INPUT_TYPE, TimeType TIME_TYPE>
 void doMultipleShooting(
     Model::ptr_t model,
-    double T,
+    double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
     Model::state_matrix_v_t &A_bar,
@@ -150,7 +147,7 @@ void doMultipleShooting(
 
     if constexpr (TIME_TYPE == TimeType::fixed)
     {
-        dt *= T;
+        dt *= time;
     }
 
     using namespace boost::numeric::odeint;
@@ -163,7 +160,7 @@ void doMultipleShooting(
         V.col(0) = X.at(k);
         V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
 
-        ODEFun odeMultipleShooting(U[k], U[k + 1], T, dt, model);
+        ODEFun odeMultipleShooting(U[k], U[k + 1], time, dt, model);
 
         integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
 
