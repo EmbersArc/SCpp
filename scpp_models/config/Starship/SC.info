@@ -1,9 +1,9 @@
 free_final_time                     true
+interpolate_input                   true
 
 K                                   30
 
 nondimensionalize                   true
-interpolate_input                   true
 
 weight_time                         1.
 weight_trust_region_time            1e1
