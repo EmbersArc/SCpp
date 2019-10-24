@@ -141,6 +141,10 @@ void doMultipleShooting(
 {
     const size_t K = X.size();
 
+    assert(not std::isnan(time));
+    assert(std::none_of(X.begin(), X.end(), [](const auto &v) { return v.hasNaN(); }));
+    assert(std::none_of(U.begin(), U.end(), [](const auto &v) { return v.hasNaN(); }));
+
     using ODEFun = ODE<INPUT_TYPE, TIME_TYPE>;
     using ode_matrix_t = typename ODEFun::ode_matrix_t;
 
