@@ -161,7 +161,9 @@ void doMultipleShooting(
         V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
         V.template rightCols<ode_matrix_t::ColsAtCompileTime - 1 - Model::state_dim>().setZero();
 
-        ODEFun odeMultipleShooting(U[k], U[k + 1], time, dt, model);
+        const Model::input_vector_t u0 = U[k];
+        const Model::input_vector_t u1 = INPUT_TYPE == InputType::interpolated ? U[k + 1] : u0;
+        ODEFun odeMultipleShooting(u0, u1, time, dt, model);
 
         integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
 
