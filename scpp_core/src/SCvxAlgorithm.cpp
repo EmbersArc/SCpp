@@ -49,19 +49,13 @@ void SCvxAlgorithm::initialize()
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
-    A_bar.resize(K - 1);
-    B_bar.resize(K - 1);
-    if (interpolate_input)
-    {
-        C_bar.resize(K - 1);
-    }
-    z_bar.resize(K - 1);
+    dd.initialize(K, interpolate_input, false);
 
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
     socp = buildSCvxProblem(trust_region, weight_virtual_control,
-                            X, U, A_bar, B_bar, C_bar, z_bar);
+                            X, U, dd);
     model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
@@ -74,14 +68,7 @@ bool SCvxAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
 
-    if (interpolate_input)
-    {
-        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
-    }
-    else
-    {
-        discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
-    }
+    discretization::multipleShooting(model, sigma, X, U, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 

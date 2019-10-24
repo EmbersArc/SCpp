@@ -1,6 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
+#include "discretizationData.hpp"
 
 namespace scpp::discretization
 {
@@ -18,39 +19,6 @@ void multipleShooting(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    Model::state_matrix_v_t &A_bar,
-    Model::control_matrix_v_t &B_bar,
-    Model::state_vector_v_t &z_bar);
-
-void multipleShooting(
-    Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
-    Model::state_matrix_v_t &A_bar,
-    Model::control_matrix_v_t &B_bar,
-    Model::control_matrix_v_t &C_bar,
-    Model::state_vector_v_t &z_bar);
-
-void multipleShooting(
-    Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
-    Model::state_matrix_v_t &A_bar,
-    Model::control_matrix_v_t &B_bar,
-    Model::state_vector_v_t &S_bar,
-    Model::state_vector_v_t &z_bar);
-
-void multipleShooting(
-    Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
-    Model::state_matrix_v_t &A_bar,
-    Model::control_matrix_v_t &B_bar,
-    Model::control_matrix_v_t &C_bar,
-    Model::state_vector_v_t &S_bar,
-    Model::state_vector_v_t &z_bar);
+    DiscretizationData &dd);
 
 } // namespace scpp::discretization

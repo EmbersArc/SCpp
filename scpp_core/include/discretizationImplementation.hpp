@@ -58,15 +58,15 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
     }
 
     Model::state_vector_t f;
-    Model::state_matrix_t A_bar;
-    Model::control_matrix_t B_bar;
+    Model::state_matrix_t A;
+    Model::control_matrix_t B;
     model->computef(x, u, f);
-    model->computeJacobians(x, u, A_bar, B_bar);
+    model->computeJacobians(x, u, A, B);
 
     if constexpr (TIME_TYPE == TimeType::variable)
     {
-        A_bar *= time;
-        B_bar *= time;
+        A *= time;
+        B *= time;
     }
 
     const Model::state_matrix_t Phi_A_xi = V.template block<Model::state_dim, Model::state_dim>(0, 1);
@@ -85,42 +85,42 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
     }
     cols += 1;
 
-    // A_bar
-    dVdt.template block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A_bar * Phi_A_xi;
+    // A
+    dVdt.template block<Model::state_dim, Model::state_dim>(0, cols).noalias() = A * Phi_A_xi;
     cols += Model::state_dim;
 
     if constexpr (INPUT_TYPE == InputType::constant)
     {
-        // B_bar
-        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar;
+        // B
+        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B;
         cols += Model::input_dim;
     }
     else
     {
-        // B_bar
+        // B
         const double alpha = (dt - t) / dt;
-        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * alpha;
+        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B * alpha;
         cols += Model::input_dim;
 
-        // C_bar
+        // C
         const double beta = t / dt;
-        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B_bar * beta;
+        dVdt.template block<Model::state_dim, Model::input_dim>(0, cols).noalias() = Phi_A_xi_inverse * B * beta;
         cols += Model::input_dim;
     }
 
     if constexpr (TIME_TYPE == TimeType::fixed)
     {
-        // z_bar
-        dVdt.template block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (f - A_bar * x - B_bar * u);
+        // z
+        dVdt.template block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (f - A * x - B * u);
         cols += 1;
     }
     else
     {
-        // S_bar
+        // s
         dVdt.template block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * f;
         cols += 1;
-        // z_bar
-        dVdt.template block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (-A_bar * x - B_bar * u);
+        // z
+        dVdt.template block<Model::state_dim, 1>(0, cols).noalias() = Phi_A_xi_inverse * (-A * x - B * u);
         cols += 1;
     }
 
@@ -133,11 +133,7 @@ void doMultipleShooting(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    Model::state_matrix_v_t &A_bar,
-    Model::control_matrix_v_t &B_bar,
-    Model::control_matrix_v_t &C_bar,
-    Model::state_vector_v_t &S_bar,
-    Model::state_vector_v_t &z_bar)
+    DiscretizationData &dd)
 {
     const size_t K = X.size();
 
@@ -173,25 +169,25 @@ void doMultipleShooting(
 
         size_t cols = 1;
 
-        A_bar[k] = V.template block<Model::state_dim, Model::state_dim>(0, cols);
+        dd.A[k] = V.template block<Model::state_dim, Model::state_dim>(0, cols);
         cols += Model::state_dim;
 
-        B_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+        dd.B[k].noalias() = dd.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
         if constexpr (INPUT_TYPE == InputType::interpolated)
         {
-            C_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+            dd.C[k].noalias() = dd.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
             cols += Model::input_dim;
         }
 
         if constexpr (TIME_TYPE == TimeType::variable)
         {
-            S_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, 1>(0, cols);
+            dd.s[k].noalias() = dd.A[k] * V.template block<Model::state_dim, 1>(0, cols);
             cols += 1;
         }
 
-        z_bar[k].noalias() = A_bar[k] * V.template block<Model::state_dim, 1>(0, cols);
+        dd.z[k].noalias() = dd.A[k] * V.template block<Model::state_dim, 1>(0, cols);
         cols += 1;
 
         assert(cols == ode_matrix_t::ColsAtCompileTime);

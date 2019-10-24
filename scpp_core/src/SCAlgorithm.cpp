@@ -53,23 +53,13 @@ void SCAlgorithm::initialize()
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
-    A_bar.resize(K - 1);
-    B_bar.resize(K - 1);
-    if (interpolate_input)
-    {
-        C_bar.resize(K - 1);
-    }
-    if (free_final_time)
-    {
-        S_bar.resize(K - 1);
-    }
-    z_bar.resize(K - 1);
+    dd.initialize(K, interpolate_input, free_final_time);
 
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
     socp = buildSCProblem(weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                          X, U, sigma, A_bar, B_bar, C_bar, S_bar, z_bar);
+                          X, U, sigma, dd);
     model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
@@ -81,28 +71,7 @@ bool SCAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    if (free_final_time)
-    {
-        if (interpolate_input)
-        {
-            discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, S_bar, z_bar);
-        }
-        else
-        {
-            discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, S_bar, z_bar);
-        }
-    }
-    else
-    {
-        if (interpolate_input)
-        {
-            discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, C_bar, z_bar);
-        }
-        else
-        {
-            discretization::multipleShooting(model, sigma, X, U, A_bar, B_bar, z_bar);
-        }
-    }
+    discretization::multipleShooting(model, sigma, X, U, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
