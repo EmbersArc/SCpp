@@ -2,9 +2,8 @@
 
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
-#include "discretization.hpp"
 #include "parameterServer.hpp"
-
+#include "trajectoryData.hpp"
 namespace scpp
 {
 
@@ -101,7 +100,7 @@ private:
     size_t max_iterations;
     std::optional<double> last_nonlinear_cost;
 
-    discretization::Data dd;
+    TrajectoryData td;
 
     double sigma;
     Model::state_vector_v_t X;

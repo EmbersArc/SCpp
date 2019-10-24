@@ -9,7 +9,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
     double &weight_virtual_control,
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
-    discretization::Data &dd)
+    TrajectoryData &td)
 {
     op::SecondOrderConeProgram socp;
 
@@ -39,21 +39,21 @@ op::SecondOrderConeProgram buildSCvxProblem(
 
             // A * x(k)
             for (size_t j = 0; j < Model::state_dim; j++)
-                eq = eq + param(dd.A.at(k)(i, j)) * var("X", {j, k});
+                eq = eq + param(td.A.at(k)(i, j)) * var("X", {j, k});
 
             // B * u(k)
             for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + param(dd.B.at(k)(i, j)) * var("U", {j, k});
+                eq = eq + param(td.B.at(k)(i, j)) * var("U", {j, k});
 
-            if (dd.interpolatedInput())
+            if (td.interpolatedInput())
             {
                 // C * u(k+1)
                 for (size_t j = 0; j < Model::input_dim; j++)
-                    eq = eq + param(dd.C.at(k)(i, j)) * var("U", {j, k + 1});
+                    eq = eq + param(td.C.at(k)(i, j)) * var("U", {j, k + 1});
             }
 
             // z
-            eq = eq + param(dd.z.at(k)(i, 0));
+            eq = eq + param(td.z.at(k)(i, 0));
 
             // nu
             eq = eq + (1.0) * var("nu", {i, k});

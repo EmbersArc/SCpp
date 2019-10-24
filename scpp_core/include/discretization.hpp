@@ -1,24 +1,10 @@
 #pragma once
 
 #include "activeModel.hpp"
+#include "trajectoryData.hpp"
 
 namespace scpp::discretization
 {
-
-struct Data
-{
-    Model::state_matrix_v_t A;
-    Model::control_matrix_v_t B;
-    Model::control_matrix_v_t C;
-    Model::state_vector_v_t s;
-    Model::state_vector_v_t z;
-
-    void initialize(size_t K, bool interpolate_input, bool free_final_time);
-
-    bool interpolatedInput() const;
-
-    bool variableTime() const;
-};
 
 void exactLinearDiscretization(Model::ptr_t model,
                                double ts,
@@ -33,6 +19,6 @@ void multipleShooting(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    Data &dd);
+    TrajectoryData &td);
 
 } // namespace scpp::discretization

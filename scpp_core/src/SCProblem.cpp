@@ -12,7 +12,7 @@ op::SecondOrderConeProgram buildSCProblem(
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
     double &sigma,
-    discretization::Data &dd)
+    TrajectoryData &td)
 {
     const size_t K = X.size();
 
@@ -30,7 +30,7 @@ op::SecondOrderConeProgram buildSCProblem(
     socp.createTensorVariable("norm1_nu");                                   // virtual control norm upper bound
     socp.createTensorVariable("Delta", {K});                                 // squared change of the stacked [ x(k), u(k) ] vector
     socp.createTensorVariable("norm2_Delta");                                // 2-norm of the Delta(k) variables
-    if (dd.variableTime())
+    if (td.variableTime())
     {
         socp.createTensorVariable("sigma");       // total time
         socp.createTensorVariable("Delta_sigma"); // squared change of sigma
@@ -55,27 +55,27 @@ op::SecondOrderConeProgram buildSCProblem(
 
             // A * x(k)
             for (size_t j = 0; j < Model::state_dim; j++)
-                eq = eq + param(dd.A.at(k)(i, j)) * var("X", {j, k});
+                eq = eq + param(td.A.at(k)(i, j)) * var("X", {j, k});
 
             // B * u(k)
             for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + param(dd.B.at(k)(i, j)) * var("U", {j, k});
+                eq = eq + param(td.B.at(k)(i, j)) * var("U", {j, k});
 
-            if (dd.interpolatedInput())
+            if (td.interpolatedInput())
             {
                 // C * u(k+1)
                 for (size_t j = 0; j < Model::input_dim; j++)
-                    eq = eq + param(dd.C.at(k)(i, j)) * var("U", {j, k + 1});
+                    eq = eq + param(td.C.at(k)(i, j)) * var("U", {j, k + 1});
             }
 
-            if (dd.variableTime())
+            if (td.variableTime())
             {
                 // Sigma sigma
-                eq = eq + param(dd.s.at(k)(i, 0)) * var("sigma");
+                eq = eq + param(td.s.at(k)(i, 0)) * var("sigma");
             }
 
             // z
-            eq = eq + param(dd.z.at(k)(i, 0));
+            eq = eq + param(td.z.at(k)(i, 0));
 
             // nu
             eq = eq + (1.0) * var("nu", {i, k});
@@ -114,7 +114,7 @@ op::SecondOrderConeProgram buildSCProblem(
         socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    if (dd.variableTime())
+    if (td.variableTime())
     {
         /**
         *  Build sigma trust region
@@ -162,7 +162,7 @@ op::SecondOrderConeProgram buildSCProblem(
         {
             norm2_args.push_back(param(X[k](i)) + (-1.0) * var("X", {i, k}));
         }
-        if (not(dd.interpolatedInput() and k == K - 1))
+        if (not(td.interpolatedInput() and k == K - 1))
         {
             for (size_t i = 0; i < Model::input_dim; i++)
             {

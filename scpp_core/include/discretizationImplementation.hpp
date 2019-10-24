@@ -6,7 +6,7 @@
 #include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
 #include "activeModel.hpp"
-#include "discretization.hpp"
+#include "trajectoryData.hpp"
 
 namespace scpp::discretization
 {
@@ -139,7 +139,7 @@ void multipleShootingImplementation(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    Data &dd)
+    TrajectoryData &td)
 {
     const size_t K = X.size();
 
@@ -175,25 +175,25 @@ void multipleShootingImplementation(
 
         size_t cols = 1;
 
-        dd.A[k] = V.template block<Model::state_dim, Model::state_dim>(0, cols);
+        td.A[k] = V.template block<Model::state_dim, Model::state_dim>(0, cols);
         cols += Model::state_dim;
 
-        dd.B[k].noalias() = dd.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+        td.B[k].noalias() = td.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
         cols += Model::input_dim;
 
         if constexpr (INPUT_TYPE == InputType::interpolated)
         {
-            dd.C[k].noalias() = dd.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
+            td.C[k].noalias() = td.A[k] * V.template block<Model::state_dim, Model::input_dim>(0, cols);
             cols += Model::input_dim;
         }
 
         if constexpr (TIME_TYPE == TimeType::variable)
         {
-            dd.s[k].noalias() = dd.A[k] * V.template block<Model::state_dim, 1>(0, cols);
+            td.s[k].noalias() = td.A[k] * V.template block<Model::state_dim, 1>(0, cols);
             cols += 1;
         }
 
-        dd.z[k].noalias() = dd.A[k] * V.template block<Model::state_dim, 1>(0, cols);
+        td.z[k].noalias() = td.A[k] * V.template block<Model::state_dim, 1>(0, cols);
         cols += 1;
 
         assert(cols == ode_matrix_t::ColsAtCompileTime);

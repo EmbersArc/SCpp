@@ -1,6 +1,7 @@
 #include "MPCAlgorithm.hpp"
 #include "MPCProblem.hpp"
 #include "timing.hpp"
+#include "discretization.hpp"
 
 using fmt::print;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "discretization.hpp"
 #include "ecosWrapper.hpp"
 #include "parameterServer.hpp"
 

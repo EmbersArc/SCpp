@@ -2,7 +2,6 @@
 
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
-#include "discretization.hpp"
 #include "SCProblem.hpp"
 #include "parameterServer.hpp"
 
@@ -96,7 +95,7 @@ private:
     double delta_tol;
     size_t max_iterations;
 
-    discretization::Data dd;
+    TrajectoryData td;
 
     double sigma;
     Model::state_vector_v_t X;
