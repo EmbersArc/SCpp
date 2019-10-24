@@ -1,4 +1,5 @@
 #include "SCvxAlgorithm.hpp"
+#include "SCvxProblem.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
 

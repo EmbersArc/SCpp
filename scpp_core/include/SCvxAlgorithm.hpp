@@ -3,7 +3,6 @@
 #include "activeModel.hpp"
 #include "ecosWrapper.hpp"
 #include "discretization.hpp"
-#include "SCvxProblem.hpp"
 #include "parameterServer.hpp"
 
 namespace scpp

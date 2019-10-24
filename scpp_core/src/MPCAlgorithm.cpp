@@ -1,4 +1,5 @@
 #include "MPCAlgorithm.hpp"
+#include "MPCProblem.hpp"
 #include "timing.hpp"
 
 using fmt::print;
