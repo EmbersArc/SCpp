@@ -11,13 +11,13 @@ namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
 
-Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double t, double total_time)
+Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double t, double total_time, bool constant)
 {
     const size_t K = U.size();
     const double time_step = total_time / (K - 1);
     const size_t i = std::min(size_t(t / time_step), K - 2);
     const Model::input_vector_t u0 = U.at(i);
-    const Model::input_vector_t u1 = U.at(i + 1);
+    const Model::input_vector_t u1 = constant ? U.at(i + 1) : u0;
 
     const double t_intermediate = std::fmod(t, time_step) / time_step;
     const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
@@ -28,7 +28,7 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
 /**
  * @brief Simulates a trajectory with the SC controller.
  * 
- * (Kind of broken right now)
+ *
  */
 int main()
 {
@@ -44,10 +44,10 @@ int main()
 
     Model::state_vector_v_t X;
     Model::input_vector_v_t U;
+    double t;
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
 
-    double t;
     Model::state_vector_t &x = model->p.x_init;
 
     double timer_run = tic();
@@ -62,7 +62,7 @@ int main()
         const size_t K = X.size();
 
         const Model::input_vector_t u0 = U.at(0);
-        const Model::input_vector_t u1 = interpolatedInput(U, time_step, t);
+        const Model::input_vector_t u1 = interpolatedInput(U, time_step, t, false);
 
         scpp::simulate(model, t / (K - 1), u0, u1, x);
 
@@ -72,11 +72,11 @@ int main()
         sim_step++;
         // if (sim_step == max_steps)
         // {
-            // X_sim = reduce_vector(X_sim, X_sim.size() / 10);
-            // U_sim = reduce_vector(U_sim, U_sim.size() / 10);
-            // add the planned trajectory
-            // X_sim.insert(X_sim.end(), X.begin(), X.end());
-            // U_sim.insert(U_sim.end(), U.begin(), U.end());
+        //     X_sim = reduce_vector(X_sim, X_sim.size() / 10);
+        //     U_sim = reduce_vector(U_sim, U_sim.size() / 10);
+        //     // add the planned trajectory
+        //     X_sim.insert(X_sim.end(), X.begin(), X.end());
+        //     U_sim.insert(U_sim.end(), U.begin(), U.end());
         // }
     }
 
@@ -114,7 +114,7 @@ int main()
     }
     {
         std::ofstream f(outputPath / "t.txt");
-        f << t / (X.size() - 1) * sim_step;
+        f << sim_step * time_step;
     }
     print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
 }
