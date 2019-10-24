@@ -5,6 +5,12 @@
 #include "eigenIntegration.hpp"
 #include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
 
+#include "activeModel.hpp"
+#include "discretization.hpp"
+
+namespace scpp::discretization
+{
+
 enum InputType : size_t
 {
     constant = 0,
@@ -128,12 +134,12 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
 }
 
 template <InputType INPUT_TYPE, TimeType TIME_TYPE>
-void doMultipleShooting(
+void multipleShootingImplementation(
     Model::ptr_t model,
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    DiscretizationData &dd)
+    Data &dd)
 {
     const size_t K = X.size();
 
@@ -193,3 +199,5 @@ void doMultipleShooting(
         assert(cols == ode_matrix_t::ColsAtCompileTime);
     }
 }
+
+} // namespace scpp::discretization

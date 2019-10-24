@@ -4,6 +4,31 @@
 namespace scpp::discretization
 {
 
+void Data::initialize(size_t K, bool interpolate_input, bool free_final_time)
+{
+    A.resize(K - 1);
+    B.resize(K - 1);
+    if (interpolate_input)
+    {
+        C.resize(K - 1);
+    }
+    if (free_final_time)
+    {
+        s.resize(K - 1);
+    }
+    z.resize(K - 1);
+}
+
+bool Data::interpolatedInput() const
+{
+    return not C.empty();
+}
+
+bool Data::variableTime() const
+{
+    return not s.empty();
+}
+
 void exactLinearDiscretization(Model::ptr_t model,
                                double ts,
                                const Model::state_vector_t &x_eq,
@@ -42,16 +67,16 @@ void multipleShooting(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    DiscretizationData &dd)
+    Data &dd)
 {
     if (not dd.interpolatedInput() and not dd.variableTime())
-        doMultipleShooting<InputType::constant, TimeType::fixed>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, time, X, U, dd);
     if (not dd.interpolatedInput() and dd.variableTime())
-        doMultipleShooting<InputType::constant, TimeType::variable>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, time, X, U, dd);
     if (dd.interpolatedInput() and not dd.variableTime())
-        doMultipleShooting<InputType::interpolated, TimeType::fixed>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, time, X, U, dd);
     if (dd.interpolatedInput() and dd.variableTime())
-        doMultipleShooting<InputType::interpolated, TimeType::variable>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, time, X, U, dd);
 }
 
 } // namespace scpp::discretization

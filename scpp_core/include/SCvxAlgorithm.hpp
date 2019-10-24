@@ -101,7 +101,7 @@ private:
     size_t max_iterations;
     std::optional<double> last_nonlinear_cost;
 
-    DiscretizationData dd;
+    discretization::Data dd;
 
     double sigma;
     Model::state_vector_v_t X;
