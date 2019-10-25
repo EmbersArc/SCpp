@@ -9,12 +9,10 @@ op::SecondOrderConeProgram buildSCProblem(
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,
-    Model::state_vector_v_t &X,
-    Model::input_vector_v_t &U,
-    double &sigma,
+    TrajectoryData &td,
     DiscretizationData &dd)
 {
-    const size_t K = X.size();
+    const size_t K = td.n_X();
 
     op::SecondOrderConeProgram socp;
 
@@ -23,10 +21,10 @@ op::SecondOrderConeProgram buildSCProblem(
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
-    socp.createTensorVariable("X", {Model::state_dim, X.size()});            // states
-    socp.createTensorVariable("U", {Model::input_dim, U.size()});            // inputs
-    socp.createTensorVariable("nu", {Model::state_dim, X.size() - 1});       // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, X.size() - 1}); // virtual control
+    socp.createTensorVariable("X", {Model::state_dim, td.n_X()});            // states
+    socp.createTensorVariable("U", {Model::input_dim, td.n_U()});            // inputs
+    socp.createTensorVariable("nu", {Model::state_dim, td.n_X() - 1});       // virtual control
+    socp.createTensorVariable("nu_bound", {Model::state_dim, td.n_X() - 1}); // virtual control
     socp.createTensorVariable("norm1_nu");                                   // virtual control norm upper bound
     socp.createTensorVariable("Delta", {K});                                 // squared change of the stacked [ x(k), u(k) ] vector
     socp.createTensorVariable("norm2_Delta");                                // 2-norm of the Delta(k) variables
@@ -129,7 +127,7 @@ op::SecondOrderConeProgram buildSCProblem(
         {
             std::vector<op::AffineExpression> norm2_args;
             norm2_args = {(0.5) + (-0.5) * var("Delta_sigma"),
-                          param(sigma) + (-1.0) * var("sigma")};
+                          param(td.t) + (-1.0) * var("sigma")};
 
             socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta_sigma"));
 
@@ -160,13 +158,13 @@ op::SecondOrderConeProgram buildSCProblem(
 
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            norm2_args.push_back(param(X[k](i)) + (-1.0) * var("X", {i, k}));
+            norm2_args.push_back(param(td.X[k](i)) + (-1.0) * var("X", {i, k}));
         }
         if (not(dd.interpolatedInput() and k == K - 1))
         {
             for (size_t i = 0; i < Model::input_dim; i++)
             {
-                norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
+                norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
             }
         }
         socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));

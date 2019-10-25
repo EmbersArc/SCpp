@@ -17,8 +17,7 @@ SCvxAlgorithm::SCvxAlgorithm(Model::ptr_t model)
     this->model = model;
     loadParameters();
 
-    all_X.reserve(max_iterations);
-    all_U.reserve(max_iterations);
+    all_td.reserve(max_iterations);
 }
 
 void SCvxAlgorithm::loadParameters()
@@ -51,13 +50,10 @@ void SCvxAlgorithm::initialize()
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
     dd.initialize(K, interpolate_input, false);
+    td.initialize(K, interpolate_input);
 
-    X.resize(K);
-    U.resize(interpolate_input ? K : K - 1);
-
-    socp = buildSCvxProblem(trust_region, weight_virtual_control,
-                            X, U, dd);
-    model->addApplicationConstraints(socp, X, U);
+    socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
+    model->addApplicationConstraints(socp, td.X, td.U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
@@ -69,7 +65,7 @@ bool SCvxAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
 
-    discretization::multipleShooting(model, sigma, X, U, dd);
+    discretization::multipleShooting(model, td, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
@@ -80,8 +76,7 @@ bool SCvxAlgorithm::iterate()
         // solve problem
         timer = tic();
 
-        const Model::state_vector_v_t old_X = X;
-        const Model::input_vector_v_t old_U = U;
+        const TrajectoryData old_td = td;
 
         solver->solveProblem(false);
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -132,8 +127,7 @@ bool SCvxAlgorithm::iterate()
             trust_region /= alpha;
             print("Trust region too large. Solving again with radius={}\n", trust_region);
             print("--------------------------------------------------\n");
-            X = old_X;
-            U = old_U;
+            td = old_td;
         }
         else
         {
@@ -155,7 +149,7 @@ bool SCvxAlgorithm::iterate()
 
     // print iteration summary
     print("\n");
-    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, sigma);
+    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
@@ -174,20 +168,19 @@ void SCvxAlgorithm::solve(bool warm_start)
     if (warm_start)
     {
         if (nondimensionalize)
-            model->nondimensionalizeTrajectory(X, U);
+            model->nondimensionalizeTrajectory(td.X, td.U);
     }
     else
     {
         loadParameters();
-        model->getInitializedTrajectory(X, U, sigma);
+        model->getInitializedTrajectory(td.X, td.U, td.t);
     }
 
     model->updateModelParameters();
 
     size_t iteration = 0;
 
-    all_X.push_back(X);
-    all_U.push_back(U);
+    all_td.push_back(td);
 
     bool converged = false;
 
@@ -198,8 +191,7 @@ void SCvxAlgorithm::solve(bool warm_start)
 
         converged = iterate();
 
-        all_X.push_back(X);
-        all_U.push_back(U);
+        all_td.push_back(td);
     }
 
     if (not converged)
@@ -210,7 +202,7 @@ void SCvxAlgorithm::solve(bool warm_start)
     if (nondimensionalize)
     {
         model->redimensionalize();
-        model->redimensionalizeTrajectory(X, U);
+        model->redimensionalizeTrajectory(td.X, td.U);
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
@@ -218,16 +210,16 @@ void SCvxAlgorithm::solve(bool warm_start)
 void SCvxAlgorithm::cacheIndices()
 {
     // cache indices for performance
-    X_indices.resize(Model::state_dim, X.size());
-    U_indices.resize(Model::input_dim, U.size());
-    for (size_t k = 0; k < X.size(); k++)
+    X_indices.resize(Model::state_dim, td.n_X());
+    U_indices.resize(Model::input_dim, td.n_U());
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
             X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
@@ -238,52 +230,42 @@ void SCvxAlgorithm::cacheIndices()
 
 void SCvxAlgorithm::readSolution()
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            td.X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            td.U[k](i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }
 
-void SCvxAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t)
+void SCvxAlgorithm::getSolution(TrajectoryData &trajectory)
 {
-    X = this->X;
-    U = this->U;
-    t = sigma;
+    trajectory = td;
 }
 
-void SCvxAlgorithm::getAllSolutions(std::vector<Model::state_vector_v_t> &X,
-                                    std::vector<Model::input_vector_v_t> &U,
-                                    std::vector<double> &t)
+void SCvxAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories)
 {
     if (nondimensionalize)
     {
-        auto all_X_redim = all_X;
-        auto all_U_redim = all_U;
-        for (size_t k = 0; k < all_X.size(); k++)
+        auto all_td_redim = all_td;
+        for (size_t k = 0; k < all_td_redim.size(); k++)
         {
-            model->redimensionalizeTrajectory(all_X_redim.at(k), all_U_redim.at(k));
+            model->redimensionalizeTrajectory(all_td_redim.at(k).X, all_td_redim.at(k).U);
         }
-        X = all_X_redim;
-        U = all_U_redim;
+        all_trajectories = all_td_redim;
     }
     else
     {
-        X = all_X;
-        U = all_U;
+        all_trajectories = all_td;
     }
-
-    t.resize(X.size());
-    std::fill(t.begin(), t.end(), sigma);
 }
 
 double SCvxAlgorithm::getNonlinearCost()
@@ -291,13 +273,13 @@ double SCvxAlgorithm::getNonlinearCost()
     double nonlinear_cost_dynamics = 0.;
     for (size_t k = 0; k < K - 1; k++)
     {
-        Model::state_vector_t x = X.at(k);
-        const Model::input_vector_t u0 = U.at(k);
-        const Model::input_vector_t u1 = interpolate_input ? U.at(k + 1) : u0;
+        Model::state_vector_t x = td.X.at(k);
+        const Model::input_vector_t u0 = td.U.at(k);
+        const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
 
-        simulate(model, sigma / (K - 1), u0, u1, x);
+        simulate(model, td.t / (K - 1), u0, u1, x);
 
-        const double virtual_control_cost = (x - X.at(k + 1)).lpNorm<1>();
+        const double virtual_control_cost = (x - td.X.at(k + 1)).lpNorm<1>();
         nonlinear_cost_dynamics += virtual_control_cost;
     }
 

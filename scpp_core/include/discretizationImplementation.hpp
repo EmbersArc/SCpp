@@ -135,12 +135,10 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
 template <InputType INPUT_TYPE, TimeType TIME_TYPE>
 void multipleShootingImplementation(
     Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
+    TrajectoryData &td,
     DiscretizationData &dd)
 {
-    const size_t K = X.size();
+    const size_t K = td.n_X();
 
     assert(not std::isnan(time));
     assert(std::none_of(X.begin(), X.end(), [](const auto &v) { return v.hasNaN(); }));
@@ -153,7 +151,7 @@ void multipleShootingImplementation(
 
     if constexpr (TIME_TYPE == TimeType::fixed)
     {
-        dt *= time;
+        dt *= td.t;
     }
 
     using namespace boost::numeric::odeint;
@@ -162,13 +160,13 @@ void multipleShootingImplementation(
     for (size_t k = 0; k < K - 1; k++)
     {
         ode_matrix_t V;
-        V.col(0) = X.at(k);
+        V.col(0) = td.X.at(k);
         V.template block<Model::state_dim, Model::state_dim>(0, 1).setIdentity();
         V.template rightCols<ode_matrix_t::ColsAtCompileTime - 1 - Model::state_dim>().setZero();
 
-        const Model::input_vector_t u0 = U[k];
-        const Model::input_vector_t u1 = INPUT_TYPE == InputType::interpolated ? U[k + 1] : u0;
-        ODEFun odeMultipleShooting(u0, u1, time, dt, model);
+        const Model::input_vector_t u0 = td.U[k];
+        const Model::input_vector_t u1 = INPUT_TYPE == InputType::interpolated ? td.U[k + 1] : u0;
+        ODEFun odeMultipleShooting(u0, u1, td.t, dt, model);
 
         integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
 

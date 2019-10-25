@@ -7,8 +7,7 @@ namespace scpp
 op::SecondOrderConeProgram buildSCvxProblem(
     double &trust_region,
     double &weight_virtual_control,
-    Model::state_vector_v_t &X,
-    Model::input_vector_v_t &U,
+    TrajectoryData &td,
     DiscretizationData &dd)
 {
     op::SecondOrderConeProgram socp;
@@ -18,13 +17,13 @@ op::SecondOrderConeProgram buildSCvxProblem(
     auto param = [](double &param_value) { return op::Parameter(&param_value); };
     // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
 
-    socp.createTensorVariable("X", {Model::state_dim, X.size()});            // states
-    socp.createTensorVariable("U", {Model::input_dim, U.size()});            // inputs
-    socp.createTensorVariable("nu", {Model::state_dim, X.size() - 1});       // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, X.size() - 1}); // virtual control lower/upper bound
+    socp.createTensorVariable("X", {Model::state_dim, td.n_X()});            // states
+    socp.createTensorVariable("U", {Model::input_dim, td.n_U()});            // inputs
+    socp.createTensorVariable("nu", {Model::state_dim, td.n_X() - 1});       // virtual control
+    socp.createTensorVariable("nu_bound", {Model::state_dim, td.n_X() - 1}); // virtual control lower/upper bound
     socp.createTensorVariable("norm1_nu");                                   // virtual control norm
 
-    for (size_t k = 0; k < X.size() - 1; k++)
+    for (size_t k = 0; k < td.n_X() - 1; k++)
     {
         /**
          * Build linearized model equality constraint
@@ -72,7 +71,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
      */
     {
         op::AffineExpression bound_sum;
-        for (size_t k = 0; k < X.size() - 1; k++)
+        for (size_t k = 0; k < td.n_X() - 1; k++)
         {
             for (size_t i = 0; i < Model::state_dim; i++)
             {
@@ -92,7 +91,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
         socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
     }
 
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         /**
          * Build input trust region:
@@ -103,7 +102,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
         std::vector<op::AffineExpression> norm2_args;
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            norm2_args.push_back(param(U[k](i)) + (-1.0) * var("U", {i, k}));
+            norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
         }
         socp.addConstraint(op::norm2(norm2_args) <= param(trust_region));
     }

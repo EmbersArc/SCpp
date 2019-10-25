@@ -21,12 +21,10 @@ int main()
 
     solver.initialize();
 
-    std::vector<Model::state_vector_v_t> all_X;
-    std::vector<Model::input_vector_v_t> all_U;
-    std::vector<double> all_times;
+    std::vector<TrajectoryData> all_td;
 
     solver.solve();
-    solver.getAllSolutions(all_X, all_U, all_times);
+    solver.getAllSolutions(all_td);
 
     // write solution to files
     double timer = tic();
@@ -36,7 +34,7 @@ int main()
                                     Eigen::DontAlignCols,
                                     ", ", "\n");
 
-    for (size_t k = 0; k < all_X.size(); k++)
+    for (size_t k = 0; k < all_td.size(); k++)
     {
         const fs::path iterationPath = outputPath / std::to_string(k);
         if (not fs::exists(iterationPath) and not fs::create_directories(iterationPath))
@@ -46,21 +44,21 @@ int main()
 
         {
             std::ofstream f(iterationPath / "X.txt");
-            for (auto &state : all_X.at(k))
+            for (auto &state : all_td.at(k).X)
             {
                 f << state.transpose().format(CSVFormat) << "\n";
             }
         }
         {
             std::ofstream f(iterationPath / "U.txt");
-            for (auto &input : all_U.at(k))
+            for (auto &input : all_td.at(k).U)
             {
                 f << input.transpose().format(CSVFormat) << "\n";
             }
         }
         {
             std::ofstream f(iterationPath / "t.txt");
-            f << all_times.at(k);
+            f << all_td.at(k).t;
         }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));

@@ -39,19 +39,17 @@ void exactLinearDiscretization(Model::ptr_t model,
 
 void multipleShooting(
     Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
+    TrajectoryData &td,
     DiscretizationData &dd)
 {
     if (not dd.interpolatedInput() and not dd.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, td, dd);
     if (not dd.interpolatedInput() and dd.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, td, dd);
     if (dd.interpolatedInput() and not dd.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, td, dd);
     if (dd.interpolatedInput() and dd.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, time, X, U, dd);
+        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, td, dd);
 }
 
 } // namespace scpp::discretization

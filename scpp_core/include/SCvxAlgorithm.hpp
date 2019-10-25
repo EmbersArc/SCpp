@@ -37,7 +37,7 @@ public:
      * @param U     The input trajectory.
      * @param t     The final time.
      */
-    void getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t);
+    void getSolution(TrajectoryData &trajectory);
 
     /**
      * @brief Get the solution from each iteration
@@ -45,9 +45,7 @@ public:
      * @param X 
      * @param U 
      */
-    void getAllSolutions(std::vector<Model::state_vector_v_t> &X,
-                         std::vector<Model::input_vector_v_t> &U,
-                         std::vector<double> &t);
+    void getAllSolutions(std::vector<TrajectoryData> &all_trajectories);
 
 private:
     /**
@@ -102,12 +100,9 @@ private:
 
     DiscretizationData dd;
 
-    double sigma;
-    Model::state_vector_v_t X;
-    Model::input_vector_v_t U;
+    TrajectoryData td;
 
-    std::vector<Model::state_vector_v_t> all_X;
-    std::vector<Model::input_vector_v_t> all_U;
+    std::vector<TrajectoryData> all_td;
 
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;

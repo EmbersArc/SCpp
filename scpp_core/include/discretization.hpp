@@ -15,9 +15,7 @@ void exactLinearDiscretization(Model::ptr_t model,
 
 void multipleShooting(
     Model::ptr_t model,
-    double time,
-    const Model::state_vector_v_t &X,
-    const Model::input_vector_v_t &U,
+    TrajectoryData &td,
     DiscretizationData &dd);
 
 } // namespace scpp::discretization

@@ -12,3 +12,4 @@ using Model = scpp::models::RocketHover;
 
 
 using DiscretizationData = Model::DiscretizationData;
+using TrajectoryData = Model::TrajectoryData;

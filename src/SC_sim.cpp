@@ -42,9 +42,8 @@ int main()
     const double time_step = 0.05;
     const size_t max_steps = 40;
 
-    Model::state_vector_v_t X;
-    Model::input_vector_v_t U;
-    double t;
+    TrajectoryData td;
+
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
 
@@ -58,13 +57,13 @@ int main()
 
         const bool warm_start = sim_step > 0;
         solver.solve(warm_start);
-        solver.getSolution(X, U, t);
-        const size_t K = X.size();
+        solver.getSolution(td);
+        const size_t K = td.n_X();
 
-        const Model::input_vector_t u0 = U.at(0);
-        const Model::input_vector_t u1 = interpolatedInput(U, time_step, t, false);
+        const Model::input_vector_t u0 = td.U.at(0);
+        const Model::input_vector_t u1 = interpolatedInput(td.U, time_step, td.t, false);
 
-        scpp::simulate(model, t / (K - 1), u0, u1, x);
+        scpp::simulate(model, td.t / (K - 1), u0, u1, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);

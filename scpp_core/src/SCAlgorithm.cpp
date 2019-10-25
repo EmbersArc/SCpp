@@ -15,9 +15,7 @@ SCAlgorithm::SCAlgorithm(Model::ptr_t model)
     this->model = model;
     loadParameters();
 
-    all_X.reserve(max_iterations);
-    all_U.reserve(max_iterations);
-    all_times.reserve(max_iterations);
+    all_td.reserve(max_iterations);
 }
 
 void SCAlgorithm::loadParameters()
@@ -56,12 +54,12 @@ void SCAlgorithm::initialize()
 
     dd.initialize(K, interpolate_input, free_final_time);
 
-    X.resize(K);
-    U.resize(interpolate_input ? K : K - 1);
+    td.initialize(K, interpolate_input);
 
-    socp = buildSCProblem(weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                          X, U, sigma, dd);
-    model->addApplicationConstraints(socp, X, U);
+    socp = buildSCProblem(weight_time, weight_trust_region_time,
+                          weight_trust_region_trajectory, weight_virtual_control,
+                          td, dd);
+    model->addApplicationConstraints(socp, td.X, td.U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
@@ -72,7 +70,7 @@ bool SCAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    discretization::multipleShooting(model, sigma, X, U, dd);
+    discretization::multipleShooting(model, td, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
@@ -100,7 +98,7 @@ bool SCAlgorithm::iterate()
     }
     print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, solver->getSolutionValue("norm2_Delta", {}));
 
-    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, sigma);
+    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
@@ -118,12 +116,12 @@ void SCAlgorithm::solve(bool warm_start)
     if (warm_start)
     {
         if (nondimensionalize)
-            model->nondimensionalizeTrajectory(X, U);
+            model->nondimensionalizeTrajectory(td.X, td.U);
     }
     else
     {
         loadParameters();
-        model->getInitializedTrajectory(X, U, sigma);
+        model->getInitializedTrajectory(td.X, td.U, td.t);
     }
 
     model->updateModelParameters();
@@ -133,9 +131,7 @@ void SCAlgorithm::solve(bool warm_start)
     size_t iteration = 0;
     bool converged = false;
 
-    all_X.push_back(X);
-    all_U.push_back(U);
-    all_times.push_back(sigma);
+    all_td.push_back(td);
 
     while (iteration < max_iterations)
     {
@@ -144,9 +140,7 @@ void SCAlgorithm::solve(bool warm_start)
 
         converged = iterate();
 
-        all_X.push_back(X);
-        all_U.push_back(U);
-        all_times.push_back(sigma);
+        all_td.push_back(td);
 
         if (converged)
         {
@@ -169,7 +163,7 @@ void SCAlgorithm::solve(bool warm_start)
     if (nondimensionalize)
     {
         model->redimensionalize();
-        model->redimensionalizeTrajectory(X, U);
+        model->redimensionalizeTrajectory(td.X, td.U);
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
@@ -181,16 +175,16 @@ void SCAlgorithm::cacheIndices()
     {
         sigma_index = socp.getTensorVariableIndex("sigma", {});
     }
-    X_indices.resize(Model::state_dim, X.size());
-    U_indices.resize(Model::input_dim, U.size());
-    for (size_t k = 0; k < X.size(); k++)
+    X_indices.resize(Model::state_dim, td.n_X());
+    U_indices.resize(Model::input_dim, td.n_U());
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
             X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
@@ -203,53 +197,44 @@ void SCAlgorithm::readSolution()
 {
     if (free_final_time)
     {
-        sigma = solver->getSolutionValue(sigma_index);
+        td.t = solver->getSolutionValue(sigma_index);
     }
-    for (size_t k = 0; k < X.size(); k++)
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            td.X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            td.U[k](i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }
 
-void SCAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U, double &t)
+void SCAlgorithm::getSolution(TrajectoryData &trajectory)
 {
-    X = this->X;
-    U = this->U;
-    t = this->sigma;
+    trajectory = td;
 }
 
-void SCAlgorithm::getAllSolutions(std::vector<Model::state_vector_v_t> &X,
-                                  std::vector<Model::input_vector_v_t> &U,
-                                  std::vector<double> &t)
+void SCAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories)
 {
     if (nondimensionalize)
     {
-        auto all_X_redim = all_X;
-        auto all_U_redim = all_U;
-        for (size_t k = 0; k < all_X.size(); k++)
+        auto all_td_redim = all_td;
+        for (size_t k = 0; k < all_td_redim.size(); k++)
         {
-            model->redimensionalizeTrajectory(all_X_redim.at(k), all_U_redim.at(k));
+            model->redimensionalizeTrajectory(all_td_redim.at(k).X, all_td_redim.at(k).U);
         }
-        X = all_X_redim;
-        U = all_U_redim;
+        all_trajectories = all_td_redim;
     }
     else
     {
-        X = all_X;
-        U = all_U;
+        all_trajectories = all_td;
     }
-
-    t = all_times;
 }
 
 } // namespace scpp
