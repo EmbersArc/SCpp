@@ -39,17 +39,13 @@ public:
 
     void redimensionalize() override;
 
-    void nondimensionalizeTrajectory(state_vector_v_t &X,
-                                     input_vector_v_t &U) override;
+    void nondimensionalizeTrajectory(TrajectoryData &td) override;
 
-    void redimensionalizeTrajectory(state_vector_v_t &X,
-                                    input_vector_v_t &U) override;
+    void redimensionalizeTrajectory(TrajectoryData &td) override;
 
     void getNewModelParameters(param_vector_t &param);
 
-    void getInitializedTrajectory(state_vector_v_t &X,
-                                  input_vector_v_t &U,
-                                  double &t) override;
+    void getInitializedTrajectory(TrajectoryData &td) override;
 
     void loadParameters();
 

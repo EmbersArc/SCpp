@@ -29,9 +29,7 @@ public:
         const param_vector_ad_t &par,
         state_vector_ad_t &f) override;
 
-    void getInitializedTrajectory(state_vector_v_t &X,
-                                  input_vector_v_t &U,
-                                  double &t) override;
+    void getInitializedTrajectory(TrajectoryData &td) override;
 
     void addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                    state_vector_v_t &X0,
@@ -41,11 +39,9 @@ public:
 
     void redimensionalize() override;
 
-    void nondimensionalizeTrajectory(state_vector_v_t &X,
-                                     input_vector_v_t &U) override;
+    void nondimensionalizeTrajectory(TrajectoryData &td) override;
 
-    void redimensionalizeTrajectory(state_vector_v_t &X,
-                                    input_vector_v_t &U) override;
+    void redimensionalizeTrajectory(TrajectoryData &td) override;
 
     void getNewModelParameters(param_vector_t &param) override;
 

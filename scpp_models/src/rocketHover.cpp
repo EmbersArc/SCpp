@@ -143,50 +143,44 @@ void RocketHover::redimensionalize()
     p.redimensionalize();
 }
 
-void RocketHover::nondimensionalizeTrajectory(state_vector_v_t &X,
-                                              input_vector_v_t &U)
+void RocketHover::nondimensionalizeTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (auto &x : td.X)
     {
-        X[k].segment<6>(0) /= p.r_scale;
+        x.segment<6>(0) /= p.r_scale;
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (auto &u : td.U)
     {
-        U[k] /= p.m_scale * p.r_scale;
+        u /= p.m_scale * p.r_scale;
     }
 }
 
-void RocketHover::redimensionalizeTrajectory(state_vector_v_t &X,
-                                             input_vector_v_t &U)
+void RocketHover::redimensionalizeTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (auto &x : td.X)
     {
-        X[k].segment<6>(0) *= p.r_scale;
+        x.segment<6>(0) *= p.r_scale;
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (auto &u : td.U)
     {
-        U[k] *= p.m_scale * p.r_scale;
+        u *= p.m_scale * p.r_scale;
     }
 }
 
-void RocketHover::getInitializedTrajectory(state_vector_v_t &X,
-                                           input_vector_v_t &U,
-                                           double &t)
+void RocketHover::getInitializedTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (size_t k = 0; k < td.n_X(); k++)
     {
-        const double alpha1 = double(X.size() - k) / X.size();
-        const double alpha2 = double(k) / X.size();
+        const double alpha1 = double(td.n_X() - k) / td.n_X();
+        const double alpha2 = double(k) / td.n_X();
 
         // mass, position and linear velocity
-        X.at(k) = alpha1 * p.x_init + alpha2 * p.x_final;
+        td.X.at(k) = alpha1 * p.x_init + alpha2 * p.x_final;
     }
-    for (size_t k = 0; k < U.size(); k++)
-    {
-        // input
-        U.at(k) = -p.g_I * p.m;
-    }
-    t = p.final_time;
+
+    std::fill(td.U.begin(), td.U.end(), -p.g_I * p.m);
+
+    td.t = p.final_time;
 }
 
 void RocketHover::loadParameters()

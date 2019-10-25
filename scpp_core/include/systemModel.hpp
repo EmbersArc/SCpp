@@ -39,6 +39,8 @@ public:
     using typename BASE::state_matrix_ad_t;
     using typename BASE::state_vector_ad_t;
 
+    using TrajectoryData = typename BASE::TrajectoryData;
+
     enum : size_t
     {
         state_dim = STATE_DIM,
@@ -57,12 +59,8 @@ public:
     /**
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class. Only required for SC models,
      * 
-     * @param X     State trajectory.
-     * @param U     Input trajectory.
      */
-    virtual void getInitializedTrajectory(state_vector_v_t &,
-                                          input_vector_v_t &,
-                                          double &)
+    virtual void getInitializedTrajectory(TrajectoryData &)
     {
         throw std::runtime_error("getInitializedTrajectory: This function has to be implemented by the derived class.");
     };
@@ -125,11 +123,8 @@ public:
     /**
      * @brief Function to remove mass and length dimensions from state and input trajectory.
      * 
-     * @param X     State trajectory.
-     * @param U     Input trajectory.
      */
-    virtual void nondimensionalizeTrajectory(state_vector_v_t &,
-                                             input_vector_v_t &)
+    virtual void nondimensionalizeTrajectory(TrajectoryData &)
     {
         fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
     };
@@ -137,11 +132,8 @@ public:
     /**
      * @brief Function to add mass and length dimensions to state and input trajectory.
      * 
-     * @param X     State trajectory.
-     * @param U     Input trajectory.
      */
-    virtual void redimensionalizeTrajectory(state_vector_v_t &,
-                                            input_vector_v_t &)
+    virtual void redimensionalizeTrajectory(TrajectoryData &)
     {
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };

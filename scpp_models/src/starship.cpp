@@ -37,35 +37,33 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
     f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
-void Starship::getInitializedTrajectory(state_vector_v_t &X,
-                                        input_vector_v_t &U,
-                                        double &t)
+void Starship::getInitializedTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (size_t k = 0; k < td.n_X(); k++)
     {
-        const double alpha1 = double(X.size() - k) / X.size();
-        const double alpha2 = double(k) / X.size();
+        const double alpha1 = double(td.n_X() - k) / td.n_X();
+        const double alpha2 = double(k) / td.n_X();
 
         // mass, position and linear velocity
-        X.at(k)(0) = alpha1 * p.x_init(0) + alpha2 * p.x_final(0);
-        X.at(k).segment(1, 6) = alpha1 * p.x_init.segment(1, 6) + alpha2 * p.x_final.segment(1, 6);
+        td.X.at(k)(0) = alpha1 * p.x_init(0) + alpha2 * p.x_final(0);
+        td.X.at(k).segment(1, 6) = alpha1 * p.x_init.segment(1, 6) + alpha2 * p.x_final.segment(1, 6);
 
         // do SLERP for quaternion
         Eigen::Quaterniond q0(p.x_init(7), p.x_init(8), p.x_init(9), p.x_init(10));
         Eigen::Quaterniond q1(p.x_final(7), p.x_final(8), p.x_final(9), p.x_final(10));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
-        X.at(k).segment(7, 4) << qs.w(), qs.vec();
+        td.X.at(k).segment(7, 4) << qs.w(), qs.vec();
 
         // angular velocity
-        X.at(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
+        td.X.at(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
     }
 
-    for (size_t k = 0; k < U.size(); k++)
+    for (auto &u : td.U)
     {
-        // input
-        U.at(k) << 0, 0, (p.T_max - p.T_min) / 2.;
+        u << 0, 0, (p.T_max - p.T_min) / 2.;
     }
-    t = p.final_time;
+
+    td.t = p.final_time;
 }
 
 void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -172,31 +170,29 @@ void Starship::getNewModelParameters(param_vector_t &param)
     param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
 }
 
-void Starship::nondimensionalizeTrajectory(state_vector_v_t &X,
-                                           input_vector_v_t &U)
+void Starship::nondimensionalizeTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (auto &x : td.X)
     {
-        X[k](0) /= p.m_scale;
-        X[k].segment<6>(1) /= p.r_scale;
+        x(0) /= p.m_scale;
+        x.segment<6>(1) /= p.r_scale;
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (auto &u : td.U)
     {
-        U[k] /= p.m_scale * p.r_scale;
+        u /= p.m_scale * p.r_scale;
     }
 }
 
-void Starship::redimensionalizeTrajectory(state_vector_v_t &X,
-                                          input_vector_v_t &U)
+void Starship::redimensionalizeTrajectory(TrajectoryData &td)
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (auto &x : td.X)
     {
-        X[k](0) *= p.m_scale;
-        X[k].segment<6>(1) *= p.r_scale;
+        x(0) *= p.m_scale;
+        x.segment<6>(1) *= p.r_scale;
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (auto &u : td.U)
     {
-        U[k] *= p.m_scale * p.r_scale;
+        u *= p.m_scale * p.r_scale;
     }
 }
 

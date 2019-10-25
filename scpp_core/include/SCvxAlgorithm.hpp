@@ -37,7 +37,7 @@ public:
      * @param U     The input trajectory.
      * @param t     The final time.
      */
-    void getSolution(TrajectoryData &trajectory);
+    void getSolution(TrajectoryData &trajectory) const;
 
     /**
      * @brief Get the solution from each iteration

@@ -168,12 +168,12 @@ void SCvxAlgorithm::solve(bool warm_start)
     if (warm_start)
     {
         if (nondimensionalize)
-            model->nondimensionalizeTrajectory(td.X, td.U);
+            model->nondimensionalizeTrajectory(td);
     }
     else
     {
         loadParameters();
-        model->getInitializedTrajectory(td.X, td.U, td.t);
+        model->getInitializedTrajectory(td);
     }
 
     model->updateModelParameters();
@@ -202,7 +202,7 @@ void SCvxAlgorithm::solve(bool warm_start)
     if (nondimensionalize)
     {
         model->redimensionalize();
-        model->redimensionalizeTrajectory(td.X, td.U);
+        model->redimensionalizeTrajectory(td);
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
@@ -246,7 +246,7 @@ void SCvxAlgorithm::readSolution()
     }
 }
 
-void SCvxAlgorithm::getSolution(TrajectoryData &trajectory)
+void SCvxAlgorithm::getSolution(TrajectoryData &trajectory) const
 {
     trajectory = td;
 }
@@ -256,9 +256,9 @@ void SCvxAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectorie
     if (nondimensionalize)
     {
         auto all_td_redim = all_td;
-        for (size_t k = 0; k < all_td_redim.size(); k++)
+        for (auto &td_redim : all_td_redim)
         {
-            model->redimensionalizeTrajectory(all_td_redim.at(k).X, all_td_redim.at(k).U);
+            model->redimensionalizeTrajectory(td_redim);
         }
         all_trajectories = all_td_redim;
     }
