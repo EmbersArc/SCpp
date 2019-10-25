@@ -1,6 +1,6 @@
-interpolate_input                   true
+interpolate_input                   false
 
-K                                   30
+K                                   15
 
 rho_0                               0.0
 rho_1                               0.25
@@ -9,7 +9,7 @@ alpha                               2.0
 beta                                3.2
 
 change_threshold                    1e-3
-weight_virtual_control              1e4
+weight_virtual_control              1e3
 trust_region                        5.
 
 nondimensionalize                   false
