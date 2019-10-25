@@ -1,7 +1,6 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "trajectoryData.hpp"
 
 namespace scpp
 {
@@ -13,5 +12,5 @@ op::SecondOrderConeProgram buildSCProblem(
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
     double &sigma,
-    TrajectoryData &td);
+    DiscretizationData &dd);
 }

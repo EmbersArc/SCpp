@@ -95,7 +95,7 @@ private:
     double delta_tol;
     size_t max_iterations;
 
-    TrajectoryData td;
+    DiscretizationData dd;
 
     double sigma;
     Model::state_vector_v_t X;

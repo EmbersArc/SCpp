@@ -54,13 +54,13 @@ void SCAlgorithm::initialize()
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
-    td.initialize(K, interpolate_input, free_final_time);
+    dd.initialize(K, interpolate_input, free_final_time);
 
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
     socp = buildSCProblem(weight_time, weight_trust_region_time, weight_trust_region_trajectory, weight_virtual_control,
-                          X, U, sigma, td);
+                          X, U, sigma, dd);
     model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
@@ -72,7 +72,7 @@ bool SCAlgorithm::iterate()
     // discretize
     const double timer_iteration = tic();
     double timer = tic();
-    discretization::multipleShooting(model, sigma, X, U, td);
+    discretization::multipleShooting(model, sigma, X, U, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 

@@ -42,16 +42,16 @@ void multipleShooting(
     double time,
     const Model::state_vector_v_t &X,
     const Model::input_vector_v_t &U,
-    TrajectoryData &td)
+    DiscretizationData &dd)
 {
-    if (not td.interpolatedInput() and not td.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, time, X, U, td);
-    if (not td.interpolatedInput() and td.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, time, X, U, td);
-    if (td.interpolatedInput() and not td.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, time, X, U, td);
-    if (td.interpolatedInput() and td.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, time, X, U, td);
+    if (not dd.interpolatedInput() and not dd.variableTime())
+        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, time, X, U, dd);
+    if (not dd.interpolatedInput() and dd.variableTime())
+        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, time, X, U, dd);
+    if (dd.interpolatedInput() and not dd.variableTime())
+        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, time, X, U, dd);
+    if (dd.interpolatedInput() and dd.variableTime())
+        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, time, X, U, dd);
 }
 
 } // namespace scpp::discretization

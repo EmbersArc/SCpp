@@ -9,3 +9,6 @@
 
 #include "rocketHover.hpp"
 using Model = scpp::models::RocketHover;
+
+
+using DiscretizationData = Model::DiscretizationData;

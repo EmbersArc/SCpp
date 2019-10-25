@@ -50,13 +50,13 @@ void SCvxAlgorithm::initialize()
     model->initializeModel();
     print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
 
-    td.initialize(K, interpolate_input, false);
+    dd.initialize(K, interpolate_input, false);
 
     X.resize(K);
     U.resize(interpolate_input ? K : K - 1);
 
     socp = buildSCvxProblem(trust_region, weight_virtual_control,
-                            X, U, td);
+                            X, U, dd);
     model->addApplicationConstraints(socp, X, U);
     cacheIndices();
 
@@ -69,7 +69,7 @@ bool SCvxAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
 
-    discretization::multipleShooting(model, sigma, X, U, td);
+    discretization::multipleShooting(model, sigma, X, U, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
