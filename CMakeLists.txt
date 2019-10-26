@@ -18,9 +18,14 @@ set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
 # SOCP INTERFACE
 add_subdirectory(lib/socp_interface)
 
+# CppAD
+execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
+execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
+
 # INCLUDES
 set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/external
+    lib/CppAD/include
 )
 set(SCPP_INCLUDE_DIRECTORIES
     scpp_core/include
