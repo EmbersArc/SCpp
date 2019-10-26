@@ -4,26 +4,13 @@
 #include "simulation.hpp"
 #include "timing.hpp"
 #include "vectorOperations.hpp"
+#include "commonFunctions.hpp"
 
 using fmt::format;
 using fmt::print;
 namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
-
-Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double t, double total_time, bool constant)
-{
-    const size_t K = U.size();
-    const double time_step = total_time / (K - 1);
-    const size_t i = std::min(size_t(t / time_step), K - 2);
-    const Model::input_vector_t u0 = U.at(i);
-    const Model::input_vector_t u1 = constant ? U.at(i + 1) : u0;
-
-    const double t_intermediate = std::fmod(t, time_step) / time_step;
-    const Model::input_vector_t u = u0 + (u1 - u0) * t_intermediate;
-
-    return u;
-}
 
 /**
  * @brief Simulates a trajectory with the SC controller.
@@ -35,12 +22,12 @@ int main()
     auto model = std::make_shared<Model>();
     model->loadParameters();
 
-    scpp::SCAlgorithm solver(model);
+    scpp::SCvxAlgorithm solver(model);
 
     solver.initialize();
 
     const double time_step = 0.05;
-    const size_t max_steps = 40;
+    const size_t max_steps = 2;
 
     TrajectoryData td;
 
@@ -61,7 +48,7 @@ int main()
         const size_t K = td.n_X();
 
         const Model::input_vector_t u0 = td.U.at(0);
-        const Model::input_vector_t u1 = interpolatedInput(td.U, time_step, td.t, false);
+        const Model::input_vector_t u1 = scpp::interpolatedInput(td.U, time_step, td.t, false);
 
         scpp::simulate(model, td.t / (K - 1), u0, u1, x);
 
