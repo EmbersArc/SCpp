@@ -2,6 +2,7 @@
 #include "SCvxRHProblem.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
+#include "discretization.hpp"
 
 using fmt::format;
 using fmt::print;
@@ -16,8 +17,7 @@ SCvxRHAlgorithm::SCvxRHAlgorithm(Model::ptr_t model)
     this->model = model;
     loadParameters();
 
-    all_X.reserve(max_iterations);
-    all_U.reserve(max_iterations);
+    all_td.reserve(max_iterations);
 }
 
 void SCvxRHAlgorithm::loadParameters()
@@ -44,7 +44,7 @@ void SCvxRHAlgorithm::loadParameters()
 
     param.loadScalar("interpolate_input", interpolate_input);
 
-    param_rh.loadScalar("time_horizon", time_horizon);
+    param_rh.loadScalar("time_horizon", td.t);
     param_rh.loadMatrix("state_weights", state_weights);
     param_rh.loadMatrix("input_weights", input_weights);
 }
@@ -58,13 +58,12 @@ void SCvxRHAlgorithm::initialize()
 
     dd.initialize(K, interpolate_input, false);
 
-    X.resize(K);
-    U.resize(interpolate_input ? K : K - 1);
+    td.initialize(K, initial_trust_region);
 
     socp = buildSCvxRHProblem(trust_region, weight_virtual_control, state_weights, input_weights,
-                              X, U, model->p.x_init, model->p.x_final, dd);
+                              model->p.x_init, model->p.x_final, td, dd);
 
-    model->addApplicationConstraints(socp, X, U);
+    model->addApplicationConstraints(socp, td.X, td.U);
     cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
@@ -76,7 +75,7 @@ bool SCvxRHAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
 
-    discretization::multipleShooting(model, time_horizon, X, U, dd);
+    discretization::multipleShooting(model, td, dd);
 
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
@@ -87,8 +86,7 @@ bool SCvxRHAlgorithm::iterate()
         // solve problem
         timer = tic();
 
-        const Model::state_vector_v_t old_X = X;
-        const Model::input_vector_v_t old_U = U;
+        const TrajectoryData old_td = td;
 
         solver->solveProblem(false);
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -139,8 +137,7 @@ bool SCvxRHAlgorithm::iterate()
             trust_region /= alpha;
             print("Trust region too large. Solving again with radius={}\n", trust_region);
             print("--------------------------------------------------\n");
-            X = old_X;
-            U = old_U;
+            td = old_td;
         }
         else
         {
@@ -162,7 +159,7 @@ bool SCvxRHAlgorithm::iterate()
 
     // print iteration summary
     print("\n");
-    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, time_horizon);
+    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
@@ -177,7 +174,7 @@ void SCvxRHAlgorithm::solve(bool warm_start)
 
     if (warm_start)
     {
-        trust_region *= beta;
+        trust_region *= alpha;
     }
     else
     {
@@ -189,8 +186,7 @@ void SCvxRHAlgorithm::solve(bool warm_start)
 
     size_t iteration = 0;
 
-    all_X.push_back(X);
-    all_U.push_back(U);
+    all_td.push_back(td);
 
     bool converged = false;
 
@@ -201,8 +197,7 @@ void SCvxRHAlgorithm::solve(bool warm_start)
 
         converged = iterate();
 
-        all_X.push_back(X);
-        all_U.push_back(U);
+        all_td.push_back(td);
     }
 
     if (not converged)
@@ -216,7 +211,6 @@ void SCvxRHAlgorithm::solve(bool warm_start)
 void SCvxRHAlgorithm::setInitialState(const Model::state_vector_t &x)
 {
     model->p.x_init = x;
-    X[0] = x;
 }
 
 void SCvxRHAlgorithm::setFinalState(const Model::state_vector_t &x)
@@ -227,24 +221,23 @@ void SCvxRHAlgorithm::setFinalState(const Model::state_vector_t &x)
 
 void SCvxRHAlgorithm::resetTrajectory()
 {
-    double sigma;
-    model->getInitializedTrajectory(X, U, sigma);
+    model->getInitializedTrajectory(td);
     trust_region = initial_trust_region;
 }
 
 void SCvxRHAlgorithm::cacheIndices()
 {
     // cache indices for performance
-    X_indices.resize(Model::state_dim, X.size());
-    U_indices.resize(Model::input_dim, U.size());
-    for (size_t k = 0; k < X.size(); k++)
+    X_indices.resize(Model::state_dim, td.n_X());
+    U_indices.resize(Model::input_dim, td.n_U());
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
             X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
@@ -255,33 +248,30 @@ void SCvxRHAlgorithm::cacheIndices()
 
 void SCvxRHAlgorithm::readSolution()
 {
-    for (size_t k = 0; k < X.size(); k++)
+    for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            td.X[k](i) = solver->getSolutionValue(X_indices(i, k));
         }
     }
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            td.U[k](i) = solver->getSolutionValue(U_indices(i, k));
         }
     }
 }
 
-void SCvxRHAlgorithm::getSolution(Model::state_vector_v_t &X, Model::input_vector_v_t &U)
+void SCvxRHAlgorithm::getSolution(TrajectoryData &trajectory) const
 {
-    X = this->X;
-    U = this->U;
+    trajectory = td;
 }
 
-void SCvxRHAlgorithm::getAllSolutions(std::vector<Model::state_vector_v_t> &X,
-                                      std::vector<Model::input_vector_v_t> &U)
+void SCvxRHAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories) const
 {
-    X = all_X;
-    U = all_U;
+    all_trajectories = all_td;
 }
 
 double SCvxRHAlgorithm::getNonlinearCost()
@@ -289,13 +279,13 @@ double SCvxRHAlgorithm::getNonlinearCost()
     double nonlinear_cost_dynamics = 0.;
     for (size_t k = 0; k < K - 1; k++)
     {
-        Model::state_vector_t x = X.at(k);
-        const Model::input_vector_t u0 = U.at(k);
-        const Model::input_vector_t u1 = interpolate_input ? U.at(k + 1) : u0;
+        Model::state_vector_t x = td.X.at(k);
+        const Model::input_vector_t u0 = td.U.at(k);
+        const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
 
-        simulate(model, time_horizon / (K - 1), u0, u1, x);
+        simulate(model, td.t / (K - 1), u0, u1, x);
 
-        const double virtual_control_cost = (x - X.at(k + 1)).lpNorm<1>();
+        const double virtual_control_cost = (x - td.X.at(k + 1)).lpNorm<1>();
         nonlinear_cost_dynamics += virtual_control_cost;
     }
 

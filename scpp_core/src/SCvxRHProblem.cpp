@@ -9,14 +9,12 @@ op::SecondOrderConeProgram buildSCvxRHProblem(
     double &weight_virtual_control,
     Model::state_vector_t &state_weights,
     Model::input_vector_t &input_weights,
-    Model::state_vector_v_t &X,
-    Model::input_vector_v_t &U,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
+    TrajectoryData &td,
     DiscretizationData &dd)
 {
-    op::SecondOrderConeProgram socp = buildSCvxProblem(trust_region, weight_virtual_control,
-                                                       X, U, dd);
+    op::SecondOrderConeProgram socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
 
     // shortcuts to access solver variables and create parameters
     auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
@@ -40,7 +38,7 @@ op::SecondOrderConeProgram buildSCvxRHProblem(
         op::Parameter x_desired =
             param_fn([&state_weights, &x_final, i]() { return -1.0 * state_weights(i) * x_final(i); });
         op::AffineTerm x_current =
-            param(state_weights(i)) * var("X", {i, X.size() - 1});
+            param(state_weights(i)) * var("X", {i, td.n_X() - 1});
         op::AffineExpression ex = x_desired + x_current;
         error_norm2_args.push_back(ex);
     }
@@ -53,7 +51,7 @@ op::SecondOrderConeProgram buildSCvxRHProblem(
      */
     socp.createTensorVariable("input_cost"); // input minimization term
     std::vector<op::AffineExpression> input_norm2_args;
-    for (size_t k = 0; k < U.size(); k++)
+    for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
