@@ -26,6 +26,7 @@ set(SCPP_INCLUDE_DIRECTORIES
     scpp_core/include
     scpp_core/utils/include
     scpp_models/include
+    scpp/include
 )
 
 # SOURCES
@@ -34,6 +35,7 @@ set(MPC_SOURCES
     # utilities
     scpp_core/utils/src/timing.cpp
     scpp_core/utils/src/parameterServer.cpp
+    scpp/src/commonFunctions.cpp
 
     # main functionality
     scpp_core/src/simulation.cpp
@@ -60,14 +62,14 @@ target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORI
 
 target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O3 -march=native)
 
-add_executable(mpc_sim src/MPC_sim.cpp)
+add_executable(mpc_sim scpp/src/MPC_sim.cpp)
 target_link_libraries(mpc_sim mpc_lib)
 
-add_executable(lqr_sim src/LQR_sim.cpp)
+add_executable(lqr_sim scpp/src/LQR_sim.cpp)
 target_link_libraries(lqr_sim mpc_lib)
 
-add_executable(sc_sim src/SC_sim.cpp)
+add_executable(sc_sim scpp/src/SC_sim.cpp)
 target_link_libraries(sc_sim mpc_lib)
 
-add_executable(sc_oneshot src/SC_oneshot.cpp)
+add_executable(sc_oneshot scpp/src/SC_oneshot.cpp)
 target_link_libraries(sc_oneshot mpc_lib)
