@@ -1,6 +1,14 @@
 #pragma once
 
+#define CODEGEN true
+
+#if CODEGEN
+#include <cppad/cg.hpp>
+#else
 #include <cppad/cppad.hpp>
+#endif
+
+#include "timing.hpp"
 
 namespace scpp
 {
@@ -25,7 +33,12 @@ public:
     using state_matrix_v_t = std::vector<state_matrix_t>;
     using control_matrix_v_t = std::vector<control_matrix_t>;
 
+#if CODEGEN
+    using scalar_t = CppAD::cg::CG<double>;
+#else
     using scalar_t = double;
+#endif
+
     using scalar_ad_t = CppAD::AD<scalar_t>;
 
     using state_vector_ad_t = Eigen::Matrix<scalar_ad_t, STATE_DIM, 1>;
@@ -79,7 +92,10 @@ public:
      * @param A 
      * @param B 
      */
-    void computeJacobians(const state_vector_t &x, const input_vector_t &u, state_matrix_t &A, control_matrix_t &B);
+    void computeJacobians(const state_vector_t &x,
+                          const input_vector_t &u,
+                          state_matrix_t &A,
+                          control_matrix_t &B);
 
     struct DiscretizationData
     {
@@ -112,9 +128,15 @@ public:
     };
 
 private:
-    // CppAD function
     CppAD::ADFun<scalar_t> f_;
+#if CODEGEN
+    std::unique_ptr<CppAD::cg::DynamicLib<double>> dynamicLib;
+    std::unique_ptr<CppAD::cg::GenericModel<double>> model;
+    param_vector_t current_parameters;
+#endif
+
     bool initialized = false;
+    bool parameters_set = false;
 };
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -125,6 +147,35 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
         return;
     }
 
+#if CODEGEN
+    dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM + PARAM_DIM);
+    x.setOnes();
+    CppAD::Independent(x, 0, false);
+
+    const state_vector_ad_t &state = x.segment<STATE_DIM>(0);
+    const input_vector_ad_t &input = x.segment<INPUT_DIM>(STATE_DIM);
+    const param_vector_ad_t &param = x.segment<PARAM_DIM>(STATE_DIM + INPUT_DIM);
+
+    state_vector_ad_t dx;
+    systemFlowMap(state, input, param, dx);
+
+    f_ = CppAD::ADFun<scalar_t>(x, dynamic_vector_ad_t(dx));
+    f_.optimize();
+
+    CppAD::cg::ModelCSourceGen<double> cgen(f_, "model");
+    cgen.setCreateForwardZero(true);
+    cgen.setCreateJacobian(true);
+    CppAD::cg::ModelLibraryCSourceGen<double> libcgen(cgen);
+
+    // compile source code
+    CppAD::cg::DynamicModelLibraryProcessor<double> p(libcgen);
+
+    CppAD::cg::GccCompiler<double> compiler;
+    compiler.addCompileFlag("-O3");
+    dynamicLib = p.createDynamicLibrary(compiler);
+
+    model = dynamicLib->model("model");
+#else
     CppAD::thread_alloc::hold_memory(true);
 
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM);
@@ -144,6 +195,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
     // store operation sequence in x' = f(x) and stop recording
     f_ = CppAD::ADFun<scalar_t>(x, dynamic_vector_ad_t(dx));
     f_.optimize();
+#endif
 
     initialized = true;
 }
@@ -151,7 +203,12 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::updateModelParameters(param_vector_t param)
 {
+#if CODEGEN
+    current_parameters = param;
+#else
     f_.new_dynamic(dynamic_vector_t(param));
+#endif
+    parameters_set = true;
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -159,12 +216,23 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computef(const state_vecto
                                                                const input_vector_t &u,
                                                                state_vector_t &f)
 {
-    assert(initialized);
-    dynamic_vector_t input(STATE_DIM + INPUT_DIM, 1);
+    assert(initialized and parameters_set);
+
+#if CODEGEN
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM + PARAM_DIM);
+    input << x, u, current_parameters;
+
+    CppAD::cg::ArrayView<const double> input_view(input.data(), input.size());
+    CppAD::cg::ArrayView<double> f_view(f.data(), f.size());
+
+    model->ForwardZero(input_view, f_view);
+#else
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM);
     input << x, u;
     dynamic_vector_map_t f_map(f.data(), STATE_DIM);
 
     f_map << f_.Forward(0, input);
+#endif
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
@@ -173,16 +241,30 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
                                                                        state_matrix_t &A,
                                                                        control_matrix_t &B)
 {
-    assert(initialized);
+    assert(initialized and parameters_set);
+
+#if CODEGEN
+    dynamic_vector_t input(STATE_DIM + INPUT_DIM + PARAM_DIM);
+    input << x, u, current_parameters;
+
+    using full_jacobian_t = Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM + PARAM_DIM, Eigen::RowMajor>;
+    full_jacobian_t J;
+
+    CppAD::cg::ArrayView<const double> input_view(input.data(), input.size());
+    CppAD::cg::ArrayView<double> J_view(J.data(), J.size());
+
+    model->Jacobian(input_view, J_view);
+#else
     dynamic_vector_t input(STATE_DIM + INPUT_DIM);
     input << x, u;
     Eigen::Matrix<double, STATE_DIM, STATE_DIM + INPUT_DIM, Eigen::RowMajor> J;
-    dynamic_vector_map_t J_map(J.data(), (STATE_DIM + INPUT_DIM) * STATE_DIM);
+    dynamic_vector_map_t J_map(J.data(), J.size());
 
     J_map << f_.Jacobian(input);
+#endif
 
-    A = J.template leftCols<STATE_DIM>();
-    B = J.template rightCols<INPUT_DIM>();
+    A = J.template block<STATE_DIM, STATE_DIM>(0, 0);
+    B = J.template block<STATE_DIM, INPUT_DIM>(0, STATE_DIM);
 }
 
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>

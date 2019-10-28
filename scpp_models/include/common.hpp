@@ -89,8 +89,8 @@ Eigen::Matrix<T, 3, 3> rotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
     const T psi = eta.z();
 
     Eigen::Matrix<T, 3, 3> M;
-    M.row(0) << cos(psi), -sin(psi), 0;
-    M.row(1) << cos(theta) * sin(psi), cos(theta) * cos(psi), 0;
+    M.row(0) << cos(psi), -sin(psi), T(0.);
+    M.row(1) << cos(theta) * sin(psi), cos(theta) * cos(psi), T(0.);
     M.row(2) << -sin(theta) * cos(psi), sin(theta) * sin(psi), cos(theta);
 
     return M / cos(theta);

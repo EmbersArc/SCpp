@@ -15,8 +15,8 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
 
     // state variables
     Eigen::Matrix<T, 3, 1> v(x(3), x(4), x(5));
-    Eigen::Matrix<T, 3, 1> eta(x(6), x(7), 0.);
-    Eigen::Matrix<T, 3, 1> w(x(8), x(9), 0);
+    Eigen::Matrix<T, 3, 1> eta(x(6), x(7), T(0.));
+    Eigen::Matrix<T, 3, 1> w(x(8), x(9), T(0.));
 
     auto R_I_B = eulerToQuaternion(eta).toRotationMatrix();
 

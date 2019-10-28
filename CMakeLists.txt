@@ -22,15 +22,16 @@ add_subdirectory(lib/socp_interface)
 execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 
-# CppADCG
+# CppADCodegen
 execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
 execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
-
 
 # INCLUDES
 set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/external
     lib/CppAD/include
+    lib/CppADCodegen/include
+    lib/CppADCodegen/build/include
 )
 set(SCPP_INCLUDE_DIRECTORIES
     scpp_core/include
@@ -66,7 +67,7 @@ set(MPC_SOURCES
 
 add_library(mpc_lib SHARED ${MPC_SOURCES})
 
-target_link_libraries(mpc_lib scop_lib fmt stdc++fs)
+target_link_libraries(mpc_lib scop_lib fmt stdc++fs dl)
 target_include_directories(mpc_lib PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
