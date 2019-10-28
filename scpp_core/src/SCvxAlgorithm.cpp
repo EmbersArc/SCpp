@@ -91,6 +91,7 @@ bool SCvxAlgorithm::iterate()
         print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
         // compare linear and nonlinear costs
+        timer = tic();
         const double nonlinear_cost_dynamics = getNonlinearCost();
         const double linear_cost_dynamics = solver->getSolutionValue("norm1_nu", {});
 
@@ -111,6 +112,7 @@ bool SCvxAlgorithm::iterate()
         const double predicted_change = last_nonlinear_cost.value() - linear_cost; // delta_L
 
         last_nonlinear_cost = nonlinear_cost;
+        print("{:<{}}{:.2f}ms\n", "Time, cost comparison:", 50, toc(timer));
 
         print("{:<{}}{:.5f}\n", "Actual change:", 50, actual_change);
         print("{:<{}}{:.5f}\n", "Predicted change:", 50, predicted_change);
