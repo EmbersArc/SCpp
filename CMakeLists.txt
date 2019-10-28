@@ -22,6 +22,11 @@ add_subdirectory(lib/socp_interface)
 execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 
+# CppADCG
+execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
+execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
+
+
 # INCLUDES
 set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/external
