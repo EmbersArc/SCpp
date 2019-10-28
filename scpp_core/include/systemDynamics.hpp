@@ -123,6 +123,8 @@ public:
 
         void initialize(size_t K, bool interpolate_input);
 
+        bool interpolatedInput() const;
+
         size_t n_X() const;
         size_t n_U() const;
     };
@@ -271,15 +273,27 @@ template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::initialize(size_t K, bool interpolate_input, bool free_final_time)
 {
     A.resize(K - 1);
+
     B.resize(K - 1);
+
     if (interpolate_input)
     {
         C.resize(K - 1);
     }
+    else
+    {
+        C.clear();
+    }
+
     if (free_final_time)
     {
         s.resize(K - 1);
     }
+    else
+    {
+        s.clear();
+    }
+
     z.resize(K - 1);
 }
 
@@ -325,6 +339,12 @@ template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 size_t SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::n_U() const
 {
     return U.size();
+}
+
+template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
+bool SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::interpolatedInput() const
+{
+    return U.size() == X.size();
 }
 
 } // namespace scpp
