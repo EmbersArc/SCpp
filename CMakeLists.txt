@@ -19,12 +19,13 @@ set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(lib/socp_interface)
 
 # CppAD
-execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 
 # CppADCodegen
-execute_process(COMMAND mkdir ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
-execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
+execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD ..
+                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
 
 # INCLUDES
 set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
@@ -57,6 +58,8 @@ set(MPC_SOURCES
     scpp_core/src/SCAlgorithm.cpp
     scpp_core/src/SCvxProblem.cpp
     scpp_core/src/SCvxAlgorithm.cpp
+    scpp_core/src/SCvxRHProblem.cpp
+    scpp_core/src/SCvxRHAlgorithm.cpp
     scpp_core/src/LQR.cpp
     scpp_core/src/LQRAlgorithm.cpp
 
