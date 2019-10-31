@@ -3,6 +3,8 @@
 #include "SCAlgorithm.hpp"
 #include "SCvxAlgorithm.hpp"
 #include "timing.hpp"
+#include "simulation.hpp"
+#include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -21,7 +23,7 @@ int main()
 
     solver.initialize();
 
-    std::vector<TrajectoryData> all_td;
+    std::vector<trajectory_data_t> all_td;
 
     solver.solve();
     solver.getAllSolutions(all_td);
@@ -62,4 +64,20 @@ int main()
         }
     }
     fmt::print("{:<{}}{:.2f}ms\n", "Time, solution files:", 50, toc(timer));
+
+    // verify by integrating
+    const auto &td = all_td.back();
+    Model::state_vector_t x = td.X.front();
+    const double timestep = td.t / (td.X.size() - 1);
+    const bool first_order_hold = td.interpolatedInput();
+
+    for (size_t k = 0; k < td.X.size() - 1; k++)
+    {
+        scpp::simulate(model, timestep, td.U[k], first_order_hold ? td.U[k + 1] : td.U[k], x);
+    }
+
+    double full_error = (x - td.X.back()).lpNorm<1>();
+
+    fmt::print("\nVerifying solution...\n");
+    fmt::print("{:<{}}{:.5f}\n", "Final deviation:", 50, full_error);
 }
