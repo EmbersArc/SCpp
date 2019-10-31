@@ -14,4 +14,4 @@ trust_region                        5.
 
 nondimensionalize                   false
 
-max_iterations                      30
+max_iterations                      20

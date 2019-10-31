@@ -1,7 +1,7 @@
 free_final_time                     true
 interpolate_input                   true
 
-K                                   30
+K                                   100
 
 nondimensionalize                   true
 
@@ -13,6 +13,6 @@ weight_virtual_control              1e4
 trust_region_factor                 1.3
 
 nu_tol                              1e-5
-delta_tol                           1e-3
+delta_tol                           1e-5
 
 max_iterations                      15

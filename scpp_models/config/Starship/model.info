@@ -22,27 +22,27 @@ r_T_B
 
 ; ----- initial values -----
 random_initial_state        false
-m_init 150000.
+m_init 140000.
 ; position
 r_init
 {
     (0)    200.
-    (1)    0.
-    (2)    800.
+    (1)    200.
+    (2)    700.
 }
 ; velocity
 v_init
 {
-    (0)     -10.
-    (1)     0.
-    (2)     -60.
-}
+    (0)     -25.
+    (1)     -25.
+    (2)     -70.
+} 
 ; orientation
 rpy_init
 {
-    (0)     0.
-    (1)     -60.
-    (2)     -90. ; not controllable
+    (0)     70.
+    (1)     -70.
+    (2)     0. ; not controllable
 }
 ; angular velocity
 w_init
@@ -53,7 +53,7 @@ w_init
 }
 
 ; ----- final values -----
-final_time      15.
+final_time      10.
 m_dry       120000.
 ; position
 r_final
@@ -85,16 +85,16 @@ w_final
 }
 
 ; thrust
-exact_minimum_thrust    false
-T_min       1500000.
+exact_minimum_thrust    true
+T_min       2000000.
 T_max       3000000.
 I_sp            330.
 
 ; maximum gimbal
-gimbal_max  12.
+gimbal_max  15.
 ; maximum angle
 theta_max   90.
 ; glideslope angle
-gamma_gs    25.
+gamma_gs    45.
 ; maximum angluar velocity
-w_B_max     45.
+w_B_max     60.

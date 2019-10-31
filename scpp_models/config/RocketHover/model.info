@@ -8,19 +8,19 @@ g_I
 
 J_B
 {
-    (0)   0.0751
-    (1)   0.0751
-    (2)   0.001
+    (0)   0.02
+    (1)   0.02
+    (2)   0.0001
 }
 
 r_T_B
 {
     (0)   0
     (1)   0
-    (2)   -0.5
+    (2)   -0.305
 }
 
-m       1.40
+m       0.5
 
 
 ; ----- initial values -----
@@ -89,8 +89,8 @@ constrain_initial_final     true
 add_slack_variables         false
 
 ; thrust
-T_min       5.
-T_max       20.
+T_min       2.
+T_max       10.
 ; maximum gimbal
 gimbal_max  12.
 ; maximum angle
