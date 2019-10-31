@@ -22,14 +22,14 @@ int main()
     auto model = std::make_shared<Model>();
     model->loadParameters();
 
-    scpp::SCvxAlgorithm solver(model);
+    scpp::SCAlgorithm solver(model);
 
     solver.initialize();
 
     const double time_step = 0.05;
-    const size_t max_steps = 2;
+    const size_t max_steps = 100;
 
-    TrajectoryData td;
+    trajectory_data_t td;
 
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
@@ -38,32 +38,31 @@ int main()
 
     double timer_run = tic();
     size_t sim_step = 0;
-    while ((x - model->p.x_final).norm() > 0.02 and sim_step < max_steps)
+    while (sim_step < max_steps)
     {
         print("\n{:*^{}}\n\n", format("<SIMULATION STEP {}>", sim_step), 60);
 
         const bool warm_start = sim_step > 0;
         solver.solve(warm_start);
         solver.getSolution(td);
-        const size_t K = td.n_X();
 
         const Model::input_vector_t u0 = td.U.at(0);
-        const Model::input_vector_t u1 = scpp::interpolatedInput(td.U, time_step, td.t, false);
+        const bool first_order_hold = td.interpolatedInput();
+        const Model::input_vector_t u1 = scpp::interpolatedInput(td.U, time_step, td.t, first_order_hold);
 
-        scpp::simulate(model, td.t / (K - 1), u0, u1, x);
+        scpp::simulate(model, time_step, u0, u1, x);
 
         X_sim.push_back(x);
         U_sim.push_back(u0);
 
+        bool reached_end = (x - model->p.x_final).norm() < 0.02 or td.t < 0.25;
+
+        if (reached_end)
+        {
+            break;
+        }
+
         sim_step++;
-        // if (sim_step == max_steps)
-        // {
-        //     X_sim = reduce_vector(X_sim, X_sim.size() / 10);
-        //     U_sim = reduce_vector(U_sim, U_sim.size() / 10);
-        //     // add the planned trajectory
-        //     X_sim.insert(X_sim.end(), X.begin(), X.end());
-        //     U_sim.insert(U_sim.end(), U.begin(), U.end());
-        // }
     }
 
     print("\n");
