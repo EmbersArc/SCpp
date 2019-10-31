@@ -76,7 +76,7 @@ bool SCvxAlgorithm::iterate()
         // solve problem
         timer = tic();
 
-        const TrajectoryData old_td = td;
+        const trajectory_data_t old_td = td;
 
         solver->solveProblem(false);
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -248,12 +248,12 @@ void SCvxAlgorithm::readSolution()
     }
 }
 
-void SCvxAlgorithm::getSolution(TrajectoryData &trajectory) const
+void SCvxAlgorithm::getSolution(trajectory_data_t &trajectory) const
 {
     trajectory = td;
 }
 
-void SCvxAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories)
+void SCvxAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectories)
 {
     if (nondimensionalize)
     {

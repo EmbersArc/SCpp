@@ -9,8 +9,8 @@ op::SecondOrderConeProgram buildSCProblem(
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,
     double &weight_virtual_control,
-    TrajectoryData &td,
-    DiscretizationData &dd)
+    trajectory_data_t &td,
+    discretization_data_t &dd)
 {
     const size_t K = td.n_X();
 
@@ -35,7 +35,7 @@ op::SecondOrderConeProgram buildSCProblem(
         // minimize total time
         socp.addMinimizationTerm(param(weight_time) * var("sigma"));
         // Total time must not be negative
-        socp.addConstraint((1.0) * var("sigma") + (-0.01) >= (0.0));
+        socp.addConstraint((1.0) * var("sigma") + (-0.001) >= (0.0));
     }
 
     for (size_t k = 0; k < K - 1; k++)
@@ -152,20 +152,20 @@ op::SecondOrderConeProgram buildSCProblem(
          *
          */
 
+        // leaving state out for now
+        // for (size_t i = 0; i < Model::state_dim; i++)
+        // {
+        //     norm2_args.push_back(param(td.X[k](i)) + (-1.0) * var("X", {i, k}));
+        // }
+    }
+    for (size_t k = 0; k < td.n_U(); k++)
+    {
         std::vector<op::AffineExpression> norm2_args;
 
         norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
-
-        for (size_t i = 0; i < Model::state_dim; i++)
+        for (size_t i = 0; i < Model::input_dim; i++)
         {
-            norm2_args.push_back(param(td.X[k](i)) + (-1.0) * var("X", {i, k}));
-        }
-        if (not(dd.interpolatedInput() and k == K - 1))
-        {
-            for (size_t i = 0; i < Model::input_dim; i++)
-            {
-                norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
-            }
+            norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
         }
         socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }

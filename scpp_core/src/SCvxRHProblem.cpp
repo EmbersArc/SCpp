@@ -11,8 +11,8 @@ op::SecondOrderConeProgram buildSCvxRHProblem(
     Model::input_vector_t &input_weights,
     Model::state_vector_t &x_init,
     Model::state_vector_t &x_final,
-    TrajectoryData &td,
-    DiscretizationData &dd)
+    trajectory_data_t &td,
+    discretization_data_t &dd)
 {
     op::SecondOrderConeProgram socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
 

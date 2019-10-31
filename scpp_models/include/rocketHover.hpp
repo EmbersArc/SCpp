@@ -39,13 +39,13 @@ public:
 
     void redimensionalize() override;
 
-    void nondimensionalizeTrajectory(TrajectoryData &td) override;
+    void nondimensionalizeTrajectory(trajectory_data_t &td) override;
 
-    void redimensionalizeTrajectory(TrajectoryData &td) override;
+    void redimensionalizeTrajectory(trajectory_data_t &td) override;
 
-    void getNewModelParameters(param_vector_t &param);
+    void getNewModelParameters(param_vector_t &param) override;
 
-    void getInitializedTrajectory(TrajectoryData &td) override;
+    void getInitializedTrajectory(trajectory_data_t &td) override;
 
     void loadParameters();
 

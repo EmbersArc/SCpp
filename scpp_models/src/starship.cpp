@@ -37,7 +37,7 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
     f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
 }
 
-void Starship::getInitializedTrajectory(TrajectoryData &td)
+void Starship::getInitializedTrajectory(trajectory_data_t &td)
 {
     for (size_t k = 0; k < td.n_X(); k++)
     {
@@ -170,7 +170,7 @@ void Starship::getNewModelParameters(param_vector_t &param)
     param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
 }
 
-void Starship::nondimensionalizeTrajectory(TrajectoryData &td)
+void Starship::nondimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -183,7 +183,7 @@ void Starship::nondimensionalizeTrajectory(TrajectoryData &td)
     }
 }
 
-void Starship::redimensionalizeTrajectory(TrajectoryData &td)
+void Starship::redimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {

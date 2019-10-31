@@ -86,7 +86,7 @@ bool SCvxRHAlgorithm::iterate()
         // solve problem
         timer = tic();
 
-        const TrajectoryData old_td = td;
+        const trajectory_data_t old_td = td;
 
         solver->solveProblem(false);
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -221,7 +221,9 @@ void SCvxRHAlgorithm::setFinalState(const Model::state_vector_t &x)
 
 void SCvxRHAlgorithm::resetTrajectory()
 {
+    const double t_save = td.t;
     model->getInitializedTrajectory(td);
+    td.t = t_save;
     trust_region = initial_trust_region;
 }
 
@@ -264,12 +266,12 @@ void SCvxRHAlgorithm::readSolution()
     }
 }
 
-void SCvxRHAlgorithm::getSolution(TrajectoryData &trajectory) const
+void SCvxRHAlgorithm::getSolution(trajectory_data_t &trajectory) const
 {
     trajectory = td;
 }
 
-void SCvxRHAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories) const
+void SCvxRHAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectories) const
 {
     all_trajectories = all_td;
 }

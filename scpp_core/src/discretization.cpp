@@ -39,8 +39,8 @@ void exactLinearDiscretization(Model::ptr_t model,
 
 void multipleShooting(
     Model::ptr_t model,
-    TrajectoryData &td,
-    DiscretizationData &dd)
+    trajectory_data_t &td,
+    discretization_data_t &dd)
 {
     if (not dd.interpolatedInput() and not dd.variableTime())
         multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, td, dd);

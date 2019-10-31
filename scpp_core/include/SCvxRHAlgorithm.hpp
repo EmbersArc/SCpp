@@ -34,13 +34,13 @@ public:
      * @brief Get the solution variables object.
      * 
      */
-    void getSolution(TrajectoryData &trajectory) const;
+    void getSolution(trajectory_data_t &trajectory) const;
 
     /**
      * @brief Get the solution from each iteration
      * 
      */
-    void getAllSolutions(std::vector<TrajectoryData> &all_trajectories) const;
+    void getAllSolutions(std::vector<trajectory_data_t> &all_trajectories) const;
 
     void setInitialState(const Model::state_vector_t &x);
 
@@ -100,14 +100,14 @@ private:
     size_t max_iterations;
     std::optional<double> last_nonlinear_cost;
 
-    DiscretizationData dd;
+    discretization_data_t dd;
 
-    TrajectoryData td;
+    trajectory_data_t td;
 
     Model::state_vector_t state_weights;
     Model::input_vector_t input_weights;
 
-    std::vector<TrajectoryData> all_td;
+    std::vector<trajectory_data_t> all_td;
 
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;

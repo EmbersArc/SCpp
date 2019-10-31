@@ -135,8 +135,8 @@ void ODE<INPUT_TYPE, TIME_TYPE>::operator()(const ode_matrix_t &V, ode_matrix_t 
 template <InputType INPUT_TYPE, TimeType TIME_TYPE>
 void multipleShootingImplementation(
     Model::ptr_t model,
-    TrajectoryData &td,
-    DiscretizationData &dd)
+    trajectory_data_t &td,
+    discretization_data_t &dd)
 {
     const size_t K = td.n_X();
 
@@ -164,7 +164,7 @@ void multipleShootingImplementation(
         const Model::input_vector_t u1 = INPUT_TYPE == InputType::interpolated ? td.U[k + 1] : u0;
         ODEFun odeMultipleShooting(u0, u1, td.t, dt, model);
 
-        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 3.);
+        integrate_adaptive(stepper, odeMultipleShooting, V, 0., dt, dt / 5.);
 
         size_t cols = 1;
 

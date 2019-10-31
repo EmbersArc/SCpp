@@ -38,13 +38,13 @@ public:
      * @param U     The input trajectory.
      * @param t     The final time.
      */
-    void getSolution(TrajectoryData &trajectory) const;
+    void getSolution(trajectory_data_t &trajectory) const;
 
     /**
      * @brief Get the solution from each iteration
      * 
      */
-    void getAllSolutions(std::vector<TrajectoryData> &all_trajectories);
+    void getAllSolutions(std::vector<trajectory_data_t> &all_trajectories);
 
 private:
     /**
@@ -90,10 +90,10 @@ private:
     double delta_tol;
     size_t max_iterations;
 
-    DiscretizationData dd;
+    discretization_data_t dd;
 
-    TrajectoryData td;
-    std::vector<TrajectoryData> all_td;
+    trajectory_data_t td;
+    std::vector<trajectory_data_t> all_td;
 
     size_t sigma_index = 0;
     Eigen::MatrixXi X_indices;

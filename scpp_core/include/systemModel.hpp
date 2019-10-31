@@ -6,6 +6,8 @@
 
 #include "optimizationProblem.hpp"
 #include "systemDynamics.hpp"
+#include "trajectoryData.hpp"
+#include "discretizationData.hpp"
 
 namespace scpp
 {
@@ -15,6 +17,9 @@ class SystemModel : public SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
     using BASE = SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>;
+
+    using trajectory_data_t = TrajectoryData<BASE>;
+    using discretization_data_t = DiscretizationData<BASE>;
 
     using ptr_t = std::shared_ptr<DERIVED>;
 
@@ -39,8 +44,6 @@ public:
     using typename BASE::state_matrix_ad_t;
     using typename BASE::state_vector_ad_t;
 
-    using TrajectoryData = typename BASE::TrajectoryData;
-
     enum : size_t
     {
         state_dim = STATE_DIM,
@@ -60,7 +63,7 @@ public:
      * @brief Function to initialize the trajectory of a derived model. Has to be implemented by the derived class. Only required for SC models,
      * 
      */
-    virtual void getInitializedTrajectory(TrajectoryData &)
+    virtual void getInitializedTrajectory(trajectory_data_t &)
     {
         throw std::runtime_error("getInitializedTrajectory: This function has to be implemented by the derived class.");
     };
@@ -124,7 +127,7 @@ public:
      * @brief Function to remove mass and length dimensions from state and input trajectory.
      * 
      */
-    virtual void nondimensionalizeTrajectory(TrajectoryData &)
+    virtual void nondimensionalizeTrajectory(trajectory_data_t &)
     {
         fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
     };
@@ -133,7 +136,7 @@ public:
      * @brief Function to add mass and length dimensions to state and input trajectory.
      * 
      */
-    virtual void redimensionalizeTrajectory(TrajectoryData &)
+    virtual void redimensionalizeTrajectory(trajectory_data_t &)
     {
         fmt::print("redimensionalizeTrajectory: Function called without implementation.");
     };
@@ -141,17 +144,17 @@ public:
     static const std::string getModelName()
     {
         return DERIVED::modelName;
-    }
+    };
 
     void setParameterFolder(const std::string &path)
     {
         param_folder_path = path;
-    }
+    };
 
     const std::string getParameterFolder() const
     {
         return param_folder_path + getModelName();
-    }
+    };
 
 private:
     std::string param_folder_path = "../scpp_models/config/";

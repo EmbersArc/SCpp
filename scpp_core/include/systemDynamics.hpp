@@ -9,10 +9,8 @@
 #endif
 
 #include "timing.hpp"
-
 namespace scpp
 {
-
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
 class SystemDynamics
 {
@@ -96,38 +94,6 @@ public:
                           const input_vector_t &u,
                           state_matrix_t &A,
                           control_matrix_t &B);
-
-    struct DiscretizationData
-    {
-        state_matrix_v_t A;
-        control_matrix_v_t B;
-        control_matrix_v_t C;
-        state_vector_v_t s;
-        state_vector_v_t z;
-
-        void initialize(size_t K, bool interpolate_input, bool free_final_time);
-
-        bool interpolatedInput() const;
-
-        bool variableTime() const;
-
-        size_t n_X() const;
-        size_t n_U() const;
-    };
-
-    struct TrajectoryData
-    {
-        state_vector_v_t X;
-        input_vector_v_t U;
-        double t;
-
-        void initialize(size_t K, bool interpolate_input);
-
-        bool interpolatedInput() const;
-
-        size_t n_X() const;
-        size_t n_U() const;
-    };
 
 private:
     CppAD::ADFun<scalar_t> f_;
@@ -267,84 +233,6 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::computeJacobians(const sta
 
     A = J.template block<STATE_DIM, STATE_DIM>(0, 0);
     B = J.template block<STATE_DIM, INPUT_DIM>(0, STATE_DIM);
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::initialize(size_t K, bool interpolate_input, bool free_final_time)
-{
-    A.resize(K - 1);
-
-    B.resize(K - 1);
-
-    if (interpolate_input)
-    {
-        C.resize(K - 1);
-    }
-    else
-    {
-        C.clear();
-    }
-
-    if (free_final_time)
-    {
-        s.resize(K - 1);
-    }
-    else
-    {
-        s.clear();
-    }
-
-    z.resize(K - 1);
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::initialize(size_t K, bool interpolate_input)
-{
-    X.resize(K);
-    U.resize(interpolate_input ? K : K - 1);
-    t = 0.;
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-bool SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::interpolatedInput() const
-{
-    return not C.empty();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-bool SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::variableTime() const
-{
-    return not s.empty();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-size_t SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::n_X() const
-{
-    return A.size();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-size_t SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::DiscretizationData::n_U() const
-{
-    return B.size();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-size_t SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::n_X() const
-{
-    return X.size();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-size_t SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::n_U() const
-{
-    return U.size();
-}
-
-template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
-bool SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::TrajectoryData::interpolatedInput() const
-{
-    return U.size() == X.size();
 }
 
 } // namespace scpp

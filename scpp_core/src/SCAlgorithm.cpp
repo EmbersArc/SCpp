@@ -117,6 +117,9 @@ void SCAlgorithm::solve(bool warm_start)
     {
         if (nondimensionalize)
             model->nondimensionalizeTrajectory(td);
+
+        weight_trust_region_time /= trust_region_factor;
+        weight_trust_region_trajectory /= trust_region_factor;
     }
     else
     {
@@ -150,7 +153,7 @@ void SCAlgorithm::solve(bool warm_start)
         else if (iteration > 2)
         {
             // else increase trust region weight
-            // weight_trust_region_time *= trust_region_factor;
+            weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
         }
     }
@@ -215,12 +218,12 @@ void SCAlgorithm::readSolution()
     }
 }
 
-void SCAlgorithm::getSolution(TrajectoryData &trajectory) const
+void SCAlgorithm::getSolution(trajectory_data_t &trajectory) const
 {
     trajectory = td;
 }
 
-void SCAlgorithm::getAllSolutions(std::vector<TrajectoryData> &all_trajectories)
+void SCAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectories)
 {
     if (nondimensionalize)
     {

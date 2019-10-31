@@ -1,5 +1,8 @@
 #pragma once
 
+
+// ---
+
 // #include "starship.hpp"
 // using Model = scpp::models::Starship;
 
@@ -8,5 +11,5 @@ using Model = scpp::models::RocketHover;
 
 // ---
 
-using DiscretizationData = Model::DiscretizationData;
-using TrajectoryData = Model::TrajectoryData;
+using discretization_data_t = Model::discretization_data_t;
+using trajectory_data_t = Model::trajectory_data_t;

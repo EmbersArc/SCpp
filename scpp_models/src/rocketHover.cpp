@@ -143,7 +143,7 @@ void RocketHover::redimensionalize()
     p.redimensionalize();
 }
 
-void RocketHover::nondimensionalizeTrajectory(TrajectoryData &td)
+void RocketHover::nondimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -155,7 +155,7 @@ void RocketHover::nondimensionalizeTrajectory(TrajectoryData &td)
     }
 }
 
-void RocketHover::redimensionalizeTrajectory(TrajectoryData &td)
+void RocketHover::redimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -167,7 +167,7 @@ void RocketHover::redimensionalizeTrajectory(TrajectoryData &td)
     }
 }
 
-void RocketHover::getInitializedTrajectory(TrajectoryData &td)
+void RocketHover::getInitializedTrajectory(trajectory_data_t &td)
 {
     for (size_t k = 0; k < td.n_X(); k++)
     {
