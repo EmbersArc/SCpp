@@ -58,8 +58,6 @@ set(MPC_SOURCES
     scpp_core/src/SCAlgorithm.cpp
     scpp_core/src/SCvxProblem.cpp
     scpp_core/src/SCvxAlgorithm.cpp
-    scpp_core/src/SCvxRHProblem.cpp
-    scpp_core/src/SCvxRHAlgorithm.cpp
     scpp_core/src/LQR.cpp
     scpp_core/src/LQRAlgorithm.cpp
 
