@@ -4,18 +4,11 @@
 #include "simulation.hpp"
 #include "timing.hpp"
 #include "vectorOperations.hpp"
+#include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
 
 fs::path getOutputPath() { return fs::path("..") / "output" / Model::getModelName(); }
-
-// calculate an exponential moving average
-double expMovingAverage(double previousAverage, double period, double newValue)
-{
-    const double factor = 2. / (period + 1.);
-    const double result = (newValue - previousAverage) * factor + previousAverage;
-    return result;
-}
 
 /**
  * @brief Simulates a trajectory with the MPC controller.
@@ -68,7 +61,7 @@ int main()
         const double t_start_solve = tic();
         solver.solve();
         const double solve_time = std::max(toc(t_start_solve) * 0.001, min_timestep);
-        avg_solve_time = expMovingAverage(avg_solve_time, 20, solve_time);
+        avg_solve_time = scpp::expMovingAverage(avg_solve_time, 20, solve_time);
         fmt::print("{:<{}}{:.2f}ms\n", "Average solve time:", 50, avg_solve_time * 1000);
 
         // move solve_time forward

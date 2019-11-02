@@ -18,4 +18,11 @@ Model::input_vector_t interpolatedInput(const Model::input_vector_v_t &U, double
     return u;
 }
 
+double expMovingAverage(double previousAverage, double period, double newValue)
+{
+    const double factor = 2. / (period + 1.);
+    const double result = (newValue - previousAverage) * factor + previousAverage;
+    return result;
+}
+
 } // namespace scpp
