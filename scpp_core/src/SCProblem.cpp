@@ -152,20 +152,20 @@ op::SecondOrderConeProgram buildSCProblem(
          *
          */
 
-        // leaving state out for now
-        // for (size_t i = 0; i < Model::state_dim; i++)
-        // {
-        //     norm2_args.push_back(param(td.X[k](i)) + (-1.0) * var("X", {i, k}));
-        // }
-    }
-    for (size_t k = 0; k < td.n_U(); k++)
-    {
         std::vector<op::AffineExpression> norm2_args;
 
         norm2_args.push_back((0.5) + (-0.5) * var("Delta", {k}));
-        for (size_t i = 0; i < Model::input_dim; i++)
+
+        for (size_t i = 0; i < Model::state_dim; i++)
         {
-            norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
+            norm2_args.push_back(param(td.X[k](i)) + (-1.0) * var("X", {i, k}));
+        }
+        if (not(not dd.interpolatedInput() and k == K - 1))
+        {
+            for (size_t i = 0; i < Model::input_dim; i++)
+            {
+                norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
+            }
         }
         socp.addConstraint(op::norm2(norm2_args) <= (0.5) + (0.5) * var("Delta", {k}));
     }
@@ -182,7 +182,7 @@ op::SecondOrderConeProgram buildSCProblem(
         {
             norm2_args.push_back((1.0) * var("Delta", {k}));
         }
-        socp.addConstraint(op::norm2(norm2_args) <= (1.0) * var("norm2_Delta"));
+        socp.addConstraint(op::norm2(norm2_args) <= 1.0 * var("norm2_Delta"));
 
         // Minimize norm2_Delta
         socp.addMinimizationTerm(param(weight_trust_region_trajectory) * var("norm2_Delta"));
