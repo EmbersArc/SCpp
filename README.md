@@ -12,7 +12,7 @@ This library implements various optimal control algorithms that are particularly
 
 ## Features
 
- * JIT derivative code generation with CppAD
+ * JIT derivative code generation with CppAD/CppADCodegen
  * Intuitive interface to implement custom models
  * Rapid iteration with parameters files
  
@@ -21,7 +21,6 @@ This library implements various optimal control algorithms that are particularly
 
  * Generic Rocket Model
  * SpaceX Starship Landing Model
- 
 
 ## Dependencies
 
@@ -30,6 +29,7 @@ This library implements various optimal control algorithms that are particularly
  * Boost (odeint and ptree)
  * fmt (included as submodule)
  * ECOS (included as submodule)
+ * CppAD/CppADCodegen (included as submodule)
 
 ## Instructions
 
@@ -60,7 +60,7 @@ Calculated trajectories are written to the `output/<modelname>` directory.
 
 ### Create a Custom Model
 
-See existing models in the `socp_mpc/models` folder for some examples.
+See existing models in the `socp_models` folder for some examples.
 
 ## Papers
 
@@ -69,9 +69,11 @@ See existing models in the `socp_mpc/models` folder for some examples.
 * [Successive Convexification for 6-DoF Mars Rocket Powered Landing with Free-Final-Time](https://arxiv.org/abs/1802.03827)
 
 ## Examples
+
 (click on videos for higher quality versions)
 
 ### Rocket Trajectory Model with Free-Final-Time
+
 <p align="center">
 <a href="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-mobile.mp4">
   <img width="400" src="https://thumbs.gfycat.com/DeliriousCandidAldabratortoise-size_restricted.gif">
