@@ -26,7 +26,8 @@ double expMovingAverage(double previousAverage, double period, double newValue)
 }
 
 std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_t &td,
-                                                          const Eigen::Vector3d offset)
+                                                          const Eigen::Vector3d offset,
+                                                          const double g)
 {
     // calculate accelerations
     std::vector<Eigen::Vector3d> acc_passenger_b;
@@ -57,9 +58,9 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
 
         const Eigen::Vector3d dw = (w1 - w0) / dt;
         const Eigen::Vector3d a_i = (vp1_i - vp0_i) / dt;
-        const Eigen::Vector3d g(0., 0., 0.);
+        const Eigen::Vector3d g_I(0., 0., g);
 
-        const Eigen::Vector3d a_b = a_i - w.cross(w.cross(r_p_b)) - dw.cross(r_p_b) + q.inverse() * g;
+        const Eigen::Vector3d a_b = a_i - w.cross(w.cross(r_p_b)) - dw.cross(r_p_b) + q.inverse() * g_I;
         acc_passenger_b.push_back(a_b);
     }
     return acc_passenger_b;
