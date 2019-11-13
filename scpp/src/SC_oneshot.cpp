@@ -82,20 +82,20 @@ int main()
     // fmt::print("{:<{}}{:.5f}\n", "Final deviation:", 50, full_error);
 
     // save accelerations:
-    {
-        const fs::path iterationPath = outputPath / "x";
+    // {
+    //     const fs::path iterationPath = outputPath / "x";
 
-        if (not fs::exists(iterationPath) and not fs::create_directories(iterationPath))
-        {
-            throw std::runtime_error("Could not create output directory!");
-        }
+    //     if (not fs::exists(iterationPath) and not fs::create_directories(iterationPath))
+    //     {
+    //         throw std::runtime_error("Could not create output directory!");
+    //     }
 
-        {
-            std::ofstream f(iterationPath / "acc_passenger_b.txt");
-            for (auto &pv : getAccelerationRotatingFrame(all_td.back(), Eigen::Vector3d(0., 0., 15.)))
-            {
-                f << pv.transpose().format(CSVFormat) << "\n";
-            }
-        }
-    }
+    //     {
+    //         std::ofstream f(iterationPath / "acc_passenger_b.txt");
+    //         for (auto &pv : getAccelerationRotatingFrame(all_td.back(), Eigen::Vector3d(0., 0., 15.), 9.81))
+    //         {
+    //             f << pv.transpose().format(CSVFormat) << "\n";
+    //         }
+    //     }
+    // }
 }
