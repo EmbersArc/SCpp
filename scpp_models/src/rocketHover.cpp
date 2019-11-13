@@ -61,7 +61,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             norm2_terms.push_back(1.0 * var("epsilon", {i}));
         }
         socp.addConstraint(op::norm2(norm2_terms) <= 1.0 * var("epsilon_norm"));
-        socp.addMinimizationTerm(100. * var("epsilon_norm"));
+        socp.addMinimizationTerm(1000. * var("epsilon_norm"));
     }
 
     if (p.constrain_initial_final)
