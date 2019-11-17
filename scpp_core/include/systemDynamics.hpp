@@ -8,7 +8,6 @@
 #include <cppad/cppad.hpp>
 #endif
 
-#include "timing.hpp"
 namespace scpp
 {
 template <size_t STATE_DIM, size_t INPUT_DIM, size_t PARAM_DIM>
