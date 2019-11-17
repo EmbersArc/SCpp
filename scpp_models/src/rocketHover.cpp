@@ -18,7 +18,7 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     Eigen::Matrix<T, 3, 1> eta(x(6), x(7), T(0.));
     Eigen::Matrix<T, 3, 1> w(x(8), x(9), T(0.));
 
-    auto R_I_B = eulerToQuaternion(eta).toRotationMatrix();
+    auto R_I_B = eulerToQuaternionXYZ(eta).toRotationMatrix();
 
     auto m = par(0);
     auto g_I_ = par.segment<3>(1);
@@ -28,7 +28,7 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
 
     f.segment<3>(0) << v;
     f.segment<3>(3) << 1. / m * (R_I_B * u) + g_I_;
-    f.segment<2>(6) << (rotationJacobian(eta) * w).head<2>();
+    f.segment<2>(6) << (rotationJacobianXYZ(eta) * w).head<2>();
     f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(u)) - w.cross(w)).head<2>();
 }
 

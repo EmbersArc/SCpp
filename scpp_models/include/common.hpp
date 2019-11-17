@@ -28,7 +28,7 @@ Eigen::Matrix<T, 4, 1> quaternionToVector(const Eigen::Quaternion<T> &q)
 
 // sequence x-y'-z'' is XYZ = Z''Y'X
 template <typename T>
-Eigen::Quaternion<T> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &eta)
+Eigen::Quaternion<T> eulerToQuaternionXYZ(const Eigen::Matrix<T, 3, 1> &eta)
 {
     Eigen::Quaternion<T> q;
     q = Eigen::AngleAxis<T>(eta.x(), Eigen::Matrix<T, 3, 1>::UnitX()) *
@@ -40,7 +40,7 @@ Eigen::Quaternion<T> eulerToQuaternion(const Eigen::Matrix<T, 3, 1> &eta)
 
 // sequence x-y-z is ZYX
 template <typename T>
-Eigen::Quaternion<T> eulerToQuaternionExtrinsic(const Eigen::Matrix<T, 3, 1> &eta)
+Eigen::Quaternion<T> eulerToQuaternionZYX(const Eigen::Matrix<T, 3, 1> &eta)
 {
     Eigen::Quaternion<T> q;
     q = Eigen::AngleAxis<T>(eta.z(), Eigen::Matrix<T, 3, 1>::UnitZ()) *
@@ -50,7 +50,7 @@ Eigen::Quaternion<T> eulerToQuaternionExtrinsic(const Eigen::Matrix<T, 3, 1> &et
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 1> quaternionToEuler(const Eigen::Quaternion<T> &q)
+Eigen::Matrix<T, 3, 1> quaternionToEulerXYZ(const Eigen::Quaternion<T> &q)
 {
     const Eigen::Matrix<T, 3, 3> R = q.toRotationMatrix();
     const T phi = atan2(-R(1, 2), R(2, 2));
@@ -60,7 +60,7 @@ Eigen::Matrix<T, 3, 1> quaternionToEuler(const Eigen::Quaternion<T> &q)
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 1> quaternionToEulerExtrinsic(const Eigen::Quaternion<T> &q)
+Eigen::Matrix<T, 3, 1> quaternionToEulerZYX(const Eigen::Quaternion<T> &q)
 {
     const Eigen::Matrix<T, 3, 3> R = q.toRotationMatrix();
     const T phi = atan2(R(1, 0), R(0, 0));
@@ -82,7 +82,7 @@ Eigen::Quaternion<T> vectorToQuaternion(const Eigen::Matrix<T, 4, 1> &v)
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 3> rotationJacobian(const Eigen::Matrix<T, 3, 1> &eta)
+Eigen::Matrix<T, 3, 3> rotationJacobianXYZ(const Eigen::Matrix<T, 3, 1> &eta)
 {
     // const T phi = eta.x();
     const T theta = eta.y();
