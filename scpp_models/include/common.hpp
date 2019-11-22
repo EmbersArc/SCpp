@@ -38,6 +38,20 @@ Eigen::Quaternion<T> eulerToQuaternionXYZ(const Eigen::Matrix<T, 3, 1> &eta)
     return q;
 }
 
+template <typename T>
+Eigen::Matrix<T, 3, 3> eulerRotationMatrixXY(const Eigen::Matrix<T, 2, 1> &eta)
+{
+    const T phi = eta.x();
+    const T theta = eta.y();
+
+    Eigen::Matrix<T, 3, 3> M;
+    M.row(0) << cos(theta), T(0.), sin(theta);
+    M.row(1) << sin(theta) * sin(phi), cos(phi), -sin(phi) * cos(theta);
+    M.row(2) << -sin(theta) * cos(phi), sin(phi), cos(phi) * cos(theta);
+
+    return M;
+}
+
 // sequence x-y-z is ZYX
 template <typename T>
 Eigen::Quaternion<T> eulerToQuaternionZYX(const Eigen::Matrix<T, 3, 1> &eta)
@@ -94,6 +108,18 @@ Eigen::Matrix<T, 3, 3> rotationJacobianXYZ(const Eigen::Matrix<T, 3, 1> &eta)
     M.row(2) << -sin(theta) * cos(psi), sin(theta) * sin(psi), cos(theta);
 
     return M / cos(theta);
+}
+
+template <typename T>
+Eigen::Matrix<T, 2, 2> rotationJacobianXY(const Eigen::Matrix<T, 2, 1> &eta)
+{
+    const T theta = eta.y();
+
+    Eigen::Matrix<T, 2, 2> M;
+    M.row(0) << cos(theta), sin(theta);
+    M.row(1) << -sin(theta), cos(theta);
+
+    return M;
 }
 
 template <typename T>
