@@ -1,6 +1,8 @@
 #include "discretization.hpp"
 #include "discretizationImplementation.hpp"
 
+#include <eigen3/unsupported/Eigen/src/MatrixFunctions/MatrixExponential.h>
+
 namespace scpp::discretization
 {
 
@@ -43,13 +45,13 @@ void multipleShooting(
     discretization_data_t &dd)
 {
     if (not dd.interpolatedInput() and not dd.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::fixed>(model, td, dd);
+        multipleShootingImplementation<false, false>(model, td, dd);
     if (not dd.interpolatedInput() and dd.variableTime())
-        multipleShootingImplementation<InputType::constant, TimeType::variable>(model, td, dd);
+        multipleShootingImplementation<false, true>(model, td, dd);
     if (dd.interpolatedInput() and not dd.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::fixed>(model, td, dd);
+        multipleShootingImplementation<true, false>(model, td, dd);
     if (dd.interpolatedInput() and dd.variableTime())
-        multipleShootingImplementation<InputType::interpolated, TimeType::variable>(model, td, dd);
+        multipleShootingImplementation<true, true>(model, td, dd);
 }
 
 } // namespace scpp::discretization
