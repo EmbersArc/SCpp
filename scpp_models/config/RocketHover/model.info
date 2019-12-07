@@ -84,9 +84,10 @@ w_final
     (2)    0. ; not controllable
 }
 
-; for successive convexification
-constrain_initial_final     false
-add_slack_variables         true
+; enable for SC and disable for MPC/LQR
+constrain_initial_final     true
+; disable for SC and enable for MPC/LQR
+add_slack_variables         false
 
 ; thrust
 T_min       2.
