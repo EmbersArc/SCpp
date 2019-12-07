@@ -16,10 +16,10 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
 {
     using T = scalar_ad_t;
 
-    auto alpha_m_ = par(0);
-    auto g_I_ = par.segment<3>(1);
+    auto alpha_m = par(0);
+    auto g_I = par.segment<3>(1);
     auto J_B_inv = par.segment<3>(4).asDiagonal().inverse();
-    auto r_T_B_ = par.segment<3>(7);
+    auto r_T_B = par.segment<3>(7);
     // = 10 parameters
 
     // state variables
@@ -30,11 +30,11 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
 
     auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
 
-    f(0) = -alpha_m_ * u.norm();
+    f(0) = -alpha_m * u.norm();
     f.segment(1, 3) << v;
-    f.segment(4, 3) << 1. / m * R_I_B * u + g_I_;
+    f.segment(4, 3) << 1. / m * R_I_B * u + g_I;
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(11, 3) << J_B_inv * r_T_B_.cross(u) - w.cross(w);
+    f.segment(11, 3) << J_B_inv * r_T_B.cross(u) - w.cross(w);
 }
 
 void Starship::getInitializedTrajectory(trajectory_data_t &td)

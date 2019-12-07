@@ -3,11 +3,11 @@
 
 // ---
 
-// #include "starship.hpp"
-// using Model = scpp::models::Starship;
+#include "starship.hpp"
+using Model = scpp::models::Starship;
 
-#include "rocketHover.hpp"
-using Model = scpp::models::RocketHover;
+// #include "rocketHover.hpp"
+// using Model = scpp::models::RocketHover;
 
 // ---
 

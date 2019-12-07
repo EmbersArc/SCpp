@@ -35,6 +35,7 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
 
     for (size_t k = 0; k < td.n_X() - 1; k++)
     {
+
         const Eigen::Vector3d r_p_b = offset;
         const Eigen::Vector3d v0 = td.X.at(k).segment<3>(4);
         const Eigen::Vector3d v1 = td.X.at(k + 1).segment<3>(4);
@@ -47,7 +48,7 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
         q1.w() = td.X.at(k + 1)(7);
         q1.vec() << td.X.at(k + 1).segment<3>(8);
         q1.normalize();
-        const Eigen::Quaterniond q = q0.slerp(0.5, q1);
+        // const Eigen::Quaterniond q = q0.slerp(0.5, q1);
 
         const Eigen::Vector3d w0 = td.X.at(k).segment<3>(11);
         const Eigen::Vector3d w1 = td.X.at(k + 1).segment<3>(11);
@@ -60,7 +61,7 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
         const Eigen::Vector3d a_i = (vp1_i - vp0_i) / dt;
         const Eigen::Vector3d g_I(0., 0., g);
 
-        const Eigen::Vector3d a_b = a_i - w.cross(w.cross(r_p_b)) - dw.cross(r_p_b) + q.inverse() * g_I;
+        const Eigen::Vector3d a_b = a_i - w.cross(w.cross(r_p_b)) - dw.cross(r_p_b); // + q.inverse() * g_I;
         acc_passenger_b.push_back(a_b);
     }
     return acc_passenger_b;
