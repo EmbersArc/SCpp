@@ -4,6 +4,7 @@
 #include "simulation.hpp"
 #include "timing.hpp"
 #include "vectorOperations.hpp"
+#include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -92,7 +93,7 @@ int main()
 
     // write solution to files
     double write_timer = tic();
-    fs::path outputPath = getOutputPath() / "LQR" / std::to_string(size_t(write_timer)) / "0";
+    fs::path outputPath = getOutputPath() / "LQR" / scpp::getTimeString() / "0";
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");

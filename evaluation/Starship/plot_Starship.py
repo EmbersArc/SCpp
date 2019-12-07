@@ -91,13 +91,13 @@ def my_plot(fig):
 def main():
     global figures_i, figures_N, FOLDER
     model_folder = "output/Starship/SC"
-    folder_num = sorted(map(int, os.listdir(model_folder)))[-1]
+    folder_num = sorted(os.listdir(model_folder))[-1]
     print(folder_num)
     FOLDER = f"{model_folder}/{folder_num}"
 
     figures_N = len(os.listdir(FOLDER))
 
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(8, 8))
     figures_i = figures_N - 1
     my_plot(fig)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)

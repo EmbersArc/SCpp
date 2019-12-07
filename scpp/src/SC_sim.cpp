@@ -73,7 +73,7 @@ int main()
 
     // write solution to files
     double timer = tic();
-    fs::path outputPath = getOutputPath() / "SC_sim" / std::to_string(size_t(timer)) / std::to_string(0);
+    fs::path outputPath = getOutputPath() / "SC_sim" / scpp::getTimeString() / std::to_string(0);
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");

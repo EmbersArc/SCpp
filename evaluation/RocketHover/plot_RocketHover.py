@@ -88,7 +88,7 @@ def my_plot(fig):
 def main():
     global figures_i, figures_N, FOLDER
     model_folder = "output/RocketHover/SC_sim"
-    folder_num = sorted(map(int, os.listdir(model_folder)))[-1]
+    folder_num = sorted(os.listdir(model_folder))[-1]
     print(folder_num)
     FOLDER = f"{model_folder}/{folder_num}"
 

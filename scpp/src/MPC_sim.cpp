@@ -93,7 +93,7 @@ int main()
 
     // write solution to files
     double write_timer = tic();
-    fs::path outputPath = getOutputPath() / "MPC" / std::to_string(size_t(write_timer)) / "0";
+    fs::path outputPath = getOutputPath() / "MPC" / scpp::getTimeString() / "0";
     if (not fs::exists(outputPath) and not fs::create_directories(outputPath))
     {
         throw std::runtime_error("Could not create output directory!");
