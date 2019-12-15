@@ -20,6 +20,7 @@ This library implements various optimal control algorithms that are particularly
 ## Current Models
 
  * Generic Rocket Model
+ * 2D Rocket Model
  * SpaceX Starship Landing Model
 
 ## Dependencies

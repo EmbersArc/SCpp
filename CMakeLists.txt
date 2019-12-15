@@ -63,6 +63,7 @@ set(MPC_SOURCES
 
     # models
     scpp_models/src/rocketHover.cpp
+    scpp_models/src/rocket2d.cpp
     scpp_models/src/starship.cpp
 )
 
@@ -77,8 +78,8 @@ target_compile_options(mpc_lib PUBLIC -std=c++17 -Wall -Wextra -Wpedantic -O3 -m
 add_executable(mpc_sim scpp/src/MPC_sim.cpp)
 target_link_libraries(mpc_sim mpc_lib)
 
-add_executable(lqr_sim scpp/src/LQR_sim.cpp)
-target_link_libraries(lqr_sim mpc_lib)
+# add_executable(lqr_sim scpp/src/LQR_sim.cpp)
+# target_link_libraries(lqr_sim mpc_lib)
 
 add_executable(sc_sim scpp/src/SC_sim.cpp)
 target_link_libraries(sc_sim mpc_lib)
