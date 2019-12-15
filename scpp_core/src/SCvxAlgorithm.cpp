@@ -114,6 +114,7 @@ bool SCvxAlgorithm::iterate()
         last_nonlinear_cost = nonlinear_cost;
         print("{:<{}}{:.2f}ms\n", "Time, cost comparison:", 50, toc(timer));
 
+        print("\n");
         print("{:<{}}{:.5f}\n", "Actual change:", 50, actual_change);
         print("{:<{}}{:.5f}\n", "Predicted change:", 50, predicted_change);
 
