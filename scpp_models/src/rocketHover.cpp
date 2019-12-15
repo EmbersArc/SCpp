@@ -21,21 +21,21 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     auto R_I_B = eulerToQuaternionXYZ(eta).toRotationMatrix();
 
     auto m = par(0);
-    auto g_I_ = par.segment<3>(1);
+    auto g_I = par.segment<3>(1);
     auto J_B_inv = par.segment<3>(4).asDiagonal().inverse();
-    auto r_T_B_ = par.segment<3>(7);
+    auto r_T_B = par.segment<3>(7);
     // = 10 parameters
 
     f.segment<3>(0) << v;
-    f.segment<3>(3) << 1. / m * (R_I_B * u) + g_I_;
+    f.segment<3>(3) << 1. / m * (R_I_B * u) + g_I;
     f.segment<2>(6) << (rotationJacobianXYZ(eta) * w).head<2>();
-    f.segment<2>(8) << (J_B_inv * (r_T_B_.cross(u)) - w.cross(w)).head<2>();
+    f.segment<2>(8) << (J_B_inv * (r_T_B.cross(u)) - w.cross(w)).head<2>();
 }
 
 void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    u << 0, 0, -p.g_I.z() * p.m;
+    u = -p.g_I * p.m;
 }
 
 void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
@@ -123,7 +123,8 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
         // Maximum Thrust
         socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}),
-                                      (1.0) * var("U", {1, k}), (1.0) * var("U", {2, k})}) <=
+                                      (1.0) * var("U", {1, k}),
+                                      (1.0) * var("U", {2, k})}) <=
                            param(p.T_max));
 
         // Maximum Gimbal Angle
@@ -174,7 +175,6 @@ void RocketHover::getInitializedTrajectory(trajectory_data_t &td)
         const double alpha1 = double(td.n_X() - k) / td.n_X();
         const double alpha2 = double(k) / td.n_X();
 
-        // mass, position and linear velocity
         td.X.at(k) = alpha1 * p.x_init + alpha2 * p.x_final;
     }
 
