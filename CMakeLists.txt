@@ -69,7 +69,7 @@ set(MPC_SOURCES
 
 add_library(mpc_lib SHARED ${MPC_SOURCES})
 
-target_link_libraries(mpc_lib scop_lib fmt stdc++fs dl Eigen3::Eigen)
+target_link_libraries(mpc_lib socp_lib fmt stdc++fs dl Eigen3::Eigen)
 target_include_directories(mpc_lib PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
 target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
