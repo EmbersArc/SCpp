@@ -4,7 +4,7 @@
 
 #include "fmt/format.h"
 
-#include "optimizationProblem.hpp"
+#include "secondOrderConeProgram.hpp"
 #include "systemDynamics.hpp"
 #include "trajectoryData.hpp"
 #include "discretizationData.hpp"

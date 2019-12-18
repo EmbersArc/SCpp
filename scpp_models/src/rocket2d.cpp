@@ -72,6 +72,7 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
             socp.addConstraint((-1.0) * var("X", {i, X0.size() - 1}) + param(p.x_final(i)) == 0.0);
         }
+        socp.addConstraint((1.0) * var("U", {0, X0.size() - 1}) == 0.0);
     }
 
     // State Constraints:
@@ -130,7 +131,7 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         socp.addConstraint((-1.0) * var("U", {0, k}) + param(p.gimbal_max) >= (0.0));
 
         // Minimum Thrust
-        socp.addConstraint((1.0) * var("U", {1, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        socp.addConstraint((1.0) * var("U", {1, k}) + -param(p.T_min) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint((-1.0) * var("U", {1, k}) + param(p.T_max) >= (0.0));

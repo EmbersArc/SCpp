@@ -119,7 +119,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     for (size_t k = 0; k < U0.size(); k++)
     {
         // Simplified Minimum Thrust
-        socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+        socp.addConstraint((1.0) * var("U", {2, k}) + -param(p.T_min) >= (0.0));
 
         // Maximum Thrust
         socp.addConstraint(op::norm2({(1.0) * var("U", {0, k}),

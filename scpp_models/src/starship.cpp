@@ -96,7 +96,7 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         //     x(0) >= m_dry
         //     for all k
         socp.addConstraint(
-            (1.0) * var("X", {0, k}) + param_fn([this]() { return -p.x_final(0); }) >= (0.0));
+            (1.0) * var("X", {0, k}) + -param(p.x_final(0)) >= (0.0));
 
         // Glide Slope
         socp.addConstraint(
@@ -133,12 +133,12 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             {
                 lhs = lhs + param_fn([&U0, i, k]() { return (U0.at(k).normalized()(i)); }) * var("U", {i, k});
             }
-            socp.addConstraint(lhs + param_fn([this]() { return -p.T_min; }) >= (0.0));
+            socp.addConstraint(lhs + -param(p.T_min) >= (0.0));
         }
         else
         {
             // Simplified Minimum Thrust
-            socp.addConstraint((1.0) * var("U", {2, k}) + param_fn([this]() { return -p.T_min; }) >= (0.0));
+            socp.addConstraint((1.0) * var("U", {2, k}) + -param(p.T_min) >= (0.0));
         }
 
         // Maximum Thrust
