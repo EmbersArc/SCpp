@@ -13,6 +13,6 @@ weight_virtual_control              1000.
 trust_region_factor                 1.2
 
 nu_tol                              1e-5
-delta_tol                           1e-4
+delta_tol                           5e-3
 
 max_iterations                      20

@@ -62,12 +62,12 @@ add_slack_variables         false
 T_min       1.
 T_max       5.
 ; maximum gimbal
-gimbal_max  12.
+gimbal_max  10.
 ; glideslope angle
-gamma_gs    60.
+gamma_gs    45.
 ; maximum angle
 theta_max   60.
 ; maximum velocity
-v_I_max     5.
+v_I_max     3.
 ; maximum angluar velocity
-w_B_max     60.
+w_B_max     120.

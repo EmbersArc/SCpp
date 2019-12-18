@@ -8,7 +8,7 @@ rho_2                               0.9
 alpha                               2.0
 beta                                3.2
 
-change_threshold                    1e-3
+change_threshold                    1e-2
 weight_virtual_control              1e3
 trust_region                        5.
 
