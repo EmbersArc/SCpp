@@ -2,14 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# vector scaling
-attitude_scale = 15
-thrust_scale = 100
-
 
 figures_i = 0
 figures_N = 100
 FOLDER = ""
+
+rocket_length = 0.2
+thrust_length = 0.1
 
 
 def my_plot(fig):
@@ -23,26 +22,35 @@ def my_plot(fig):
     ax.set_xlabel('X, east')
     ax.set_ylabel('Y, up')
 
-    ax.plot(X[:, 0], X[:, 1], color='lightgrey', zorder=0)
-
     rx = X[:, 0]
     ry = X[:, 1]
 
-    dx = -np.sin(X[:, 4])
-    dy = np.cos(X[:, 4])
+    dx = -np.sin(X[:, 4]) * rocket_length
+    dy = np.cos(X[:, 4]) * rocket_length
 
-    Fx = np.sin(X[:, 4] + U[:, 0]) * U[:, 1]
-    Fy = -np.cos(X[:, 4] + U[:, 0]) * U[:, 1]
+    Fx = -np.sin(X[:, 4] + U[:, 0]) * U[:, 1]
+    Fy = np.cos(X[:, 4] + U[:, 0]) * U[:, 1]
+
+    max_thrust = np.max(np.sqrt(Fx**2+Fy**2))
+    Fx /= max_thrust
+    Fy /= max_thrust
+
+    Fx *= thrust_length
+    Fy *= thrust_length
+
+    # position vector
+    ax.plot(X[:, 0], X[:, 1], color='lightgrey', zorder=0)
 
     # attitude vector
-    ax.quiver(rx, ry, dx, dy, color='blue', width=0.003,
-              scale=attitude_scale, headwidth=1, headlength=0)
+    ax.quiver(rx, ry, dx, dy, color='blue', width=0.004, headwidth=1,
+              headlength=0, pivot="mid", scale_units="xy", scale=1)
 
     # force vector
-    ax.quiver(rx, ry, Fx, Fy, color='red', width=0.002,
-              scale=thrust_scale, headwidth=1, headlength=0)
+    ax.quiver(rx-dx/2, ry-dy/2, Fx, Fy, color='red', width=0.004,
+              pivot="tip", scale_units="xy", scale=1, headwidth=1, headlength=0)
 
     ax.set_title("Iteration " + str(figures_i))
+    ax.set_aspect("equal")
 
 
 def key_press_event(event):
