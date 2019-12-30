@@ -54,7 +54,6 @@ void SCvxAlgorithm::initialize()
 
     socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
-    cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
 }
@@ -84,7 +83,7 @@ bool SCvxAlgorithm::iterate()
 
         // check feasibility
         timer = tic();
-        if (!socp.feasibilityCheck(solver->getSolutionVector()))
+        if (!socp.isFeasible())
         {
             throw std::runtime_error("Solver produced an invalid solution.\n");
         }
@@ -93,7 +92,8 @@ bool SCvxAlgorithm::iterate()
         // compare linear and nonlinear costs
         timer = tic();
         const double nonlinear_cost_dynamics = getNonlinearCost();
-        const double linear_cost_dynamics = solver->getSolutionValue("norm1_nu", {});
+        double linear_cost_dynamics;
+        socp.readSolution("norm1_nu", linear_cost_dynamics);
 
         // TODO: Consider linearized model constraints
         const double nonlinear_cost_constraints = 0.;
@@ -210,41 +210,24 @@ void SCvxAlgorithm::solve(bool warm_start)
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
 
-void SCvxAlgorithm::cacheIndices()
-{
-    // cache indices for performance
-    X_indices.resize(Model::state_dim, td.n_X());
-    U_indices.resize(Model::input_dim, td.n_U());
-    for (size_t k = 0; k < td.n_X(); k++)
-    {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
-        }
-    }
-    for (size_t k = 0; k < td.n_U(); k++)
-    {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
-        }
-    }
-}
-
 void SCvxAlgorithm::readSolution()
 {
+    Eigen::MatrixXd X, U;
+    socp.readSolution("X", X);
+    socp.readSolution("U", U);
+
     for (size_t k = 0; k < td.n_X(); k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            td.X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            td.X[k](i) = X(i, k);
         }
     }
     for (size_t k = 0; k < td.n_U(); k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            td.U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            td.U[k](i) = U(i, k);
         }
     }
 }
