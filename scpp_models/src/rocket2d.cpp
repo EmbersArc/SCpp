@@ -51,7 +51,7 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         v_epsilon = socp.createVariable("epsilon", total_slack_variables);
         v_epsilon_norm = socp.createVariable("epsilon_norm");
 
-        socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_epsilon) <= op::Parameter(1.0) * v_epsilon_norm);
+        socp.addConstraint(op::Norm2(v_epsilon) <= v_epsilon_norm);
         socp.addMinimizationTerm(op::Parameter(1000.) * v_epsilon_norm);
     }
 
@@ -61,8 +61,8 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     if (p.constrain_initial_final)
     {
         // Initial and final state
-        socp.addConstraint(op::Parameter(-1.0) * v_X.col(0) + op::Parameter(&p.x_init) == 0.);
-        socp.addConstraint(op::Parameter(-1.0) * v_X.col(v_X.cols() - 1) + op::Parameter(&p.x_final) == 0.);
+        socp.addConstraint(-v_X.col(0) + op::Parameter(&p.x_init) == 0.);
+        socp.addConstraint(-v_X.col(v_X.cols() - 1) + op::Parameter(&p.x_final) == 0.);
         socp.addConstraint(op::Parameter(1.0) * v_U(0, v_U.cols() - 1) == 0.);
     }
 
@@ -74,34 +74,34 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             op::Affine rhs = op::Parameter(&p.v_I_max);
             if (p.add_slack_variables)
             {
-                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
+                rhs = rhs + v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(2, k) + op::Parameter(1.0) * v_X(3, k)) <= rhs);
+            socp.addConstraint(op::Norm2(v_X.block(2, k, 2, 1)) <= rhs);
         }
         { // Max Tilt Angle
             op::Affine rhs = op::Parameter(&p.theta_max);
             if (p.add_slack_variables)
             {
-                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
+                rhs = rhs + v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(4, k)) <= rhs);
+            socp.addConstraint(op::Norm2(v_X(4, k)) <= rhs);
         }
         { // Max Rotation Velocity
             op::Affine rhs = op::Parameter(&p.theta_max);
             if (p.add_slack_variables)
             {
-                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
+                rhs = rhs + v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(5, k)) <= rhs);
+            socp.addConstraint(op::Norm2(v_X(5, k)) <= rhs);
         }
 
         { // Glideslope
             op::Affine rhs = op::Parameter([this]() { return std::tan(p.gamma_gs); }) * v_X(1, k);
             if (p.add_slack_variables)
             {
-                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
+                rhs = rhs + v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(0, k)) <= rhs);
+            socp.addConstraint(op::Norm2(v_X(0, k)) <= rhs);
         }
     }
     if (p.add_slack_variables)
@@ -113,13 +113,13 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     auto some_vector = Eigen::MatrixXd(1, U0.size());
     some_vector.setOnes();
     // Minimum Gimbal Angle
-    socp.addConstraint(op::Parameter(1.0) * v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
     // Maximum Gimbal Angle
-    socp.addConstraint(op::Parameter(-1.0) * v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(-v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
     // Minimum Thrust
-    socp.addConstraint(op::Parameter(1.0) * v_U.row(1) + op::Parameter(&p.T_min) * op::Parameter(-some_vector) >= (0.0));
+    socp.addConstraint(v_U.row(1) + op::Parameter(&p.T_min) * op::Parameter(-some_vector) >= (0.0));
     // Maximum Thrust
-    socp.addConstraint(op::Parameter(-1.0) * v_U.row(1) + op::Parameter(&p.T_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(-v_U.row(1) + op::Parameter(&p.T_max) * op::Parameter(some_vector) >= (0.0));
 }
 
 void Rocket2d::nondimensionalize()
