@@ -63,10 +63,10 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         // Initial and final state
         socp.addConstraint(op::Parameter(-1.0) * v_X.col(0) + op::Parameter(&p.x_init) == 0.);
         socp.addConstraint(op::Parameter(-1.0) * v_X.col(v_X.cols() - 1) + op::Parameter(&p.x_final) == 0.);
-        socp.addConstraint(op::Affine(op::ParameterSource(1.0) * v_U(0, v_U.cols() - 1)) == 0.);
+        socp.addConstraint(op::Parameter(1.0) * v_U(0, v_U.cols() - 1) == 0.);
     }
 
-    // // State Constraints:
+    // State Constraints:
     size_t slack_index = 0;
     for (size_t k = 1; k < X0.size(); k++)
     {
@@ -74,39 +74,34 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             op::Affine rhs = op::Parameter(&p.v_I_max);
             if (p.add_slack_variables)
             {
-
-                rhs = rhs + op::Affine(op::AffineTerm(op::ParameterSource(1.0), v_epsilon(slack_index++)));
+                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Affine(op::ParameterSource(1.0) * v_X(2, k) +
-                                                    op::ParameterSource(1.0) * v_X(3, k))) <= rhs);
+            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(2, k) + op::Parameter(1.0) * v_X(3, k)) <= rhs);
         }
         { // Max Tilt Angle
             op::Affine rhs = op::Parameter(&p.theta_max);
             if (p.add_slack_variables)
             {
-
-                rhs = rhs + op::Affine(op::AffineTerm(op::ParameterSource(1.0), v_epsilon(slack_index++)));
+                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Affine(op::ParameterSource(1.0) * v_X(4, k))) <= rhs);
+            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(4, k)) <= rhs);
         }
-
         { // Max Rotation Velocity
             op::Affine rhs = op::Parameter(&p.theta_max);
             if (p.add_slack_variables)
             {
-
-                rhs = rhs + op::Affine(op::AffineTerm(op::ParameterSource(1.0), v_epsilon(slack_index++)));
+                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Affine(op::ParameterSource(1.0) * v_X(5, k))) <= rhs);
+            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(5, k)) <= rhs);
         }
 
         { // Glideslope
-            op::Affine rhs = op::Affine(op::ParameterSource([this]() { return std::tan(p.gamma_gs); }) * v_X(1, k));
+            op::Affine rhs = op::Parameter([this]() { return std::tan(p.gamma_gs); }) * v_X(1, k);
             if (p.add_slack_variables)
             {
-                rhs = rhs + op::Affine(op::AffineTerm(op::ParameterSource(1.0), v_epsilon(slack_index++)));
+                rhs = rhs + op::Parameter(1.0) * v_epsilon(slack_index++);
             }
-            socp.addConstraint(op::Norm2(op::Affine(op::ParameterSource(1.0) * v_X(0, k))) <= rhs);
+            socp.addConstraint(op::Norm2(op::Parameter(1.0) * v_X(0, k)) <= rhs);
         }
     }
     if (p.add_slack_variables)

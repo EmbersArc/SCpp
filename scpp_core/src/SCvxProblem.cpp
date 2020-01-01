@@ -47,17 +47,17 @@ op::SecondOrderConeProgram buildSCvxProblem(
         socp.addConstraint(op::Parameter(1.0) * v_nu_bound + op::Parameter(1.0) * v_nu >= 0.);
         socp.addConstraint(op::Parameter(1.0) * v_nu_bound + op::Parameter(-1.0) * v_nu >= 0.);
 
-        op::AffineExpression bound_sum;
+        op::Affine bound_sum;
         for (size_t row = 0; row < v_nu.rows(); row++)
         {
             for (size_t col = 0; col < v_nu.cols(); col++)
             {
-                bound_sum = bound_sum + op::ParameterSource(-1.0) * v_nu_bound(row, col);
+                bound_sum = bound_sum + op::Parameter(-1.0) * v_nu_bound(row, col);
             }
         }
 
         // sum(nu_bound) <= norm1_nu
-        socp.addConstraint(op::Parameter(1.0) * v_norm1_nu + op::Affine(bound_sum) >= (0.0));
+        socp.addConstraint(op::Parameter(1.0) * v_norm1_nu + bound_sum >= (0.0));
 
         // Minimize the virtual control
         socp.addMinimizationTerm(op::Parameter(&weight_virtual_control) * v_norm1_nu);
