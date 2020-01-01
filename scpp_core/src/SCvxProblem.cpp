@@ -47,14 +47,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
         socp.addConstraint(v_nu_bound + v_nu >= 0.);
         socp.addConstraint(v_nu_bound + -v_nu >= 0.);
 
-        op::Affine bound_sum;
-        for (size_t row = 0; row < v_nu.rows(); row++)
-        {
-            for (size_t col = 0; col < v_nu.cols(); col++)
-            {
-                bound_sum = bound_sum + -v_nu_bound(row, col);
-            }
-        }
+        op::Affine bound_sum = op::sum(-v_nu_bound);
 
         // sum(nu_bound) <= norm1_nu
         socp.addConstraint(v_norm1_nu + bound_sum >= (0.0));
