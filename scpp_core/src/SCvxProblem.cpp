@@ -26,13 +26,18 @@ op::SecondOrderConeProgram buildSCvxProblem(
          *   -x(k+1)  + A x(k) + B u(k) + C u(k+1) + z + nu == 0
          * 
          */
-        socp.addConstraint(-v_X.col(k + 1) +
-                               op::Parameter(&dd.A.at(k)) * v_X.col(k) +
-                               op::Parameter(&dd.B.at(k)) * v_U.col(k) +
-                               op::Parameter(&dd.C.at(k)) * v_U.col(k + 1) +
-                               op::Parameter(&dd.z.at(k)) +
-                               v_nu.col(k) ==
-                           0.);
+        op::Affine lhs = -v_X.col(k + 1) +
+                         op::Parameter(&dd.A.at(k)) * v_X.col(k) +
+                         op::Parameter(&dd.B.at(k)) * v_U.col(k) +
+                         op::Parameter(&dd.z.at(k)) +
+                         v_nu.col(k);
+
+        if (td.interpolatedInput())
+        {
+            lhs += op::Parameter(&dd.C.at(k)) * v_U.col(k + 1);
+        }
+
+        socp.addConstraint(lhs == 0.);
     }
 
     /**
