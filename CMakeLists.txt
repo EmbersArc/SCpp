@@ -54,8 +54,8 @@ set(MPC_SOURCES
     scpp_core/src/discretization.cpp
     # scpp_core/src/MPCProblem.cpp
     # scpp_core/src/MPCAlgorithm.cpp
-    # scpp_core/src/SCProblem.cpp
-    # scpp_core/src/SCAlgorithm.cpp
+    scpp_core/src/SCProblem.cpp
+    scpp_core/src/SCAlgorithm.cpp
     scpp_core/src/SCvxProblem.cpp
     scpp_core/src/SCvxAlgorithm.cpp
     # scpp_core/src/LQR.cpp

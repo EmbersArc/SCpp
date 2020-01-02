@@ -52,10 +52,10 @@ op::SecondOrderConeProgram buildSCvxProblem(
         socp.addConstraint(v_nu_bound + v_nu >= 0.);
         socp.addConstraint(v_nu_bound + -v_nu >= 0.);
 
-        op::Affine bound_sum = op::sum(-v_nu_bound);
+        op::Affine bound_sum = op::sum(v_nu_bound);
 
         // sum(nu_bound) <= norm1_nu
-        socp.addConstraint(v_norm1_nu + bound_sum >= (0.0));
+        socp.addConstraint(v_norm1_nu + -bound_sum >= (0.0));
 
         // Minimize the virtual control
         socp.addMinimizationTerm(op::Parameter(&weight_virtual_control) * v_norm1_nu);
