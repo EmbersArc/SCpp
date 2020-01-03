@@ -19,7 +19,7 @@ int main()
     auto model = std::make_shared<Model>();
     model->loadParameters();
 
-    scpp::SCAlgorithm solver(model);
+    scpp::SCvxAlgorithm solver(model);
 
     solver.initialize();
 

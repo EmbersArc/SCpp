@@ -64,7 +64,7 @@ set(MPC_SOURCES
     # models
     # scpp_models/src/rocketHover.cpp
     scpp_models/src/rocket2d.cpp
-    # scpp_models/src/starship.cpp
+    scpp_models/src/starship.cpp
 )
 
 add_library(mpc_lib SHARED ${MPC_SOURCES})

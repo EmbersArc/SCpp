@@ -26,8 +26,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
          *   -x(k+1)  + A x(k) + B u(k) + C u(k+1) + z + nu == 0
          * 
          */
-        op::Affine lhs = -v_X.col(k + 1) +
-                         op::Parameter(&dd.A.at(k)) * v_X.col(k) +
+        op::Affine lhs = op::Parameter(&dd.A.at(k)) * v_X.col(k) +
                          op::Parameter(&dd.B.at(k)) * v_U.col(k) +
                          op::Parameter(&dd.z.at(k)) +
                          v_nu.col(k);
@@ -37,7 +36,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
             lhs += op::Parameter(&dd.C.at(k)) * v_U.col(k + 1);
         }
 
-        socp.addConstraint(lhs == 0.);
+        socp.addConstraint(lhs == v_X.col(k + 1));
     }
 
     /**
@@ -49,13 +48,13 @@ op::SecondOrderConeProgram buildSCvxProblem(
      *
      */
     {
-        socp.addConstraint(v_nu_bound + v_nu >= 0.);
-        socp.addConstraint(v_nu_bound + -v_nu >= 0.);
+        socp.addConstraint(v_nu >= -v_nu_bound);
+        socp.addConstraint(v_nu_bound >= v_nu);
 
         op::Affine bound_sum = op::sum(v_nu_bound);
 
         // sum(nu_bound) <= norm1_nu
-        socp.addConstraint(v_norm1_nu + -bound_sum >= (0.0));
+        socp.addConstraint(v_norm1_nu >= bound_sum);
 
         // Minimize the virtual control
         socp.addMinimizationTerm(op::Parameter(&weight_virtual_control) * v_norm1_nu);

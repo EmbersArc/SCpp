@@ -70,23 +70,17 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                          state_vector_v_t &X0,
                                          input_vector_v_t &U0)
 {
-    const size_t K = X0.size();
-
-    auto var = [&socp](const string &name, const vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
-    auto param = [](double &param_value) { return op::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
+    op::Variable v_X = socp.getVariable("X");
+    op::Variable v_U = socp.getVariable("U");
 
     // Initial state
-    for (size_t i = 0; i < STATE_DIM_; i++)
-    {
-        socp.addConstraint((-1.0) * var("X", {i, 0}) + param(p.x_init(i)) == 0.0);
-    }
+    socp.addConstraint(v_X.col(0) == op::Parameter(&p.x_init));
 
     // Final State
     // mass and roll are free
     for (size_t i : {1, 2, 3, 4, 5, 6, 8, 9, 11, 12})
     {
-        socp.addConstraint((-1.0) * var("X", {i, K - 1}) + param(p.x_final(i)) == 0.0);
+        socp.addConstraint(v_X(i, v_X.cols() - 1) == op::Parameter(&p.x_final(i)));
     }
 
     // State Constraints:
@@ -95,64 +89,49 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         // Mass
         //     x(0) >= m_dry
         //     for all k
-        socp.addConstraint(
-            (1.0) * var("X", {0, k}) + -param(p.x_final(0)) >= (0.0));
+        socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
 
         // Glide Slope
-        socp.addConstraint(
-            op::norm2({(1.0) * var("X", {1, k}),
-                       (1.0) * var("X", {2, k})}) <= param_fn([this]() { return tan(p.gamma_gs); }) * var("X", {3, k}));
+        socp.addConstraint(op::Norm2(v_X.block(1, 0, 2, -1), 0) <= op::Parameter([this]() { return tan(p.gamma_gs); }) * v_X.block(3, 0, 1, -1));
 
         // Max Tilt Angle
         // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(
-            op::norm2({(1.0) * var("X", {8, k}),
-                       (1.0) * var("X", {9, k})}) <=
-            param_fn([this]() { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
+        socp.addConstraint(op::Norm2(v_X.block(8, 0, 2, -1), 0) <= op::Parameter([this] { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
 
         // Max Rotation Velocity
-        socp.addConstraint(
-            op::norm2({(1.0) * var("X", {11, k}),
-                       (1.0) * var("X", {12, k}),
-                       (1.0) * var("X", {13, k})}) <= param(p.w_B_max));
+        socp.addConstraint(op::Norm2(v_X.block(11, 0, 3, -1), 0) <= op::Parameter(&p.w_B_max));
     }
 
     // Control Constraints
 
     // Final Input
-    socp.addConstraint((1.0) * var("U", {0, U0.size() - 1}) == (0.0));
-    socp.addConstraint((1.0) * var("U", {1, U0.size() - 1}) == (0.0));
+    socp.addConstraint(op::Parameter(1.0) * v_U.block(0, v_U.cols() - 1, 2, 1) == 0.);
 
-    for (size_t k = 0; k < U0.size(); k++)
+    if (p.exact_minimum_thrust)
     {
-        if (p.exact_minimum_thrust)
+        // Linearized Minimum Thrust
+        for (size_t k = 0; k < U0.size(); k++)
         {
-            // Linearized Minimum Thrust
-            op::AffineExpression lhs;
+            op::Affine lhs;
             for (size_t i = 0; i < INPUT_DIM_; i++)
             {
-                lhs = lhs + param_fn([&U0, i, k]() { return (U0.at(k).normalized()(i)); }) * var("U", {i, k});
+                lhs = lhs + op::Parameter([&U0, i, k] { return (U0.at(k).normalized()(i)); }) * v_U(i, k);
             }
-            socp.addConstraint(lhs + -param(p.T_min) >= (0.0));
+            socp.addConstraint(lhs >= op::Parameter(&p.T_min));
         }
-        else
-        {
-            // Simplified Minimum Thrust
-            socp.addConstraint((1.0) * var("U", {2, k}) + -param(p.T_min) >= (0.0));
-        }
-
-        // Maximum Thrust
-        socp.addConstraint(
-            op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k}),
-                       (1.0) * var("U", {2, k})}) <= param(p.T_max));
-
-        // Maximum Gimbal Angle
-        socp.addConstraint(
-            op::norm2({(1.0) * var("U", {0, k}),
-                       (1.0) * var("U", {1, k})}) <=
-            param_fn([this]() { return tan(p.gimbal_max); }) * var("U", {2, k}));
     }
+    else
+    {
+        // Simplified Minimum Thrust
+        socp.addConstraint(v_U.row(2) >= op::Parameter(&p.T_min));
+    }
+
+    // Maximum Thrust
+    socp.addConstraint(op::Norm2(v_U, 0) <= op::Parameter(&p.T_max));
+
+    // Maximum Gimbal Angle
+    socp.addConstraint(op::Norm2(v_U.block(0, 0, 2, -1), 0) <=
+                       op::Parameter([this] { return tan(p.gimbal_max); }) * v_U.row(2));
 }
 
 void Starship::nondimensionalize()
