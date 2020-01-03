@@ -48,8 +48,8 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     if (p.constrain_initial_final)
     {
         // Initial and final state
-        socp.addConstraint(-v_X.col(0) + op::Parameter(&p.x_init) == 0.);
-        socp.addConstraint(-v_X.col(v_X.cols() - 1) + op::Parameter(&p.x_final) == 0.);
+        socp.addConstraint(op::Parameter(&p.x_init) == v_X.col(0));
+        socp.addConstraint(op::Parameter(&p.x_final) == v_X.col(v_X.cols() - 1));
         socp.addConstraint(op::Parameter(1.0) * v_U(0, v_U.cols() - 1) == 0.);
     }
 
@@ -68,16 +68,14 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                        op::Parameter(&p.w_B_max));
 
     // Control Constraints
-    auto some_vector = Eigen::MatrixXd(1, v_U.cols());
-    some_vector.setOnes();
     // Minimum Gimbal Angle
-    socp.addConstraint(v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(v_U.row(0) >= -op::Parameter(&p.gimbal_max));
     // Maximum Gimbal Angle
-    socp.addConstraint(-v_U.row(0) + op::Parameter(&p.gimbal_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(op::Parameter(&p.gimbal_max) >= v_U.row(0));
     // Minimum Thrust
-    socp.addConstraint(v_U.row(1) + op::Parameter(&p.T_min) * op::Parameter(-some_vector) >= (0.0));
+    socp.addConstraint(v_U.row(1)>= op::Parameter(&p.T_min));
     // Maximum Thrust
-    socp.addConstraint(-v_U.row(1) + op::Parameter(&p.T_max) * op::Parameter(some_vector) >= (0.0));
+    socp.addConstraint(op::Parameter(&p.T_max) >= v_U.row(1));
 }
 
 void Rocket2d::nondimensionalize()

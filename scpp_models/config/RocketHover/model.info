@@ -54,7 +54,7 @@ w_init
 }
 
 ; ----- final values -----
-final_time      10.
+final_time      5.
 ; position
 r_final
 {
@@ -95,7 +95,7 @@ T_max       10.
 ; maximum gimbal
 gimbal_max  12.
 ; maximum angle
-theta_max   60.
+theta_max   80.
 ; maximum velocity
 v_I_max     6.
 ; maximum angluar velocity

@@ -62,7 +62,7 @@ set(MPC_SOURCES
     # scpp_core/src/LQRAlgorithm.cpp
 
     # models
-    # scpp_models/src/rocketHover.cpp
+    scpp_models/src/rocketHover.cpp
     scpp_models/src/rocket2d.cpp
     scpp_models/src/starship.cpp
 )

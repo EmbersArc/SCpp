@@ -82,12 +82,12 @@ def my_plot(fig):
     ax.plot(X[:, 0], X[:, 1], X[:, 2], color='gray')
 
     # fig.suptitle(f"Iteration {figures_i}", fontsize=14)
-    plt.savefig(f"output/graphs/{figures_i}.png")
+    # plt.savefig(f"output/graphs/{figures_i}.png")
 
 
 def main():
     global figures_i, figures_N, FOLDER
-    model_folder = "output/RocketHover/SC_sim"
+    model_folder = "output/RocketHover/SC"
     folder_num = sorted(os.listdir(model_folder))[-1]
     print(folder_num)
     FOLDER = f"{model_folder}/{folder_num}"
