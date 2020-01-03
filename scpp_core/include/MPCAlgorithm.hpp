@@ -66,12 +66,6 @@ public:
 
 private:
     /**
-     * @brief Saves solution indices for performance.
-     *
-     */
-    void cacheIndices();
-
-    /**
      * @brief Reads the solution variables X, U and sigma.
      *
      */

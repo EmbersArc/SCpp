@@ -38,7 +38,6 @@ op::SecondOrderConeProgram buildSCProblem(
         /**
          * Build linearized model equality constraint
          *    x(k+1) == A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu
-         *   -x(k+1)  + A x(k) + B u(k) + C u(k+1) + Sigma sigma + z + nu == 0
          * 
          */
         op::Affine lhs = op::Parameter(&dd.A.at(k)) * v_X.col(k) +

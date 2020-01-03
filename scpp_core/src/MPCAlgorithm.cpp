@@ -57,7 +57,6 @@ void MPCAlgorithm::initialize()
                            A, B, z,
                            constant_dynamics, intermediate_cost_active);
     model->addApplicationConstraints(socp, X, U);
-    cacheIndices();
 
     solver = std::make_unique<EcosWrapper>(socp);
 
@@ -123,41 +122,24 @@ void MPCAlgorithm::solve()
     readSolution();
 }
 
-void MPCAlgorithm::cacheIndices()
-{
-    // cache indices for performance
-    X_indices.resize(Model::state_dim, K);
-    U_indices.resize(Model::input_dim, K);
-    for (size_t k = 0; k < K; k++)
-    {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
-        }
-    }
-    for (size_t k = 0; k < K - 1; k++)
-    {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
-        }
-    }
-}
-
 void MPCAlgorithm::readSolution()
 {
+    Eigen::MatrixXd X, U;
+    socp.readSolution("X", X);
+    socp.readSolution("U", U);
+
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            this->X[k](i) = X(i, k);
         }
     }
     for (size_t k = 0; k < K - 1; k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            this->U[k](i) = U(i, k);
         }
     }
 }

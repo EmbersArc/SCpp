@@ -54,7 +54,7 @@ def my_plot(fig):
 
         Rx = rot_axis1(phi).T
         Ry = rot_axis2(theta).T
-        R = Rx * Ry
+        R = np.array(Rx * Ry)
 
         Fx, Fy, Fz = np.dot(R, U[k, :] / T_max)
         dx, dy, dz = np.dot(R, np.array([0., 0., 1.]))
@@ -87,7 +87,7 @@ def my_plot(fig):
 
 def main():
     global figures_i, figures_N, FOLDER
-    model_folder = "output/RocketHover/SC"
+    model_folder = "output/RocketHover/MPC"
     folder_num = sorted(os.listdir(model_folder))[-1]
     print(folder_num)
     FOLDER = f"{model_folder}/{folder_num}"
