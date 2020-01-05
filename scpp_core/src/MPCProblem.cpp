@@ -38,9 +38,19 @@ op::SecondOrderConeProgram buildMPCProblem(
          *    x(k+1) == A x(k) + B u(k) + z
          * 
          */
-        op::Affine lhs = op::Parameter(&A) * v_X.col(k) +
-                         op::Parameter(&B) * v_U.col(k) +
-                         op::Parameter(&z);
+        op::Affine lhs;
+        if (constant_dynamics)
+        {
+            lhs = op::Parameter(A) * v_X.col(k) +
+                  op::Parameter(B) * v_U.col(k) +
+                  op::Parameter(z);
+        }
+        else
+        {
+            lhs = op::Parameter(&A) * v_X.col(k) +
+                  op::Parameter(&B) * v_U.col(k) +
+                  op::Parameter(&z);
+        }
 
         socp.addConstraint(lhs == v_X.col(k + 1));
     }

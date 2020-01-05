@@ -12,17 +12,21 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Boost REQUIRED)
 
 # FMT
+message("\n### configuring FMT ###")
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # SOCP INTERFACE
+message("\n### configuring socp_interface ###")
 add_subdirectory(lib/socp_interface)
 
 # CppAD
+message("\n### configuring CppAD ###")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
 
 # CppADCodegen
+message("\n### configuring CppADCodegen ###")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
 execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD ..
                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
