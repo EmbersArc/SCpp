@@ -67,7 +67,7 @@ void Starship::getInitializedTrajectory(trajectory_data_t &td)
 }
 
 void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                         state_vector_v_t &X0,
+                                         state_vector_v_t &,
                                          input_vector_v_t &U0)
 {
     op::Variable v_X = socp.getVariable("X");
@@ -84,23 +84,20 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 
     // State Constraints:
-    for (size_t k = 0; k < X0.size(); k++)
-    {
-        // Mass
-        //     x(0) >= m_dry
-        //     for all k
-        socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
+    // Mass
+    //     x(0) >= m_dry
+    //     for all k
+    socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
 
-        // Glide Slope
-        socp.addConstraint(op::Norm2(v_X.block(1, 0, 2, -1), 0) <= op::Parameter([this]() { return tan(p.gamma_gs); }) * v_X.block(3, 0, 1, -1));
+    // Glide Slope
+    socp.addConstraint(op::Norm2(v_X.block(1, 0, 2, -1), 0) <= op::Parameter([this]() { return tan(p.gamma_gs); }) * v_X.block(3, 0, 1, -1));
 
-        // Max Tilt Angle
-        // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-        socp.addConstraint(op::Norm2(v_X.block(8, 0, 2, -1), 0) <= op::Parameter([this] { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
+    // Max Tilt Angle
+    // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
+    socp.addConstraint(op::Norm2(v_X.block(8, 0, 2, -1), 0) <= op::Parameter([this] { return sqrt((1.0 - cos(p.theta_max)) / 2.); }));
 
-        // Max Rotation Velocity
-        socp.addConstraint(op::Norm2(v_X.block(11, 0, 3, -1), 0) <= op::Parameter(&p.w_B_max));
-    }
+    // Max Rotation Velocity
+    socp.addConstraint(op::Norm2(v_X.block(11, 0, 3, -1), 0) <= op::Parameter(&p.w_B_max));
 
     // Control Constraints
 
@@ -115,7 +112,7 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
             op::Affine lhs;
             for (size_t i = 0; i < INPUT_DIM_; i++)
             {
-                lhs = lhs + op::Parameter([&U0, i, k] { return (U0.at(k).normalized()(i)); }) * v_U(i, k);
+                lhs += op::Parameter([&U0, i, k] { return (U0.at(k).normalized()(i)); }) * v_U(i, k);
             }
             socp.addConstraint(lhs >= op::Parameter(&p.T_min));
         }
