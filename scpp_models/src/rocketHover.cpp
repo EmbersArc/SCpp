@@ -64,27 +64,24 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         socp.addConstraint(v_U(1, v_U.cols() - 1) == op::Parameter(0.));
     }
 
-    Eigen::MatrixXd row_vector(1, v_X.cols() - 1);
-    row_vector.setOnes();
     // State Constraints:
-    op::Affine rhs;
     // Max Velocity
-    rhs = op::Parameter(&p.v_I_max) * op::Parameter(row_vector);
+    op::Norm2Lhs lhs = op::Norm2(v_X.block(3, 1, 3, -1), 0);
     if (p.add_slack_variables)
-        rhs += v_epsilon.row(0);
-    socp.addConstraint(op::Norm2(v_X.block(3, 1, 3, -1), 0) <= rhs);
+        lhs += v_epsilon.row(0);
+    socp.addConstraint(lhs <= op::Parameter(&p.v_I_max));
 
     // Max Tilt Angle
-    rhs = op::Parameter(&p.theta_max) * op::Parameter(row_vector);
+    lhs = op::Norm2(v_X.block(6, 1, 2, -1), 0);
     if (p.add_slack_variables)
-        rhs += v_epsilon.row(1);
-    socp.addConstraint(op::Norm2(v_X.block(6, 1, 2, -1), 0) <= rhs);
+        lhs += v_epsilon.row(1);
+    socp.addConstraint(lhs <= op::Parameter(&p.theta_max));
 
     // Max Rotation Velocity
-    rhs = op::Parameter(&p.w_B_max) * op::Parameter(row_vector);
+    lhs = op::Norm2(v_X.block(8, 1, 2, -1), 0);
     if (p.add_slack_variables)
-        rhs += v_epsilon.row(2);
-    socp.addConstraint(op::Norm2(v_X.block(8, 1, 2, -1), 0) <= rhs);
+        lhs += v_epsilon.row(2);
+    socp.addConstraint(lhs <= op::Parameter(&p.w_B_max));
 
     // Control Constraints
     // Simplified Minimum Thrust

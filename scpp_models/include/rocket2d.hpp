@@ -4,7 +4,7 @@
 #include <random>
 
 #include "systemModel.hpp"
-#include "ecosWrapper.hpp"
+#include "socpSolver.hpp"
 #include "parameterServer.hpp"
 
 #include "rocket2dDefinitions.hpp"

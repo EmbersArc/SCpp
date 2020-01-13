@@ -55,7 +55,7 @@ void SCvxAlgorithm::initialize()
     socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
 
-    solver = std::make_unique<EcosWrapper>(socp);
+    solver = std::make_unique<op::Solver>(socp);
 }
 
 bool SCvxAlgorithm::iterate()

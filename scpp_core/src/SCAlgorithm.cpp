@@ -60,7 +60,7 @@ void SCAlgorithm::initialize()
                           weight_trust_region_trajectory, weight_virtual_control,
                           td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
-    solver = std::make_unique<EcosWrapper>(socp);
+    solver = std::make_unique<op::Solver>(socp);
 }
 
 bool SCAlgorithm::iterate()

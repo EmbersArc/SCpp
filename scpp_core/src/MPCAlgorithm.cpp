@@ -58,7 +58,7 @@ void MPCAlgorithm::initialize()
                            constant_dynamics, intermediate_cost_active);
     model->addApplicationConstraints(socp, X, U);
 
-    solver = std::make_unique<EcosWrapper>(socp);
+    solver = std::make_unique<op::Solver>(socp);
 
     initialized = true;
     print("[MPC] Controller started.\n");

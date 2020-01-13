@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "ecosWrapper.hpp"
+#include "socpSolver.hpp"
 #include "SCProblem.hpp"
 #include "parameterServer.hpp"
 
@@ -95,7 +95,7 @@ private:
 
     op::SecondOrderConeProgram socp;
 
-    std::unique_ptr<EcosWrapper> solver;
+    std::unique_ptr<op::Solver> solver;
 };
 
 } // namespace scpp
