@@ -73,13 +73,21 @@ bool SCvxAlgorithm::iterate()
     while (true)
     {
         // solve problem
+        print("Solving problem.\n");
         timer = tic();
 
         const trajectory_data_t old_td = td;
 
-        solver->solveProblem(false);
+        const bool success = solver->solveProblem(false);
+        print("Solver message:\n");
+        print("> {}\n", solver->getResultString());
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
-        readSolution();
+
+        if (not success)
+        {
+            print("Solver failed to find a solution. Terminating.\n");
+            std::terminate();
+        }
 
         // check feasibility
         timer = tic();
@@ -191,13 +199,18 @@ void SCvxAlgorithm::solve(bool warm_start)
     {
         iteration++;
         print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
-
         converged = iterate();
 
         all_td.push_back(td);
     }
 
-    if (not converged)
+    print("{:=^{}}\n\n", "", 60);
+
+    if (converged)
+    {
+        print("Converged after {} iterations.\n\n", iteration);
+    }
+    else
     {
         print("No convergence after {} iterations.\n\n", max_iterations);
     }
@@ -207,6 +220,7 @@ void SCvxAlgorithm::solve(bool warm_start)
         model->redimensionalize();
         model->redimensionalizeTrajectory(td);
     }
+    print("{:=^{}}\n\n", "", 60);
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
 }
 

@@ -94,24 +94,17 @@ void MPCAlgorithm::solve()
 {
     assert(initialized);
 
-    print("Solving model {}\n", Model::getModelName());
+    print("Solving problem.\n");
     const double timer_solve = tic();
     if (nondimensionalize)
     {
         model->nondimensionalize();
     }
 
-    const int exit_flag = solver->solveProblem(false);
-    if (exit_flag == -4)
-    {
-        print("Process interrupted.");
-        std::terminate();
-    }
+    solver->solveProblem(false);
 
-    if (exit_flag != 0)
-    {
-        print("There was an issue (Exit code {}) while solving the problem. Continuing.\n", exit_flag);
-    }
+    print("Solver message:\n");
+    print("> {}\n", solver->getResultString());
 
     if (nondimensionalize)
     {

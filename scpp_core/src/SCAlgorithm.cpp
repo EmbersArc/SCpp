@@ -73,9 +73,18 @@ bool SCAlgorithm::iterate()
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
     // solve the problem
+    print("Solving problem.\n");
     timer = tic();
-    solver->solveProblem(false);
+    const bool success = solver->solveProblem(false);
+    print("Solver message:\n");
+    print("> {}\n", solver->getResultString());
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+
+    if (not success)
+    {
+        print("Solver failed to find a solution. Terminating.\n");
+        std::terminate();
+    }
 
     readSolution();
 
@@ -104,7 +113,6 @@ bool SCAlgorithm::iterate()
     print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
-
     // check for convergence
     return norm2_Delta < delta_tol && norm1_nu < nu_tol;
 }
@@ -139,29 +147,30 @@ void SCAlgorithm::solve(bool warm_start)
 
     all_td.push_back(td);
 
-    while (iteration < max_iterations)
+    while (iteration < max_iterations and not converged)
     {
         iteration++;
-        print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
 
+        print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
         converged = iterate();
 
         all_td.push_back(td);
 
-        if (converged)
+        if (iteration > 2)
         {
-            print("Converged after {} iterations.\n\n", iteration);
-            break;
-        }
-        else if (iteration > 2)
-        {
-            // else increase trust region weight
+            // increase trust region weight
             weight_trust_region_time *= trust_region_factor;
             weight_trust_region_trajectory *= trust_region_factor;
         }
     }
 
-    if (not converged)
+    print("{:=^{}}\n\n", "", 60);
+
+    if (converged)
+    {
+        print("Converged after {} iterations.\n\n", iteration);
+    }
+    else
     {
         print("No convergence after {} iterations.\n\n", max_iterations);
     }
