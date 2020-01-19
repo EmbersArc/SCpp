@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "ecosWrapper.hpp"
+#include "socpSolver.hpp"
 #include "parameterServer.hpp"
 
 namespace scpp
@@ -66,12 +66,6 @@ public:
 
 private:
     /**
-     * @brief Saves solution indices for performance.
-     *
-     */
-    void cacheIndices();
-
-    /**
      * @brief Reads the solution variables X, U and sigma.
      *
      */
@@ -109,7 +103,7 @@ private:
 
     op::SecondOrderConeProgram socp;
 
-    std::unique_ptr<EcosWrapper> solver;
+    std::unique_ptr<op::Solver> solver;
 
     bool state_weights_set = false;
     bool input_weights_set = false;

@@ -3,16 +3,16 @@
 
 #include <Eigen/Dense>
 #include <boost/numeric/odeint/algebra/vector_space_algebra.hpp>
+#include <boost/version.hpp>
 
 // Necessary routines for Eigen matrices to work with vector_space_algebra
 // from odeint
 // (that is, it lets odeint treat the Eigen matrices correctly, knowing
 // how to add, multiply, compute the norm, etc)
 
+#if (EIGEN_VERSION_AT_LEAST(3, 3, 0) && BOOST_VERSION < 107100)
 namespace Eigen
 {
-
-#if EIGEN_VERSION_AT_LEAST(3, 3, 0)
 namespace internal
 {
 
@@ -42,7 +42,6 @@ struct functor_traits<scalar_add_op<Scalar>>
 };
 
 } // namespace internal
-#endif
 
 template <typename D>
 inline const typename Eigen::CwiseUnaryOp<
@@ -119,4 +118,5 @@ struct vector_space_norm_inf<Eigen::Matrix<double, S1, S2, O, M1, M2>>
 } // namespace numeric
 } // namespace boost
 
-#endif // BOOST_NUMERIC_ODEINT_EXTERNAL_EIGEN_EIGEN_ALGEBRA_HPP_INCLUDED
+#endif
+#endif

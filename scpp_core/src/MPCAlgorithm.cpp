@@ -57,9 +57,8 @@ void MPCAlgorithm::initialize()
                            A, B, z,
                            constant_dynamics, intermediate_cost_active);
     model->addApplicationConstraints(socp, X, U);
-    cacheIndices();
 
-    solver = std::make_unique<EcosWrapper>(socp);
+    solver = std::make_unique<op::Solver>(socp);
 
     initialized = true;
     print("[MPC] Controller started.\n");
@@ -95,24 +94,17 @@ void MPCAlgorithm::solve()
 {
     assert(initialized);
 
-    print("Solving model {}\n", Model::getModelName());
+    print("Solving problem.\n");
     const double timer_solve = tic();
     if (nondimensionalize)
     {
         model->nondimensionalize();
     }
 
-    const int exit_flag = solver->solveProblem(false);
-    if (exit_flag == -4)
-    {
-        print("Process interrupted.");
-        std::terminate();
-    }
+    solver->solveProblem(false);
 
-    if (exit_flag != 0)
-    {
-        print("There was an issue (Exit code {}) while solving the problem. Continuing.\n", exit_flag);
-    }
+    print("Solver message:\n");
+    print("> {}\n", solver->getResultString());
 
     if (nondimensionalize)
     {
@@ -123,41 +115,24 @@ void MPCAlgorithm::solve()
     readSolution();
 }
 
-void MPCAlgorithm::cacheIndices()
-{
-    // cache indices for performance
-    X_indices.resize(Model::state_dim, K);
-    U_indices.resize(Model::input_dim, K);
-    for (size_t k = 0; k < K; k++)
-    {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            X_indices(i, k) = socp.getTensorVariableIndex("X", {i, k});
-        }
-    }
-    for (size_t k = 0; k < K - 1; k++)
-    {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            U_indices(i, k) = socp.getTensorVariableIndex("U", {i, k});
-        }
-    }
-}
-
 void MPCAlgorithm::readSolution()
 {
+    Eigen::MatrixXd X, U;
+    socp.readSolution("X", X);
+    socp.readSolution("U", U);
+
     for (size_t k = 0; k < K; k++)
     {
         for (size_t i = 0; i < Model::state_dim; i++)
         {
-            X[k](i) = solver->getSolutionValue(X_indices(i, k));
+            this->X[k](i) = X(i, k);
         }
     }
     for (size_t k = 0; k < K - 1; k++)
     {
         for (size_t i = 0; i < Model::input_dim; i++)
         {
-            U[k](i) = solver->getSolutionValue(U_indices(i, k));
+            this->U[k](i) = U(i, k);
         }
     }
 }

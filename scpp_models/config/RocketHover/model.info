@@ -54,7 +54,7 @@ w_init
 }
 
 ; ----- final values -----
-final_time      10.
+final_time      5.
 ; position
 r_final
 {
@@ -85,9 +85,9 @@ w_final
 }
 
 ; enable for SC and disable for MPC/LQR
-constrain_initial_final     true
+constrain_initial_final     false
 ; disable for SC and enable for MPC/LQR
-add_slack_variables         false
+add_slack_variables         true
 
 ; thrust
 T_min       2.
@@ -95,7 +95,7 @@ T_max       10.
 ; maximum gimbal
 gimbal_max  12.
 ; maximum angle
-theta_max   60.
+theta_max   80.
 ; maximum velocity
 v_I_max     6.
 ; maximum angluar velocity

@@ -4,7 +4,7 @@
 #include <random>
 
 #include "systemModel.hpp"
-#include "ecosWrapper.hpp"
+#include "socpSolver.hpp"
 #include "parameterServer.hpp"
 
 #include "starshipDefinitions.hpp"
@@ -50,7 +50,7 @@ public:
     struct Parameters
     {
         bool exact_minimum_thrust;
-        
+
         Eigen::Vector3d g_I;
         Eigen::Vector3d J_B;
         Eigen::Vector3d r_T_B;
@@ -83,6 +83,18 @@ public:
 
         void redimensionalizeTrajectory(state_vector_v_t &X, input_vector_v_t &U) const;
     } p;
+
+    struct DynamicParameters
+    {
+        double tilt_const;
+        double gs_const;
+        double gimbal_const;
+        Eigen::MatrixXd thrust_const;
+        input_vector_v_t *U0_ptr;
+    } p_dyn;
+
+private:
+    void updateProblemParameters();
 };
 
 } // namespace scpp::models

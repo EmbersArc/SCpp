@@ -12,53 +12,30 @@ op::SecondOrderConeProgram buildSCvxProblem(
 {
     op::SecondOrderConeProgram socp;
 
-    // shortcuts to access solver variables and create parameters
-    auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
-    auto param = [](double &param_value) { return op::Parameter(&param_value); };
-    // auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
-
-    socp.createTensorVariable("X", {Model::state_dim, td.n_X()});            // states
-    socp.createTensorVariable("U", {Model::input_dim, td.n_U()});            // inputs
-    socp.createTensorVariable("nu", {Model::state_dim, td.n_X() - 1});       // virtual control
-    socp.createTensorVariable("nu_bound", {Model::state_dim, td.n_X() - 1}); // virtual control lower/upper bound
-    socp.createTensorVariable("norm1_nu");                                   // virtual control norm
+    op::Variable v_X = socp.createVariable("X", Model::state_dim, td.n_X());                   // states
+    op::Variable v_U = socp.createVariable("U", Model::input_dim, td.n_U());                   // inputs
+    op::Variable v_nu = socp.createVariable("nu", Model::state_dim, td.n_X() - 1);             // virtual control
+    op::Variable v_nu_bound = socp.createVariable("nu_bound", Model::state_dim, td.n_X() - 1); // virtual control lower/upper bound
+    op::Variable v_norm1_nu = socp.createVariable("norm1_nu");                                 // virtual control norm
 
     for (size_t k = 0; k < td.n_X() - 1; k++)
     {
         /**
          * Build linearized model equality constraint
          *    x(k+1) == A x(k) + B u(k) + C u(k+1) + z + nu
-         *   -x(k+1)  + A x(k) + B u(k) + C u(k+1) + z + nu == 0
          * 
          */
-        for (size_t i = 0; i < Model::state_dim; i++)
+        op::Affine lhs = op::Parameter(&dd.A.at(k)) * v_X.col(k) +
+                         op::Parameter(&dd.B.at(k)) * v_U.col(k) +
+                         op::Parameter(&dd.z.at(k)) +
+                         v_nu.col(k);
+
+        if (td.interpolatedInput())
         {
-            // - x(k+1)
-            op::AffineExpression eq = (-1.0) * var("X", {i, k + 1});
-
-            // A * x(k)
-            for (size_t j = 0; j < Model::state_dim; j++)
-                eq = eq + param(dd.A.at(k)(i, j)) * var("X", {j, k});
-
-            // B * u(k)
-            for (size_t j = 0; j < Model::input_dim; j++)
-                eq = eq + param(dd.B.at(k)(i, j)) * var("U", {j, k});
-
-            if (dd.interpolatedInput())
-            {
-                // C * u(k+1)
-                for (size_t j = 0; j < Model::input_dim; j++)
-                    eq = eq + param(dd.C.at(k)(i, j)) * var("U", {j, k + 1});
-            }
-
-            // z
-            eq = eq + param(dd.z.at(k)(i, 0));
-
-            // nu
-            eq = eq + (1.0) * var("nu", {i, k});
-
-            socp.addConstraint(eq == 0.0);
+            lhs += op::Parameter(&dd.C.at(k)) * v_U.col(k + 1);
         }
+
+        socp.addConstraint(lhs == v_X.col(k + 1));
     }
 
     /**
@@ -70,25 +47,16 @@ op::SecondOrderConeProgram buildSCvxProblem(
      *
      */
     {
-        op::AffineExpression bound_sum;
-        for (size_t k = 0; k < td.n_X() - 1; k++)
-        {
-            for (size_t i = 0; i < Model::state_dim; i++)
-            {
-                // -nu_bound <= nu
-                socp.addConstraint((1.0) * var("nu_bound", {i, k}) + (1.0) * var("nu", {i, k}) >= (0.0));
-                //  nu <= nu_bound
-                socp.addConstraint((1.0) * var("nu_bound", {i, k}) + (-1.0) * var("nu", {i, k}) >= (0.0));
+        socp.addConstraint(v_nu >= -v_nu_bound);
+        socp.addConstraint(v_nu_bound >= v_nu);
 
-                // sum(-nu_bound)
-                bound_sum = bound_sum + (-1.0) * var("nu_bound", {i, k});
-            }
-        }
+        op::Affine bound_sum = op::sum(v_nu_bound);
+
         // sum(nu_bound) <= norm1_nu
-        socp.addConstraint((1.0) * var("norm1_nu") + bound_sum >= (0.0));
+        socp.addConstraint(v_norm1_nu >= bound_sum);
 
         // Minimize the virtual control
-        socp.addMinimizationTerm(param(weight_virtual_control) * var("norm1_nu"));
+        socp.addMinimizationTerm(op::Parameter(&weight_virtual_control) * v_norm1_nu);
     }
 
     for (size_t k = 0; k < td.n_U(); k++)
@@ -98,13 +66,9 @@ op::SecondOrderConeProgram buildSCvxProblem(
          *     norm2(u - u0)  <=  trust_region
          *
          */
+        op::Affine norm2_args = op::Parameter(&td.U.at(k)) + -v_U.col(k);
 
-        std::vector<op::AffineExpression> norm2_args;
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            norm2_args.push_back(param(td.U[k](i)) + (-1.0) * var("U", {i, k}));
-        }
-        socp.addConstraint(op::norm2(norm2_args) <= param(trust_region));
+        socp.addConstraint(op::Norm2(norm2_args) <= op::Parameter(&trust_region));
     }
 
     return socp;

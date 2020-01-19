@@ -81,7 +81,7 @@ def main():
 
     figures_N = len(os.listdir(FOLDER))
 
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure()
     figures_i = figures_N - 1
     my_plot(fig)
     cid = fig.canvas.mpl_connect('key_press_event', key_press_event)

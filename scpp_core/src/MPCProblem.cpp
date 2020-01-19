@@ -20,20 +20,15 @@ op::SecondOrderConeProgram buildMPCProblem(
 {
     op::SecondOrderConeProgram socp;
 
-    socp.createTensorVariable("X", {Model::state_dim, X.size()}); // states
-    socp.createTensorVariable("U", {Model::input_dim, U.size()}); // inputs
-    socp.createTensorVariable("error_cost");                      // error minimization term
-    socp.createTensorVariable("input_cost");                      // input minimization term
-
-    // shortcuts to access solver variables and create parameters
-    auto var = [&socp](const std::string &name, const std::vector<size_t> &indices = {}) { return socp.getVariable(name, indices); };
-    auto param = [](double &param_value) { return op::Parameter(&param_value); };
-    auto param_fn = [](std::function<double()> callback) { return op::Parameter(callback); };
+    op::Variable v_X = socp.createVariable("X", Model::state_dim, X.size()); // states
+    op::Variable v_U = socp.createVariable("U", Model::input_dim, U.size()); // inputs
+    op::Variable v_error_cost = socp.createVariable("error_cost");           // error minimization term
+    op::Variable v_input_cost = socp.createVariable("input_cost");           // input minimization term
 
     // Initial state
     for (size_t i = 0; i < Model::state_dim; i++)
     {
-        socp.addConstraint((-1.0) * var("X", {i, 0}) + param(x_init(i)) == 0.0);
+        socp.addConstraint(v_X.col(0) == op::Parameter(&x_init));
     }
 
     for (size_t k = 0; k < X.size() - 1; k++)
@@ -41,100 +36,55 @@ op::SecondOrderConeProgram buildMPCProblem(
         /**
          * Build linearized model equality constraint
          *    x(k+1) == A x(k) + B u(k) + z
-         * -I x(k+1)  + A x(k) + B u(k) + z == 0
          * 
          */
-        for (size_t i = 0; i < Model::state_dim; i++)
+        op::Affine lhs;
+        if (constant_dynamics)
         {
-            // -I * x(k+1)
-            op::AffineExpression eq = (-1.0) * var("X", {i, k + 1});
-
-            // A * x(k)
-            for (size_t j = 0; j < Model::state_dim; j++)
-                if (constant_dynamics)
-                {
-                    if (A(i, j) != 0)
-                        eq = eq + A(i, j) * var("X", {j, k});
-                }
-                else
-                {
-                    eq = eq + param(A(i, j)) * var("X", {j, k});
-                }
-
-            // B * u(k)
-            for (size_t j = 0; j < Model::input_dim; j++)
-                if (constant_dynamics)
-                {
-                    if (B(i, j) != 0.)
-                        eq = eq + B(i, j) * var("U", {j, k});
-                }
-                else
-                {
-                    eq = eq + param(B(i, j)) * var("U", {j, k});
-                }
-
-            // z
-            if (constant_dynamics)
-            {
-                if (z(i) != 0.)
-                    eq = eq + z(i);
-            }
-            else
-            {
-                eq = eq + param(z(i));
-            }
-
-            socp.addConstraint(eq == 0.0);
+            lhs = op::Parameter(A) * v_X.col(k) +
+                  op::Parameter(B) * v_U.col(k) +
+                  op::Parameter(z);
         }
+        else
+        {
+            lhs = op::Parameter(&A) * v_X.col(k) +
+                  op::Parameter(&B) * v_U.col(k) +
+                  op::Parameter(&z);
+        }
+
+        socp.addConstraint(lhs == v_X.col(k + 1));
     }
 
     /**
      * Build error cost
      * 
      */
-    std::vector<op::AffineExpression> error_norm2_args;
+    op::Affine error_norm2_args;
     if (intermediate_cost_active)
     {
         for (size_t k = 1; k < X.size() - 1; k++)
         {
-            for (size_t i = 0; i < Model::state_dim; i++)
-            {
-                op::Parameter x_desired =
-                    param_fn([&state_weights_intermediate, &x_final, i]() { return -1.0 * state_weights_intermediate(i) * x_final(i); });
-                op::AffineTerm x_current =
-                    param(state_weights_intermediate(i)) * var("X", {i, k});
-                op::AffineExpression ex = x_desired + x_current;
-                error_norm2_args.push_back(ex);
-            }
+            error_norm2_args = op::vstack({error_norm2_args,
+                                           op::Parameter(&state_weights_intermediate).cwiseProduct(-op::Parameter(&x_final) + v_X.col(k))});
         }
     }
-    for (size_t i = 0; i < Model::state_dim; i++)
-    {
-        op::Parameter x_desired =
-            param_fn([&state_weights_terminal, &x_final, i]() { return -1.0 * state_weights_terminal(i) * x_final(i); });
-        op::AffineTerm x_current =
-            param(state_weights_terminal(i)) * var("X", {i, X.size() - 1});
-        op::AffineExpression ex = x_desired + x_current;
-        error_norm2_args.push_back(ex);
-    }
-    socp.addConstraint(op::norm2(error_norm2_args) <= (1.0) * var("error_cost"));
-    socp.addMinimizationTerm(1.0 * var("error_cost"));
+    error_norm2_args = op::vstack({error_norm2_args,
+                                   op::Parameter(&state_weights_terminal).cwiseProduct(-op::Parameter(&x_final) + v_X.col(v_X.cols() - 1))});
+    socp.addConstraint(op::Norm2(error_norm2_args) <= v_error_cost);
+    socp.addMinimizationTerm(v_error_cost);
 
     /**
      * Build input cost
      * 
      */
-    std::vector<op::AffineExpression> input_norm2_args;
+    op::Affine input_norm2_args;
     for (size_t k = 0; k < U.size(); k++)
     {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            op::AffineExpression ex = param(input_weights(i)) * var("U", {i, k});
-            input_norm2_args.push_back(ex);
-        }
+        input_norm2_args = op::vstack({input_norm2_args,
+                                       op::Parameter(&input_weights).cwiseProduct(v_U.col(k))});
     }
-    socp.addConstraint(op::norm2(input_norm2_args) <= (1.0) * var("input_cost"));
-    socp.addMinimizationTerm(1.0 * var("input_cost"));
+    socp.addConstraint(op::Norm2(input_norm2_args) <= v_input_cost);
+    socp.addMinimizationTerm(v_input_cost);
 
     return socp;
 }

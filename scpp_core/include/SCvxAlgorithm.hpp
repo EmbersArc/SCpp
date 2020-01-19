@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "ecosWrapper.hpp"
+#include "socpSolver.hpp"
 #include "parameterServer.hpp"
 
 namespace scpp
@@ -48,12 +48,6 @@ public:
     void getAllSolutions(std::vector<trajectory_data_t> &all_trajectories);
 
 private:
-    /**
-     * @brief Saves solution indices for performance.
-     * 
-     */
-    void cacheIndices();
-
     /**
      * @brief Reads the solution variables X, U.
      * 
@@ -109,7 +103,7 @@ private:
 
     op::SecondOrderConeProgram socp;
 
-    std::unique_ptr<EcosWrapper> solver;
+    std::unique_ptr<op::Solver> solver;
 };
 
 } // namespace scpp
