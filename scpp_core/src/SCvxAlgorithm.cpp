@@ -73,15 +73,16 @@ bool SCvxAlgorithm::iterate()
     while (true)
     {
         // solve problem
-        print("Solving problem.\n");
-        timer = tic();
-
         const trajectory_data_t old_td = td;
 
+        print("\n");
+        print("Solving problem.\n");
+        timer = tic();
         const bool success = solver->solveProblem(false);
         print("Solver message:\n");
         print("> {}\n", solver->getResultString());
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+        print("\n");
 
         if (not success)
         {

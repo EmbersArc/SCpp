@@ -90,16 +90,16 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
 
     // Glide Slope
-    socp.addConstraint(op::Norm2(v_X.block(1, 0, 2, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(1, 0, 2, v_X.cols()), 0) <=
                        op::Parameter(&p_dyn.gs_const) * v_X.block(3, 0, 1, v_X.cols()));
 
     // Max Tilt Angle
     // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-    socp.addConstraint(op::Norm2(v_X.block(8, 0, 2, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(8, 0, 2, v_X.cols()), 0) <=
                        op::Parameter(&p_dyn.tilt_const));
 
     // Max Rotation Velocity
-    socp.addConstraint(op::Norm2(v_X.block(11, 0, 3, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(11, 0, 3, v_X.cols()), 0) <=
                        op::Parameter(&p.w_B_max));
 
     // Control Constraints:
@@ -122,10 +122,10 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 
     // Maximum Thrust
-    socp.addConstraint(op::Norm2(v_U, 0) <= op::Parameter(&p.T_max));
+    socp.addConstraint(op::norm2(v_U, 0) <= op::Parameter(&p.T_max));
 
     // Maximum Gimbal Angle
-    socp.addConstraint(op::Norm2(v_U.topRows(2), 0) <=
+    socp.addConstraint(op::norm2(v_U.topRows(2), 0) <=
                        op::Parameter(&p_dyn.gimbal_const) * v_U.row(2));
 }
 

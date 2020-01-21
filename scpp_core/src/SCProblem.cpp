@@ -94,7 +94,7 @@ op::SecondOrderConeProgram buildSCProblem(
             op::Affine norm2_args = op::vstack({op::Parameter(0.5) + op::Parameter(-0.5) * socp.getVariable("Delta_sigma"),
                                                 op::Parameter(&td.t) + -socp.getVariable("sigma")});
 
-            socp.addConstraint(op::Norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * socp.getVariable("Delta_sigma"));
+            socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * socp.getVariable("Delta_sigma"));
 
             // Minimize Delta_sigma
             socp.addMinimizationTerm(op::Parameter(&weight_trust_region_time) * socp.getVariable("Delta_sigma"));
@@ -126,7 +126,7 @@ op::SecondOrderConeProgram buildSCProblem(
                                      op::Parameter(&td.U[k]) + -v_U.col(k)});
         }
 
-        socp.addConstraint(op::Norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * v_Delta(k));
+        socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * v_Delta(k));
     }
 
     /**
@@ -136,7 +136,7 @@ op::SecondOrderConeProgram buildSCProblem(
      * 
      */
     {
-        socp.addConstraint(op::Norm2(v_Delta) <= v_norm2_Delta);
+        socp.addConstraint(op::norm2(v_Delta) <= v_norm2_Delta);
 
         // Minimize norm2_Delta
         socp.addMinimizationTerm(op::Parameter(&weight_trust_region_trajectory) * v_norm2_Delta);

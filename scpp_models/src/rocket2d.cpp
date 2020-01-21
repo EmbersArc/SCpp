@@ -55,16 +55,16 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
     // State Constraints:
     // Glideslope
-    socp.addConstraint(op::Norm2(v_X.row(0), 0) <=
+    socp.addConstraint(op::norm2(v_X.row(0), 0) <=
                        op::Parameter([this]() { return std::tan(p.gamma_gs); }) * v_X.row(1));
     // Max Velocity
-    socp.addConstraint(op::Norm2(v_X.block(2, 0, 2, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(2, 0, 2, v_X.cols()), 0) <=
                        op::Parameter(&p.v_I_max));
     // Max Tilt Angle
-    socp.addConstraint(op::Norm2(v_X.row(4), 0) <=
+    socp.addConstraint(op::norm2(v_X.row(4), 0) <=
                        op::Parameter(&p.theta_max));
     // Max Rotation Velocity
-    socp.addConstraint(op::Norm2(v_X.row(5), 0) <=
+    socp.addConstraint(op::norm2(v_X.row(5), 0) <=
                        op::Parameter(&p.w_B_max));
 
     // Control Constraints

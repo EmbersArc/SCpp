@@ -70,7 +70,7 @@ op::SecondOrderConeProgram buildMPCProblem(
     }
     error_norm2_args = op::vstack({error_norm2_args,
                                    op::Parameter(&state_weights_terminal).cwiseProduct(-op::Parameter(&x_final) + v_X.col(v_X.cols() - 1))});
-    socp.addConstraint(op::Norm2(error_norm2_args) <= v_error_cost);
+    socp.addConstraint(op::norm2(error_norm2_args) <= v_error_cost);
     socp.addMinimizationTerm(v_error_cost);
 
     /**
@@ -83,7 +83,7 @@ op::SecondOrderConeProgram buildMPCProblem(
         input_norm2_args = op::vstack({input_norm2_args,
                                        op::Parameter(&input_weights).cwiseProduct(v_U.col(k))});
     }
-    socp.addConstraint(op::Norm2(input_norm2_args) <= v_input_cost);
+    socp.addConstraint(op::norm2(input_norm2_args) <= v_input_cost);
     socp.addMinimizationTerm(v_input_cost);
 
     return socp;
