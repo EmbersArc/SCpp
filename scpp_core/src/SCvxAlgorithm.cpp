@@ -98,6 +98,8 @@ bool SCvxAlgorithm::iterate()
         }
         print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
+        readSolution();
+
         // compare linear and nonlinear costs
         timer = tic();
         const double nonlinear_cost_dynamics = getNonlinearCost();
@@ -233,17 +235,11 @@ void SCvxAlgorithm::readSolution()
 
     for (size_t k = 0; k < td.n_X(); k++)
     {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            td.X[k](i) = X(i, k);
-        }
+        td.X[k] = X.col(k);
     }
     for (size_t k = 0; k < td.n_U(); k++)
     {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            td.U[k](i) = U(i, k);
-        }
+        td.U[k] = U.col(k);
     }
 }
 
