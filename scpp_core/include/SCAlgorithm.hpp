@@ -67,6 +67,8 @@ private:
      */
     bool iterate();
 
+    void updateWeights();
+
     size_t K;
 
     Model::ptr_t model;
@@ -75,13 +77,15 @@ private:
     bool interpolate_input;
 
     bool nondimensionalize;
+
     double weight_time;
     double weight_trust_region_time;
-    double weight_trust_region_trajectory;
+    Eigen::VectorXd weight_trust_region_trajectory;
     double weight_virtual_control;
-    double trust_region_factor;
+    double delta_min;
     double nu_tol;
     double delta_tol;
+
     size_t max_iterations;
 
     discretization_data_t dd;

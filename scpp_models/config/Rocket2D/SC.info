@@ -7,12 +7,10 @@ nondimensionalize                   false
 
 weight_time                         1.
 weight_trust_region_time            10.
-weight_trust_region_trajectory      10.
+delta_min                           0.02
 weight_virtual_control              1000.
 
-trust_region_factor                 1.2
-
 nu_tol                              1e-5
-delta_tol                           5e-3
+delta_tol                           1e-4
 
-max_iterations                      20
+max_iterations                      15

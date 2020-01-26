@@ -1,5 +1,6 @@
 #include "SCAlgorithm.hpp"
 #include "timing.hpp"
+#include "simulation.hpp"
 #include "discretization.hpp"
 
 using fmt::format;
@@ -34,8 +35,7 @@ void SCAlgorithm::loadParameters()
 
     param.loadScalar("weight_time", weight_time);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
-    param.loadScalar("trust_region_factor", trust_region_factor);
-    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
+    param.loadScalar("delta_min", delta_min);
 
     param.loadScalar("interpolate_input", interpolate_input);
 
@@ -56,6 +56,8 @@ void SCAlgorithm::initialize()
 
     td.initialize(K, interpolate_input);
 
+    weight_trust_region_trajectory.resize(K - 1);
+
     socp = buildSCProblem(weight_time, weight_trust_region_time,
                           weight_trust_region_trajectory, weight_virtual_control,
                           td, dd);
@@ -69,8 +71,20 @@ bool SCAlgorithm::iterate()
     const double timer_iteration = tic();
     double timer = tic();
     discretization::multipleShooting(model, td, dd);
-
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
+
+    
+    timer = tic();
+    updateWeights();
+    print("{:<{}}{:.2f}ms\n", "Time, defects:", 50, toc(timer));
+
+    print("Defect pattern:\n");
+    for (size_t k = 0; k < weight_trust_region_trajectory.size(); k++)
+    {
+        print("{}", weight_trust_region_trajectory(k) == 1. / delta_min ? "-" : "x");
+    }
+    print("\n");
+
 
     // solve the problem
     print("\n");
@@ -98,25 +112,26 @@ bool SCAlgorithm::iterate()
     }
     print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
-    double norm1_nu, Delta_sigma, norm2_Delta;
+    double norm1_nu, delta_sigma, norm1_delta;
     socp.readSolution("norm1_nu", norm1_nu);
-    socp.readSolution("Delta_sigma", Delta_sigma);
-    socp.readSolution("norm2_Delta", norm2_Delta);
+    socp.readSolution("norm1_delta", norm1_delta);
 
     // print iteration summary
     print("\n");
     print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, norm1_nu);
     if (free_final_time)
     {
-        print("{:<{}}{: .4f}\n", "State Input Delta", 50, Delta_sigma);
+        socp.readSolution("delta_sigma", delta_sigma);
+        print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
     }
-    print("{:<{}}{: .4f}\n\n", "Trust Region Delta", 50, norm2_Delta);
+    print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, norm1_delta);
 
     print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
+
     // check for convergence
-    return norm2_Delta < delta_tol && norm1_nu < nu_tol;
+    return norm1_delta < delta_tol and norm1_nu < nu_tol;
 }
 
 void SCAlgorithm::solve(bool warm_start)
@@ -130,9 +145,6 @@ void SCAlgorithm::solve(bool warm_start)
     {
         if (nondimensionalize)
             model->nondimensionalizeTrajectory(td);
-
-        weight_trust_region_time /= trust_region_factor;
-        weight_trust_region_trajectory /= trust_region_factor;
     }
     else
     {
@@ -157,13 +169,6 @@ void SCAlgorithm::solve(bool warm_start)
         converged = iterate();
 
         all_td.push_back(td);
-
-        if (iteration > 2)
-        {
-            // increase trust region weight
-            weight_trust_region_time *= trust_region_factor;
-            weight_trust_region_trajectory *= trust_region_factor;
-        }
     }
 
     print("{:=^{}}\n\n", "", 60);
@@ -224,6 +229,22 @@ void SCAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectori
     else
     {
         all_trajectories = all_td;
+    }
+}
+
+void SCAlgorithm::updateWeights()
+{
+    for (size_t k = 0; k < K - 1; k++)
+    {
+        Model::state_vector_t x = td.X.at(k);
+        const Model::input_vector_t u0 = td.U.at(k);
+        const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
+
+        simulate(model, td.t / (K - 1), u0, u1, x);
+
+        const double defect = (x - td.X.at(k + 1)).lpNorm<1>();
+
+        weight_trust_region_trajectory(k) = defect >= delta_min ? 1. / defect : 1. / delta_min;
     }
 }
 
