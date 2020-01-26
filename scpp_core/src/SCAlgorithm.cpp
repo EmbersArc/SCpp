@@ -73,12 +73,14 @@ bool SCAlgorithm::iterate()
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
     // solve the problem
+    print("\n");
     print("Solving problem.\n");
     timer = tic();
     const bool success = solver->solveProblem(false);
     print("Solver message:\n");
     print("> {}\n", solver->getResultString());
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+    print("\n");
 
     if (not success)
     {
@@ -195,17 +197,11 @@ void SCAlgorithm::readSolution()
 
     for (size_t k = 0; k < td.n_X(); k++)
     {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            td.X[k](i) = X(i, k);
-        }
+        td.X[k] = X.col(k);
     }
     for (size_t k = 0; k < td.n_U(); k++)
     {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            td.U[k](i) = U(i, k);
-        }
+        td.U[k] = U.col(k);
     }
 }
 

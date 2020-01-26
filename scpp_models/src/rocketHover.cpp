@@ -51,7 +51,7 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         v_epsilon = socp.createVariable("epsilon", 3, v_X.cols() - 1); // three state constraints
         op::Variable v_epsilon_norm = socp.createVariable("epsilon_norm");
 
-        socp.addConstraint(op::Norm2(v_epsilon) <= v_epsilon_norm);
+        socp.addConstraint(op::norm2(v_epsilon) <= v_epsilon_norm);
         socp.addMinimizationTerm(op::Parameter(1000.) * v_epsilon_norm);
     }
 
@@ -66,19 +66,19 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
     // State Constraints:
     // Max Velocity
-    op::Norm2Lhs lhs = op::Norm2(v_X.block(3, 1, 3, v_X.cols() - 1), 0);
+    op::SOCLhs lhs = op::norm2(v_X.block(3, 1, 3, v_X.cols() - 1), 0);
     if (p.add_slack_variables)
         lhs += v_epsilon.row(0);
     socp.addConstraint(lhs <= op::Parameter(&p.v_I_max));
 
     // Max Tilt Angle
-    lhs = op::Norm2(v_X.block(6, 1, 2, v_X.cols() - 1), 0);
+    lhs = op::norm2(v_X.block(6, 1, 2, v_X.cols() - 1), 0);
     if (p.add_slack_variables)
         lhs += v_epsilon.row(1);
     socp.addConstraint(lhs <= op::Parameter(&p.theta_max));
 
     // Max Rotation Velocity
-    lhs = op::Norm2(v_X.block(8, 1, 2, v_X.cols() - 1), 0);
+    lhs = op::norm2(v_X.block(8, 1, 2, v_X.cols() - 1), 0);
     if (p.add_slack_variables)
         lhs += v_epsilon.row(2);
     socp.addConstraint(lhs <= op::Parameter(&p.w_B_max));
@@ -88,10 +88,10 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     socp.addConstraint(v_U.row(2) >= op::Parameter(&p.T_min));
 
     // Maximum Thrust
-    socp.addConstraint(op::Norm2(v_U, 0) <= op::Parameter(&p.T_max));
+    socp.addConstraint(op::norm2(v_U, 0) <= op::Parameter(&p.T_max));
 
     // Maximum Gimbal Angle
-    socp.addConstraint(op::Norm2(v_U.topRows(2), 0) <=
+    socp.addConstraint(op::norm2(v_U.topRows(2), 0) <=
                        op::Parameter([this] { return std::tan(p.gimbal_max); }) * v_U.row(2));
 }
 

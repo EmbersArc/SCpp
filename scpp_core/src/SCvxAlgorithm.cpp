@@ -73,15 +73,16 @@ bool SCvxAlgorithm::iterate()
     while (true)
     {
         // solve problem
-        print("Solving problem.\n");
-        timer = tic();
-
         const trajectory_data_t old_td = td;
 
+        print("\n");
+        print("Solving problem.\n");
+        timer = tic();
         const bool success = solver->solveProblem(false);
         print("Solver message:\n");
         print("> {}\n", solver->getResultString());
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+        print("\n");
 
         if (not success)
         {
@@ -96,6 +97,8 @@ bool SCvxAlgorithm::iterate()
             throw std::runtime_error("Solver produced an invalid solution.\n");
         }
         print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
+
+        readSolution();
 
         // compare linear and nonlinear costs
         timer = tic();
@@ -232,17 +235,11 @@ void SCvxAlgorithm::readSolution()
 
     for (size_t k = 0; k < td.n_X(); k++)
     {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            td.X[k](i) = X(i, k);
-        }
+        td.X[k] = X.col(k);
     }
     for (size_t k = 0; k < td.n_U(); k++)
     {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            td.U[k](i) = U(i, k);
-        }
+        td.U[k] = U.col(k);
     }
 }
 

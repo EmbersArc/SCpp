@@ -68,7 +68,7 @@ op::SecondOrderConeProgram buildSCvxProblem(
          */
         op::Affine norm2_args = op::Parameter(&td.U.at(k)) + -v_U.col(k);
 
-        socp.addConstraint(op::Norm2(norm2_args) <= op::Parameter(&trust_region));
+        socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(&trust_region));
     }
 
     return socp;

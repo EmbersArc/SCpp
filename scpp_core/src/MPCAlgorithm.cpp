@@ -123,17 +123,11 @@ void MPCAlgorithm::readSolution()
 
     for (size_t k = 0; k < K; k++)
     {
-        for (size_t i = 0; i < Model::state_dim; i++)
-        {
-            this->X[k](i) = X(i, k);
-        }
+        this->X[k] = X.col(k);
     }
     for (size_t k = 0; k < K - 1; k++)
     {
-        for (size_t i = 0; i < Model::input_dim; i++)
-        {
-            this->U[k](i) = U(i, k);
-        }
+        this->U[k] = U.col(k);
     }
 }
 
