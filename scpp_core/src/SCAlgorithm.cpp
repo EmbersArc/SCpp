@@ -35,7 +35,7 @@ void SCAlgorithm::loadParameters()
 
     param.loadScalar("weight_time", weight_time);
     param.loadScalar("weight_virtual_control", weight_virtual_control);
-    param.loadScalar("delta_min", delta_min);
+    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
 
     param.loadScalar("interpolate_input", interpolate_input);
 
@@ -56,8 +56,6 @@ void SCAlgorithm::initialize()
 
     td.initialize(K, interpolate_input);
 
-    weight_trust_region_trajectory.resize(K - 1);
-
     socp = buildSCProblem(weight_time, weight_trust_region_time,
                           weight_trust_region_trajectory, weight_virtual_control,
                           td, dd);
@@ -73,19 +71,6 @@ bool SCAlgorithm::iterate()
     discretization::multipleShooting(model, td, dd);
     print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
 
-    
-    timer = tic();
-    updateWeights();
-    print("{:<{}}{:.2f}ms\n", "Time, defects:", 50, toc(timer));
-
-    print("Defect pattern:\n");
-    for (size_t k = 0; k < weight_trust_region_trajectory.size(); k++)
-    {
-        print("{}", weight_trust_region_trajectory(k) == 1. / delta_min ? "-" : "x");
-    }
-    print("\n");
-
-
     // solve the problem
     print("\n");
     print("Solving problem.\n");
@@ -94,6 +79,16 @@ bool SCAlgorithm::iterate()
     print("Solver message:\n");
     print("> {}\n", solver->getResultString());
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+    print("\n");
+
+    timer = tic();
+    std::vector<bool> defects = calculateDefects();
+    print("{:<{}}{:.2f}ms\n", "Time, defects:", 50, toc(timer));
+    print("Defect pattern:\n");
+    for (bool defect : defects)
+    {
+        print("{}", defect ? "x" : "-");
+    }
     print("\n");
 
     if (not success)
@@ -115,6 +110,11 @@ bool SCAlgorithm::iterate()
     double norm1_nu, delta_sigma, norm1_delta;
     socp.readSolution("norm1_nu", norm1_nu);
     socp.readSolution("norm1_delta", norm1_delta);
+
+    if (norm1_nu < nu_tol)
+    {
+        weight_trust_region_trajectory *= 2.;
+    }
 
     // print iteration summary
     print("\n");
@@ -232,20 +232,25 @@ void SCAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectori
     }
 }
 
-void SCAlgorithm::updateWeights()
+std::vector<bool> SCAlgorithm::calculateDefects()
 {
+    std::vector<bool> pattern;
+
     for (size_t k = 0; k < K - 1; k++)
     {
         Model::state_vector_t x = td.X.at(k);
         const Model::input_vector_t u0 = td.U.at(k);
         const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
 
-        simulate(model, td.t / (K - 1), u0, u1, x);
+        const double dt = td.t / (K - 1);
+        simulate(model, dt, u0, u1, x);
 
-        const double defect = (x - td.X.at(k + 1)).lpNorm<1>();
+        const double defect = (x - td.X.at(k + 1)).squaredNorm();
 
-        weight_trust_region_trajectory(k) = defect >= delta_min ? 1. / defect : 1. / delta_min;
+        pattern.push_back(defect > nu_tol);
     }
+
+    return pattern;
 }
 
 } // namespace scpp

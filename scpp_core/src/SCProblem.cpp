@@ -7,7 +7,7 @@ namespace scpp
 op::SecondOrderConeProgram buildSCProblem(
     double &weight_time,
     double &weight_trust_region_time,
-    Eigen::VectorXd &weight_trust_region_trajectory,
+    double &weight_trust_region_trajectory,
     double &weight_virtual_control,
     trajectory_data_t &td,
     discretization_data_t &dd)
@@ -21,7 +21,7 @@ op::SecondOrderConeProgram buildSCProblem(
     op::Variable v_nu = socp.createVariable("nu", Model::state_dim, td.n_X() - 1);             // virtual control
     op::Variable v_nu_bound = socp.createVariable("nu_bound", Model::state_dim, td.n_X() - 1); // virtual control
     op::Variable v_norm1_nu = socp.createVariable("norm1_nu");                                 // virtual control norm upper bound
-    op::Variable v_delta = socp.createVariable("delta", K - 1);                                // change of the stacked [ x(k), u(k) ] vector
+    op::Variable v_delta = socp.createVariable("delta", K);                                    // change of the stacked [ x(k), u(k) ] vector
     op::Variable v_norm1_delta = socp.createVariable("norm1_delta");                           // 1-norm of the delta(k) variables
     if (dd.variableTime())
     {
@@ -92,7 +92,7 @@ op::SecondOrderConeProgram buildSCProblem(
         */
         {
             op::Affine norm2_args = op::vstack({op::Parameter(0.5) + op::Parameter(-0.5) * socp.getVariable("delta_sigma"),
-                                                op::Parameter(&td.t) + -socp.getVariable("sigma")});
+                                                -op::Parameter(&td.t) + socp.getVariable("sigma")});
 
             socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * socp.getVariable("delta_sigma"));
 
@@ -101,7 +101,7 @@ op::SecondOrderConeProgram buildSCProblem(
         }
     }
 
-    for (size_t k = 0; k < K - 1; k++)
+    for (size_t k = 0; k < K; k++)
     {
         /**
          * Build state and input trust-region:
@@ -118,13 +118,13 @@ op::SecondOrderConeProgram buildSCProblem(
          */
 
         op::Affine norm2_args = op::vstack({op::Parameter(0.5) + op::Parameter(-0.5) * v_delta(k),
-                                            op::Parameter(&td.X.at(k + 1)) + -v_X.col(k + 1)});
+                                            op::Parameter(&td.X.at(k)) + -v_X.col(k)});
 
-        if (not(not dd.interpolatedInput() and k == K - 2))
-        {
-            norm2_args = op::vstack({norm2_args,
-                                     op::Parameter(&td.U.at(k + 1)) + -v_U.col(k + 1)});
-        }
+        // if (dd.interpolatedInput() or (not dd.interpolatedInput() and k < K - 1))
+        // {
+        //     norm2_args = op::vstack({norm2_args,
+        //                              op::Parameter(&td.U.at(k)) + -v_U.col(k)});
+        // }
 
         socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * v_delta(k));
     }
@@ -136,10 +136,10 @@ op::SecondOrderConeProgram buildSCProblem(
      * 
      */
     {
-        socp.addConstraint(op::norm2(op::Parameter(&weight_trust_region_trajectory).cwiseProduct(v_delta)) <= v_norm1_delta);
+        socp.addConstraint(v_delta <= v_norm1_delta);
 
         // Minimize norm2_delta
-        socp.addMinimizationTerm(v_norm1_delta);
+        socp.addMinimizationTerm(op::Parameter(&weight_trust_region_trajectory) * v_norm1_delta);
     }
 
     return socp;

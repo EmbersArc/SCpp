@@ -67,7 +67,11 @@ private:
      */
     bool iterate();
 
-    void updateWeights();
+    /**
+     * @brief Calculates defects in the linearized trajectory.
+     *
+     */
+    std::vector<bool> calculateDefects();
 
     size_t K;
 
@@ -80,22 +84,16 @@ private:
 
     double weight_time;
     double weight_trust_region_time;
-    Eigen::VectorXd weight_trust_region_trajectory;
+    double weight_trust_region_trajectory;
     double weight_virtual_control;
-    double delta_min;
     double nu_tol;
     double delta_tol;
 
     size_t max_iterations;
 
     discretization_data_t dd;
-
     trajectory_data_t td;
     std::vector<trajectory_data_t> all_td;
-
-    size_t sigma_index = 0;
-    Eigen::MatrixXi X_indices;
-    Eigen::MatrixXi U_indices;
 
     op::SecondOrderConeProgram socp;
 

@@ -93,13 +93,8 @@ private:
     std::optional<double> last_nonlinear_cost;
 
     discretization_data_t dd;
-
     trajectory_data_t td;
-
     std::vector<trajectory_data_t> all_td;
-
-    Eigen::MatrixXi X_indices;
-    Eigen::MatrixXi U_indices;
 
     op::SecondOrderConeProgram socp;
 
