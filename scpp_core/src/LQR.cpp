@@ -1,5 +1,4 @@
 #include "LQR.hpp"
-#include "fmt/format.h"
 
 constexpr size_t STATE_DIM = Model::state_dim;
 using schur_matrix_t = Eigen::Matrix<double, 2 * STATE_DIM, 2 * STATE_DIM>;
@@ -20,9 +19,9 @@ bool solveSchurIterative(const schur_matrix_t &M,
         if (iterations > maxIterations)
             return false;
 
-        schur_matrix_t Mdiff = Mlocal - Mlocal.inverse();
+        const schur_matrix_t Mdiff = Mlocal - Mlocal.inverse();
 
-        schur_matrix_t Mnew = Mlocal - 0.5 * Mdiff;
+        const schur_matrix_t Mnew = Mlocal - 0.5 * Mdiff;
 
         converged = Mnew.isApprox(Mlocal, epsilon);
 
@@ -32,10 +31,10 @@ bool solveSchurIterative(const schur_matrix_t &M,
     }
 
     /* break down M and extract M11 M12 M21 M22 */
-    Model::state_matrix_t M11(Mlocal.topLeftCorner<STATE_DIM, STATE_DIM>());
-    Model::state_matrix_t M12(Mlocal.topRightCorner<STATE_DIM, STATE_DIM>());
-    Model::state_matrix_t M21(Mlocal.bottomLeftCorner<STATE_DIM, STATE_DIM>());
-    Model::state_matrix_t M22(Mlocal.bottomRightCorner<STATE_DIM, STATE_DIM>());
+    const Model::state_matrix_t M11(Mlocal.topLeftCorner<STATE_DIM, STATE_DIM>());
+    const Model::state_matrix_t M12(Mlocal.topRightCorner<STATE_DIM, STATE_DIM>());
+    const Model::state_matrix_t M21(Mlocal.bottomLeftCorner<STATE_DIM, STATE_DIM>());
+    const Model::state_matrix_t M22(Mlocal.bottomRightCorner<STATE_DIM, STATE_DIM>());
 
     /* find M and N using the elements of M	*/
     factor_matrix_t U;
@@ -99,14 +98,8 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
 
     Eigen::FullPivLU<ctrl_matrix_t> lu_decomp(C);
 
-    if (lu_decomp.rank() == Model::state_dim)
-    {
-        // fmt::print("[LQR] System is controllable.\n");
-    }
-    else
-    {
-        fmt::print("[LQR] WARNING: System is not controllable!\n");
-    }
+    // check if system is controllable
+    assert(lu_decomp.rank() == Model::state_dim);
 
     // fmt::print("[LQR] Computing feedback gains.\n");
     Model::input_matrix_t R_inverse;
