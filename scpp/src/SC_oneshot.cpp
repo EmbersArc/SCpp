@@ -3,7 +3,6 @@
 #include "SCAlgorithm.hpp"
 #include "SCvxAlgorithm.hpp"
 #include "timing.hpp"
-#include "simulation.hpp"
 #include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
