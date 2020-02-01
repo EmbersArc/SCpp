@@ -6,9 +6,9 @@ K                                   25
 nondimensionalize                   true
 
 weight_time                         1.
-weight_trust_region_time            10.
+weight_trust_region_time            1.
 weight_trust_region_trajectory      1.
-weight_virtual_control              5000.
+weight_virtual_control              1000.
 
 nu_tol                              1e-5
 delta_tol                           1e-3
