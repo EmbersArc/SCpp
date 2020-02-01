@@ -89,7 +89,7 @@ bool SCAlgorithm::iterate()
     {
         print("{}", defect ? "x" : "-");
     }
-    print("\n");
+    print("\n\n");
 
     if (not success)
     {
@@ -107,7 +107,7 @@ bool SCAlgorithm::iterate()
     }
     print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
-    double norm1_nu, delta_sigma, norm1_delta;
+    double norm1_nu, norm1_delta;
     socp.readSolution("norm1_nu", norm1_nu);
     socp.readSolution("norm1_delta", norm1_delta);
 
@@ -121,6 +121,7 @@ bool SCAlgorithm::iterate()
     print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, norm1_nu);
     if (free_final_time)
     {
+        double delta_sigma;
         socp.readSolution("delta_sigma", delta_sigma);
         print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
     }
