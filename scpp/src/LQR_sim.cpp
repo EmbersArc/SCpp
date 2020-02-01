@@ -18,7 +18,7 @@ int main()
 
     scpp::LQRAlgorithm solver(model);
 
-    const double sim_time = 15.;
+    const double sim_time = 5.;
     const double write_steps = 30;
 
     solver.initialize();
@@ -34,8 +34,6 @@ int main()
     Model::state_vector_t x = model->p.x_init;
 
     solver.setFinalState(model->p.x_final);
-    std::cout << model->p.x_init << "\n";
-    std::cout << model->p.x_final << "\n";
 
     double t = 0.;
     size_t sim_step = 0;
