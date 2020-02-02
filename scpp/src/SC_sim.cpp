@@ -3,7 +3,6 @@
 #include "SCAlgorithm.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
-#include "vectorOperations.hpp"
 #include "commonFunctions.hpp"
 
 using fmt::format;

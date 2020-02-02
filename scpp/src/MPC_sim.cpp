@@ -3,7 +3,6 @@
 #include "MPCAlgorithm.hpp"
 #include "simulation.hpp"
 #include "timing.hpp"
-#include "vectorOperations.hpp"
 #include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
@@ -103,9 +102,9 @@ int main()
                                     Eigen::DontAlignCols,
                                     ", ", "\n");
 
-    X_sim = reduce_vector(X_sim, write_steps);
-    U_sim = reduce_vector(U_sim, write_steps);
-    t_sim = reduce_vector(t_sim, write_steps);
+    X_sim = scpp::reduce_vector(X_sim, write_steps);
+    U_sim = scpp::reduce_vector(U_sim, write_steps);
+    t_sim = scpp::reduce_vector(t_sim, write_steps);
     {
         std::ofstream f(outputPath / "X.txt");
         for (auto &state : X_sim)
