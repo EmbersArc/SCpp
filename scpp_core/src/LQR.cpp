@@ -86,20 +86,19 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
 {
     // fmt::print("[LQR] Checking controllability...\n");
 
-    using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
-
-    ctrl_matrix_t C;
-    C.block<Model::state_dim, Model::input_dim>(0, 0) = B;
-    for (size_t i = 1; i < Model::state_dim; i++)
     {
-        C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim).noalias() =
-            A * C.block<Model::state_dim, Model::input_dim>(0, (i - 1) * Model::input_dim);
+        using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
+        ctrl_matrix_t C;
+        C.block<Model::state_dim, Model::input_dim>(0, 0) = B;
+        for (size_t i = 1; i < Model::state_dim; i++)
+        {
+            C.block<Model::state_dim, Model::input_dim>(0, i * Model::input_dim).noalias() =
+                A * C.block<Model::state_dim, Model::input_dim>(0, (i - 1) * Model::input_dim);
+        }
+
+        // check if system is controllable
+        assert(Eigen::FullPivLU<ctrl_matrix_t>(C).rank() == Model::state_dim);
     }
-
-    Eigen::FullPivLU<ctrl_matrix_t> lu_decomp(C);
-
-    // check if system is controllable
-    assert(lu_decomp.rank() == Model::state_dim);
 
     // fmt::print("[LQR] Computing feedback gains.\n");
     Model::input_matrix_t R_inverse;

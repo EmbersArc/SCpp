@@ -41,6 +41,12 @@ template <class Model>
 typename Model::input_vector_t TrajectoryData<Model>::inputAtTime(double t) const
 {
     t = std::clamp(t, 0., this->t);
+
+    if (t == this->t)
+    {
+        return U.back();
+    }
+
     const double dt = this->t / (n_X() - 1);
     double interpolate_value = std::fmod(t, dt) / dt;
     const size_t i = t / dt;
@@ -55,6 +61,12 @@ template <class Model>
 typename Model::state_vector_t TrajectoryData<Model>::approxStateAtTime(double t) const
 {
     t = std::clamp(t, 0., this->t);
+
+    if (t == this->t)
+    {
+        return X.back();
+    }
+
     const double dt = this->t / (n_X() - 1);
     double interpolate_value = std::fmod(t, dt) / dt;
     const size_t i = t / dt;

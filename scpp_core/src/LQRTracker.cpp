@@ -43,6 +43,7 @@ void LQRTracker::loadParameters()
 
 void LQRTracker::getInput(double t, const Model::state_vector_t &x, Model::input_vector_t &u) const
 {
+    t = std::clamp(t, 0., td.t);
     const Model::state_vector_t x_target = td.approxStateAtTime(t);
     const Model::input_vector_t u_target = td.inputAtTime(t);
     const Model::feedback_matrix_t K = interpolateGains(t);
@@ -53,12 +54,13 @@ void LQRTracker::getInput(double t, const Model::state_vector_t &x, Model::input
 Model::feedback_matrix_t LQRTracker::interpolateGains(double t) const
 {
     t = std::clamp(t, 0., td.t);
+
     const double dt = td.t / (td.n_X() - 1);
     double interpolate_value = std::fmod(t, dt) / dt;
     const size_t i = t / dt;
 
     const Model::feedback_matrix_t K0 = gains.at(i);
-    const Model::feedback_matrix_t K1 = td.interpolatedInput() ? gains.at(i + 1) : gains.at(i);
+    const Model::feedback_matrix_t K1 = td.interpolatedInput() ? gains.at(std::min(gains.size() - 1, i + 1)) : gains.at(i);
 
     return K0 + interpolate_value * (K1 - K0);
 }
