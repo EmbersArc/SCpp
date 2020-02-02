@@ -91,8 +91,8 @@ target_compile_options(mpc_lib PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
 add_executable(mpc_sim scpp/src/MPC_sim.cpp)
 target_link_libraries(mpc_sim mpc_lib)
 
-add_executable(lqr_sim scpp/src/LQR_sim.cpp)
-target_link_libraries(lqr_sim mpc_lib)
+# add_executable(lqr_sim scpp/src/LQR_sim.cpp)
+# target_link_libraries(lqr_sim mpc_lib)
 
 add_executable(sc_tracking scpp/src/SC_tracking.cpp)
 target_link_libraries(sc_tracking mpc_lib)
