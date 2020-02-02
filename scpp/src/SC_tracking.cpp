@@ -4,7 +4,6 @@
 #include "LQRTracker.hpp"
 #include "timing.hpp"
 #include "simulation.hpp"
-#include "vectorOperations.hpp"
 #include "commonFunctions.hpp"
 
 namespace fs = std::experimental::filesystem;
@@ -43,7 +42,7 @@ int main()
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
     std::vector<double> t_sim;
-    const double t_max = td.t * 1.5;
+    const double t_max = td.t * 1;
     const double write_steps = 30;
 
     Model::state_vector_t x = model->p.x_init;
@@ -51,7 +50,7 @@ int main()
     double t = 0.;
     size_t sim_step = 0;
 
-    while (t < td.t or t > t_max)
+    while (t < t_max)
     {
         // get the calculated input
         Model::input_vector_t u;
@@ -67,15 +66,16 @@ int main()
 
         sim_step++;
 
-        if ((x - model->p.x_final).norm() < 0.02)
-        {
-            break;
-        }
+        // if ((x - model->p.x_final).norm() < 0.01)
+        // {
+        //     break;
+        // }
     }
 
     fmt::print("\n");
     fmt::print("Simulating trajectory.\n");
     fmt::print("Finished after {} steps.\n", sim_step + 1);
+    fmt::print("Final error: {:.2f}.\n", (x - model->p.x_final).norm());
     fmt::print("{:<{}}{:.2f}ms\n", "Time, simulation:", 50, toc(run_timer));
     fmt::print("{:<{}}{:.2f}s\n", "Simulated time:", 50, t);
     fmt::print("\n");
@@ -92,9 +92,9 @@ int main()
                                     Eigen::DontAlignCols,
                                     ", ", "\n");
 
-    X_sim = reduce_vector(X_sim, write_steps);
-    U_sim = reduce_vector(U_sim, write_steps);
-    t_sim = reduce_vector(t_sim, write_steps);
+    X_sim = scpp::reduce_vector(X_sim, write_steps);
+    U_sim = scpp::reduce_vector(U_sim, write_steps);
+    t_sim = scpp::reduce_vector(t_sim, write_steps);
     {
         std::ofstream f(outputPath / "X.txt");
         for (auto &state : X_sim)
