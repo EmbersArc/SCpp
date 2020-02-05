@@ -59,7 +59,7 @@ def my_plot(fig):
         ])
         CIB = np.transpose(CBI)
 
-        Fx, Fy, Fz = np.dot(CIB, U[k, :])
+        Fx, Fy, Fz = np.dot(CIB, U[k, 0:3])
         dx, dy, dz = np.dot(CIB, np.array([0., 0., 1.]))
         # tx, ty, tz = np.dot(CIB, np.array([1., 0., 0.]))
 
