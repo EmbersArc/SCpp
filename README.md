@@ -29,8 +29,8 @@ This library implements various optimal control algorithms that are particularly
  * Eigen
  * Boost (odeint and ptree)
  * fmt (included as submodule)
- * ECOS (included as submodule)
  * CppAD/CppADCodegen (included as submodule)
+ * [socp_interface](https://github.com/EmbersArc/socp_interface) (included as submodule)
 
 ## Instructions
 
