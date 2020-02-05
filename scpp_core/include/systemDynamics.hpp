@@ -116,7 +116,7 @@ void SystemDynamics<STATE_DIM, INPUT_DIM, PARAM_DIM>::initializeModel()
 
 #if CODEGEN
     dynamic_vector_ad_t x(STATE_DIM + INPUT_DIM + PARAM_DIM);
-    x.setOnes();
+    x.setRandom();
     CppAD::Independent(x, 0, false);
 
     const state_vector_ad_t &state = x.segment<STATE_DIM>(0);
