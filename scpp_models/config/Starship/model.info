@@ -10,7 +10,7 @@ J_B
 {
     (0)   5000000.
     (1)   5000000.
-    (2)   50000.
+    (2)   70000.
 }
 
 r_T_B
@@ -89,6 +89,10 @@ exact_minimum_thrust    true
 I_sp                    275.
 T_min                   200000.
 T_max                   420000.
+t_max                   17500.
+
+; roll control
+enable_roll_control     false
 
 ; maximum gimbal
 gimbal_max  15.
