@@ -84,8 +84,6 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
                 const Model::control_matrix_t &B,
                 Model::feedback_matrix_t &K)
 {
-    // fmt::print("[LQR] Checking controllability...\n");
-
     {
         using ctrl_matrix_t = Eigen::Matrix<double, Model::state_dim, Model::state_dim * Model::input_dim>;
         ctrl_matrix_t C;
@@ -100,7 +98,6 @@ bool ComputeLQR(const Model::state_matrix_t &Q,
         assert(Eigen::FullPivLU<ctrl_matrix_t>(C).rank() == Model::state_dim);
     }
 
-    // fmt::print("[LQR] Computing feedback gains.\n");
     Model::input_matrix_t R_inverse;
     Model::state_matrix_t P;
     bool success = careSolve(Q, R, A, B, P, R_inverse);

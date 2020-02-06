@@ -2,8 +2,6 @@
 
 #include "activeModel.hpp"
 
-#include "Eigen/Dense"
-
 bool ComputeLQR(const Model::state_matrix_t &Q,
                 const Model::input_matrix_t &R,
                 const Model::state_matrix_t &A,
