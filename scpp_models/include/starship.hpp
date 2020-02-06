@@ -6,6 +6,7 @@
 #include "systemModel.hpp"
 #include "socpSolver.hpp"
 #include "parameterServer.hpp"
+#include "common.hpp"
 
 #include "starshipDefinitions.hpp"
 
@@ -50,6 +51,7 @@ public:
     struct Parameters
     {
         bool exact_minimum_thrust;
+        bool enable_roll_control;
 
         Eigen::Vector3d g_I;
         Eigen::Vector3d J_B;
@@ -57,6 +59,7 @@ public:
         double alpha_m;
         double T_min;
         double T_max;
+        double t_max;
 
         double gimbal_max;
         double theta_max;

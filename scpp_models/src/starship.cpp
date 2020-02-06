@@ -1,9 +1,6 @@
 #include "common.hpp"
 #include "starship.hpp"
 
-using std::string;
-using std::vector;
-
 namespace scpp::models
 {
 
@@ -28,13 +25,16 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
     auto q = x.segment<4>(7);
     auto w = x.segment<3>(11);
 
+    auto thrust = u.head<3>();
+    auto torque = Eigen::Matrix<T, 3, 1>(T(0.), T(0.), u(3));
+
     auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
 
-    f(0) = -alpha_m * u.norm();
+    f(0) = -alpha_m * thrust.norm();
     f.segment(1, 3) << v;
-    f.segment(4, 3) << 1. / m * R_I_B * u + g_I;
+    f.segment(4, 3) << 1. / m * R_I_B * thrust + g_I;
     f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(11, 3) << J_B_inv * r_T_B.cross(u) - w.cross(w);
+    f.segment(11, 3) << J_B_inv * (r_T_B.cross(thrust) + torque) - w.cross(w);
 }
 
 void Starship::getInitializedTrajectory(trajectory_data_t &td)
@@ -60,7 +60,7 @@ void Starship::getInitializedTrajectory(trajectory_data_t &td)
 
     for (auto &u : td.U)
     {
-        u << 0, 0, (p.T_max - p.T_min) / 2.;
+        u << 0., 0., (p.T_max - p.T_min) / 2., 0.;
     }
 
     td.t = p.final_time;
@@ -78,7 +78,10 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
     // Final State
     // mass and roll are free
-    for (size_t i : {1, 2, 3, 4, 5, 6, 8, 9, 11, 12})
+    for (size_t i : {1, 2, 3,
+                     4, 5, 6,
+                     8, 9,
+                     11, 12})
     {
         socp.addConstraint(v_X(i, v_X.cols() - 1) == op::Parameter(&p.x_final(i)));
     }
@@ -104,16 +107,17 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
 
     // Control Constraints:
     // Final Input
-    socp.addConstraint(v_U(0, v_U.cols() - 1) == 0.);
-    socp.addConstraint(v_U(1, v_U.cols() - 1) == 0.);
+    socp.addConstraint(v_U.col(v_U.cols() - 1)(0)== 0.);
+    socp.addConstraint(v_U.col(v_U.cols() - 1)(1)== 0.);
+    socp.addConstraint(v_U.col(v_U.cols() - 1)(3) == 0.);
 
     if (p.exact_minimum_thrust)
     {
         p_dyn.U0_ptr = &U0;
-        p_dyn.thrust_const.resize(INPUT_DIM_, U0.size());
+        p_dyn.thrust_const.resize(3, U0.size());
 
         // Linearized Minimum Thrust
-        socp.addConstraint(op::sum(op::Parameter(&p_dyn.thrust_const).cwiseProduct(v_U), 0) >= op::Parameter(&p.T_min));
+        socp.addConstraint(op::sum(op::Parameter(&p_dyn.thrust_const).cwiseProduct(v_U.topRows(3)), 0) >= op::Parameter(&p.T_min));
     }
     else
     {
@@ -122,11 +126,22 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 
     // Maximum Thrust
-    socp.addConstraint(op::norm2(v_U, 0) <= op::Parameter(&p.T_max));
+    socp.addConstraint(op::norm2(v_U.topRows(3), 0) <= op::Parameter(&p.T_max));
 
     // Maximum Gimbal Angle
     socp.addConstraint(op::norm2(v_U.topRows(2), 0) <=
                        op::Parameter(&p_dyn.gimbal_const) * v_U.row(2));
+
+    if (p.enable_roll_control)
+    {
+        socp.addConstraint(v_U.row(3) <= op::Parameter(&p.t_max));
+        socp.addConstraint(v_U.row(3) >= -op::Parameter(&p.t_max));
+    }
+    else
+    {
+        socp.addConstraint(v_X.row(13) == 0.);
+        socp.addConstraint(v_U.row(3) == 0.);
+    }
 }
 
 void Starship::nondimensionalize()
@@ -147,7 +162,7 @@ void Starship::updateProblemParameters()
 
     for (size_t k = 0; k < size_t(p_dyn.thrust_const.cols()); k++)
     {
-        p_dyn.thrust_const.col(k) = (*p_dyn.U0_ptr)[k].normalized();
+        p_dyn.thrust_const.col(k) = p_dyn.U0_ptr->at(k).head<3>().normalized();
     }
 }
 
@@ -167,7 +182,8 @@ void Starship::nondimensionalizeTrajectory(trajectory_data_t &td)
     }
     for (auto &u : td.U)
     {
-        u /= p.m_scale * p.r_scale;
+        u.head<3>() /= p.m_scale * p.r_scale;
+        u(3) /= p.m_scale * p.r_scale * p.r_scale;
     }
 }
 
@@ -180,7 +196,8 @@ void Starship::redimensionalizeTrajectory(trajectory_data_t &td)
     }
     for (auto &u : td.U)
     {
-        u *= p.m_scale * p.r_scale;
+        u.head<3>() *= p.m_scale * p.r_scale;
+        u(3) *= p.m_scale * p.r_scale * p.r_scale;
     }
 }
 
@@ -238,6 +255,7 @@ void Starship::Parameters::loadFromFile(const std::string &path)
     param.loadMatrix("v_final", v_final);
     param.loadScalar("T_min", T_min);
     param.loadScalar("T_max", T_max);
+    param.loadScalar("t_max", t_max);
     param.loadScalar("I_sp", I_sp);
     param.loadScalar("gimbal_max", gimbal_max);
     param.loadScalar("theta_max", theta_max);
@@ -246,6 +264,7 @@ void Starship::Parameters::loadFromFile(const std::string &path)
     param.loadScalar("random_initial_state", random_initial_state);
     param.loadScalar("final_time", final_time);
     param.loadScalar("exact_minimum_thrust", exact_minimum_thrust);
+    param.loadScalar("enable_roll_control", enable_roll_control);
 
     deg2rad(gimbal_max);
     deg2rad(theta_max);
@@ -285,6 +304,7 @@ void Starship::Parameters::nondimensionalize()
 
     T_min /= m_scale * r_scale;
     T_max /= m_scale * r_scale;
+    t_max /= m_scale * r_scale * r_scale;
 }
 
 void Starship::Parameters::redimensionalize()
@@ -304,6 +324,7 @@ void Starship::Parameters::redimensionalize()
 
     T_min *= m_scale * r_scale;
     T_max *= m_scale * r_scale;
+    t_max *= m_scale * r_scale * r_scale;
 }
 
 } // namespace scpp::models
