@@ -47,6 +47,8 @@ int main()
 
     Model::state_vector_t x = model->p.x_init;
 
+    const size_t initial_error = (x - model->p.x_final).norm();
+
     double t = 0.;
     size_t sim_step = 0;
 
@@ -70,17 +72,14 @@ int main()
         {
             throw std::runtime_error("State has NaN.");
         }
-
-        if ((x - model->p.x_final).norm() < 0.01)
-        {
-            break;
-        }
     }
+
+    const size_t final_error = (x - model->p.x_final).norm();
 
     fmt::print("\n");
     fmt::print("Simulating trajectory.\n");
     fmt::print("Finished after {} steps.\n", sim_step + 1);
-    fmt::print("Final error: {:.2f}.\n", (x - model->p.x_final).norm());
+    fmt::print("Final error: {:.4f}%.\n", 100. * final_error / initial_error);
     fmt::print("{:<{}}{:.2f}ms\n", "Time, simulation:", 50, toc(run_timer));
     fmt::print("{:<{}}{:.2f}s\n", "Simulated time:", 50, t);
     fmt::print("\n");
