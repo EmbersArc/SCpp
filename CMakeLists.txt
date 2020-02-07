@@ -5,8 +5,6 @@ project(scpp_mpc)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(ADDITIONAL_CLEAN_FILES "")
-
 # Eigen
 find_package(Eigen3 REQUIRED NO_MODULE)
 
@@ -24,23 +22,22 @@ add_subdirectory(lib/socp_interface)
 
 # CppAD
 message("\n### Configuring CppAD ###")
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
-execute_process(COMMAND cmake .. WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
-list(APPEND ADDITIONAL_CLEAN_FILES ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/build)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppAD)
+execute_process(COMMAND cmake ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD 
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppAD)
 
 # CppADCodegen
 message("\n### Configuring CppADCodegen ###")
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
-execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD ..
-                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
-list(APPEND ADDITIONAL_CLEAN_FILES ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen/build)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppADCodegen)
+execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppADCodegen)
 
 # INCLUDES
 set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/external
     lib/CppAD/include
     lib/CppADCodegen/include
-    lib/CppADCodegen/build/include
+    build/lib/CppADCodegen/include
 )
 set(SCPP_INCLUDE_DIRECTORIES
     scpp_core/include
