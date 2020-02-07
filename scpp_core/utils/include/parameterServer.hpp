@@ -93,11 +93,11 @@ void ParameterServer::loadMatrix(
     boost::property_tree::ptree matrix_pt = pt.get_child(matrixName);
 
     const size_t num_entries = matrix_pt.size() - matrix_pt.count("scaling");
-    if (num_entries < matrix.size())
+    if (num_entries < size_t(matrix.size()))
     {
         throw std::runtime_error(fmt::format("Missing entries in matrix type: {}!\n", matrixName));
     }
-    if (num_entries > matrix.size())
+    if (num_entries > size_t(matrix.size()))
     {
         throw std::runtime_error(fmt::format("Redundant entries in matrix type: {}!\n", matrixName));
     }
