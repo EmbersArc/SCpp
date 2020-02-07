@@ -221,6 +221,7 @@ void SCvxAlgorithm::solve(bool warm_start)
     if (nondimensionalize)
     {
         model->redimensionalize();
+        model->updateModelParameters();
         model->redimensionalizeTrajectory(td);
     }
     print("{:=^{}}\n\n", "", 60);

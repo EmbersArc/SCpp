@@ -186,6 +186,7 @@ void SCAlgorithm::solve(bool warm_start)
     if (nondimensionalize)
     {
         model->redimensionalize();
+        model->updateModelParameters();
         model->redimensionalizeTrajectory(td);
     }
     print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
