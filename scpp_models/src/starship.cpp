@@ -22,19 +22,21 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
     // state variables
     auto m = x(0);
     auto v = x.segment<3>(4);
-    auto q = x.segment<4>(7);
-    auto w = x.segment<3>(11);
+    auto q = x.segment<3>(7);
+    auto w = x.segment<3>(10);
 
     auto thrust = u.head<3>();
     auto torque = Eigen::Matrix<T, 3, 1>(T(0.), T(0.), u(3));
 
-    auto R_I_B = Eigen::Quaternion<T>(q(0), q(1), q(2), q(3)).toRotationMatrix();
+    auto R_I_B = Eigen::Quaternion<T>(sqrt(1. - q.squaredNorm()),
+                                      q(0), q(1), q(2))
+                     .toRotationMatrix();
 
     f(0) = -alpha_m * thrust.norm();
-    f.segment(1, 3) << v;
-    f.segment(4, 3) << 1. / m * R_I_B * thrust + g_I;
-    f.segment(7, 4) << T(0.5) * omegaMatrix<T>(w) * q;
-    f.segment(11, 3) << J_B_inv * (r_T_B.cross(thrust) + torque) - w.cross(w);
+    f.segment<3>(1) << v;
+    f.segment<3>(4) << 1. / m * R_I_B * thrust + g_I;
+    f.segment<3>(7) << T(0.5) * omegaMatrixReduced<T>(q) * w;
+    f.segment<3>(10) << J_B_inv * (r_T_B.cross(thrust) + torque) - w.cross(w);
 }
 
 void Starship::getInitializedTrajectory(trajectory_data_t &td)
@@ -49,13 +51,15 @@ void Starship::getInitializedTrajectory(trajectory_data_t &td)
         td.X.at(k).segment(1, 6) = alpha1 * p.x_init.segment(1, 6) + alpha2 * p.x_final.segment(1, 6);
 
         // do SLERP for quaternion
-        Eigen::Quaterniond q0(p.x_init(7), p.x_init(8), p.x_init(9), p.x_init(10));
-        Eigen::Quaterniond q1(p.x_final(7), p.x_final(8), p.x_final(9), p.x_final(10));
+        auto q0_ = p.x_init.segment<3>(7);
+        Eigen::Quaterniond q0(sqrt(1. - q0_.squaredNorm()), q0_(0), q0_(1), q0_(2));
+        auto q1_ = p.x_init.segment<3>(7);
+        Eigen::Quaterniond q1(sqrt(1. - q1_.squaredNorm()), q1_(0), q1_(1), q1_(2));
         Eigen::Quaterniond qs = q0.slerp(alpha2, q1);
-        td.X.at(k).segment(7, 4) << qs.w(), qs.vec();
+        td.X.at(k).segment<3>(7) = qs.vec();
 
         // angular velocity
-        td.X.at(k).segment(11, 3) = alpha1 * p.x_init.segment(11, 3) + alpha2 * p.x_final.segment(11, 3);
+        td.X.at(k).segment<3>(10) = alpha1 * p.x_init.segment<3>(10) + alpha2 * p.x_final.segment<3>(10);
     }
 
     for (auto &u : td.U)
@@ -80,16 +84,14 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     // mass and roll are free
     for (size_t i : {1, 2, 3,
                      4, 5, 6,
-                     8, 9,
-                     11, 12})
+                     7, 8,
+                     10, 11, 12})
     {
         socp.addConstraint(v_X(i, v_X.cols() - 1) == op::Parameter(&p.x_final(i)));
     }
 
     // State Constraints:
     // Mass
-    //     x(0) >= m_dry
-    //     for all k
     socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
 
     // Glide Slope
@@ -97,18 +99,17 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                        op::Parameter(&p_dyn.gs_const) * v_X.block(3, 0, 1, v_X.cols()));
 
     // Max Tilt Angle
-    // norm2([x(8), x(9)]) <= sqrt((1 - cos_theta_max) / 2)
-    socp.addConstraint(op::norm2(v_X.block(8, 0, 2, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(7, 0, 2, v_X.cols()), 0) <=
                        op::Parameter(&p_dyn.tilt_const));
 
     // Max Rotation Velocity
-    socp.addConstraint(op::norm2(v_X.block(11, 0, 3, v_X.cols()), 0) <=
+    socp.addConstraint(op::norm2(v_X.block(10, 0, 3, v_X.cols()), 0) <=
                        op::Parameter(&p.w_B_max));
 
     // Control Constraints:
     // Final Input
-    socp.addConstraint(v_U.col(v_U.cols() - 1)(0)== 0.);
-    socp.addConstraint(v_U.col(v_U.cols() - 1)(1)== 0.);
+    socp.addConstraint(v_U.col(v_U.cols() - 1)(0) == 0.);
+    socp.addConstraint(v_U.col(v_U.cols() - 1)(1) == 0.);
     socp.addConstraint(v_U.col(v_U.cols() - 1)(3) == 0.);
 
     if (p.exact_minimum_thrust)
@@ -139,7 +140,7 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
     else
     {
-        socp.addConstraint(v_X.row(13) == 0.);
+        socp.addConstraint(v_X.row(12) == 0.);
         socp.addConstraint(v_U.row(3) == 0.);
     }
 }
@@ -224,7 +225,7 @@ void Starship::Parameters::randomizeInitialState()
     double ry = dist(eng) * rpy_init.y();
     double rz = rpy_init.z();
     Eigen::Vector3d euler(rx, ry, rz);
-    x_init.segment(7, 4) << quaternionToVector(eulerToQuaternionXYZ(euler));
+    x_init.segment(7, 3) << quaternionToVector(eulerToQuaternionXYZ(euler));
 }
 
 void Starship::loadParameters()
@@ -275,13 +276,13 @@ void Starship::Parameters::loadFromFile(const std::string &path)
 
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
-    Eigen::Vector4d q_init = quaternionToVector(eulerToQuaternionXYZ(rpy_init));
-    x_init << m_init, r_init, v_init, q_init, w_init;
+    const auto q_init = eulerToQuaternionXYZ(rpy_init);
+    x_init << m_init, r_init, v_init, q_init.vec(), w_init;
     if (random_initial_state)
     {
         randomizeInitialState();
     }
-    x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0, 0, 0;
+    x_final << m_dry, r_final, v_final, 0., 0., 0., 0., 0., 0.;
 }
 
 void Starship::Parameters::nondimensionalize()
