@@ -33,8 +33,19 @@
  */
 class ParameterServer
 {
-  public:
-    explicit ParameterServer(const std::string &filename);
+public:
+    explicit ParameterServer(const std::string &filename)
+    {
+        try
+        {
+            boost::property_tree::read_info(filename, pt);
+        }
+        catch (const boost::property_tree::info_parser_error &e)
+        {
+            fmt::print("Could not open file for reading: {}\n", filename);
+            fmt::print("{}\n", e.what());
+        }
+    }
 
     template <typename T>
     void loadScalar(
@@ -46,7 +57,7 @@ class ParameterServer
         const std::string &matrixName,
         Eigen::MatrixBase<T> &matrix);
 
-  private:
+private:
     boost::property_tree::ptree pt;
 };
 
@@ -79,6 +90,18 @@ void ParameterServer::loadMatrix(
     const size_t rows = matrix.rows();
     const size_t cols = matrix.cols();
 
+    boost::property_tree::ptree matrix_pt = pt.get_child(matrixName);
+
+    const size_t num_entries = matrix_pt.size() - matrix_pt.count("scaling");
+    if (num_entries < matrix.size())
+    {
+        throw std::runtime_error(fmt::format("Missing entries in matrix type: {}!\n", matrixName));
+    }
+    if (num_entries > matrix.size())
+    {
+        throw std::runtime_error(fmt::format("Redundant entries in matrix type: {}!\n", matrixName));
+    }
+
     for (size_t i = 0; i < rows; i++)
     {
         for (size_t j = 0; j < cols; j++)
@@ -87,16 +110,16 @@ void ParameterServer::loadMatrix(
             {
                 if (cols == 1)
                 {
-                    matrix(i) = pt.get<scalar_t>(fmt::format("{}.({})", matrixName, i));
+                    matrix(i) = matrix_pt.get<scalar_t>(fmt::format("({})", i));
                 }
                 else
                 {
-                    matrix(i, j) = pt.get<scalar_t>(fmt::format("{}.({},{})", matrixName, i, j));
+                    matrix(i, j) = matrix_pt.get<scalar_t>(fmt::format("({},{})", i, j));
                 }
             }
             catch (...)
             {
-                throw std::runtime_error(fmt::format("WARNING: Failed to load matrix type: {}!\n", matrixName));
+                throw std::runtime_error(fmt::format("Failed to load matrix type: {}!\n", matrixName));
             }
         }
     }

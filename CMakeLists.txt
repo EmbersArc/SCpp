@@ -54,7 +54,6 @@ set(SCPP_INCLUDE_DIRECTORIES
 set(MPC_SOURCES
     # utilities
     scpp_core/utils/src/timing.cpp
-    scpp_core/utils/src/parameterServer.cpp
     scpp/src/commonFunctions.cpp
 
     # main functionality
