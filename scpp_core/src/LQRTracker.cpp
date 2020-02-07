@@ -6,7 +6,6 @@ namespace scpp
 LQRTracker::LQRTracker(Model::ptr_t model, const trajectory_data_t &td)
     : model(model), td(td)
 {
-
     loadParameters();
 
     gains.resize(td.n_X());

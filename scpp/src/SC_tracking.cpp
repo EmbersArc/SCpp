@@ -34,7 +34,7 @@ int main()
     scpp::LQRTracker tracker(model, td);
     fmt::print("{:<{}}{:.2f}ms\n", "Time, LQR gains:", 50, 1 * toc(gains_timer));
 
-    const double timestep = 0.010;
+    const double timestep = 0.01;
 
     // start simulation
     const double run_timer = tic();
@@ -42,7 +42,7 @@ int main()
     Model::state_vector_v_t X_sim;
     Model::input_vector_v_t U_sim;
     std::vector<double> t_sim;
-    const double t_max = td.t * 1;
+    const double t_max = td.t;
     const double write_steps = 30;
 
     Model::state_vector_t x = model->p.x_init;
@@ -66,10 +66,15 @@ int main()
 
         sim_step++;
 
-        // if ((x - model->p.x_final).norm() < 0.01)
-        // {
-        //     break;
-        // }
+        if (x.hasNaN())
+        {
+            throw std::runtime_error("State has NaN.");
+        }
+
+        if ((x - model->p.x_final).norm() < 0.01)
+        {
+            break;
+        }
     }
 
     fmt::print("\n");
