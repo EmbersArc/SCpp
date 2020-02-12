@@ -4,8 +4,6 @@
 namespace scpp::models
 {
 
-Rocket2d::Rocket2d() {}
-
 void Rocket2d::systemFlowMap(const state_vector_ad_t &x,
                              const input_vector_ad_t &u,
                              const param_vector_ad_t &,
@@ -73,7 +71,7 @@ void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     // Maximum Gimbal Angle
     socp.addConstraint(op::Parameter(&p.gimbal_max) >= v_U.row(0));
     // Minimum Thrust
-    socp.addConstraint(v_U.row(1)>= op::Parameter(&p.T_min));
+    socp.addConstraint(v_U.row(1) >= op::Parameter(&p.T_min));
     // Maximum Thrust
     socp.addConstraint(op::Parameter(&p.T_max) >= v_U.row(1));
 }

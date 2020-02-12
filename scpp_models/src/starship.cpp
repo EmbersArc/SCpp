@@ -4,8 +4,6 @@
 namespace scpp::models
 {
 
-Starship::Starship() {}
-
 void Starship::systemFlowMap(const state_vector_ad_t &x,
                              const input_vector_ad_t &u,
                              const param_vector_ad_t &par,
@@ -204,7 +202,7 @@ void Starship::redimensionalizeTrajectory(trajectory_data_t &td)
 
 void Starship::Parameters::randomizeInitialState()
 {
-    std::mt19937 eng(time(0));
+    std::mt19937 eng(time(nullptr));
     auto dist = std::uniform_real_distribution<double>(-1., 1.);
 
     // mass

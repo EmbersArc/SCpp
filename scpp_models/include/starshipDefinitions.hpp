@@ -5,9 +5,9 @@ namespace scpp::models
 
 enum dimensions
 {
-    STATE_DIM_ = 13,
-    INPUT_DIM_ = 4,
-    PARAM_DIM_ = 10
+    STATE_DIM = 13,
+    INPUT_DIM = 4,
+    PARAM_DIM = 10
 };
 
 }

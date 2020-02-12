@@ -16,10 +16,10 @@ namespace scpp::models
  * @brief A 3D rocket model.
  * 
  */
-class RocketHover : public SystemModel<RocketHover, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class RocketHover : public SystemModel<RocketHover, STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    RocketHover();
+    RocketHover() = default;
 
     inline static const std::string modelName = "RocketHover";
 

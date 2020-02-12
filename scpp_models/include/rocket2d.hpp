@@ -16,10 +16,10 @@ namespace scpp::models
  * @brief A 2D rocket model.
  * 
  */
-class Rocket2d : public SystemModel<Rocket2d, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class Rocket2d : public SystemModel<Rocket2d, STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    Rocket2d();
+    Rocket2d() = default;
 
     inline static const std::string modelName = "Rocket2D";
 

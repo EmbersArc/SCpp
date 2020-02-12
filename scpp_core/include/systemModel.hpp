@@ -102,7 +102,7 @@ public:
      */
     virtual void nondimensionalize()
     {
-        fmt::print("nondimensionalize: Function called without implementation.");
+        throw std::runtime_error("nondimensionalize: This function has to be implemented by the derived class.");
     };
 
     /**
@@ -111,7 +111,7 @@ public:
      */
     virtual void redimensionalize()
     {
-        fmt::print("redimensionalize: Function called without implementation.");
+        throw std::runtime_error("redimensionalize: This function has to be implemented by the derived class.");
     };
 
     /**
@@ -129,7 +129,7 @@ public:
      */
     virtual void nondimensionalizeTrajectory(trajectory_data_t &)
     {
-        fmt::print("nondimensionalizeTrajectory: Function called without implementation.");
+        throw std::runtime_error("nondimensionalizeTrajectory: This function has to be implemented by the derived class.");
     };
 
     /**
@@ -138,7 +138,7 @@ public:
      */
     virtual void redimensionalizeTrajectory(trajectory_data_t &)
     {
-        fmt::print("redimensionalizeTrajectory: Function called without implementation.");
+        throw std::runtime_error("redimensionalizeTrajectory: This function has to be implemented by the derived class.");
     };
 
     static const std::string getModelName()

@@ -17,10 +17,10 @@ namespace scpp::models
  * @brief A 3D rocket landing model.
  * 
  */
-class Starship : public SystemModel<Starship, STATE_DIM_, INPUT_DIM_, PARAM_DIM_>
+class Starship : public SystemModel<Starship, STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    Starship();
+    Starship() = default;
 
     inline static const std::string modelName = "Starship";
 

@@ -4,8 +4,6 @@
 namespace scpp::models
 {
 
-RocketHover::RocketHover() {}
-
 void RocketHover::systemFlowMap(const state_vector_ad_t &x,
                                 const input_vector_ad_t &u,
                                 const param_vector_ad_t &par,
