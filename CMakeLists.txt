@@ -29,7 +29,7 @@ execute_process(COMMAND cmake ${CMAKE_CURRENT_LIST_DIR}/lib/CppAD
 # CppADCodegen
 message("\n### Configuring CppADCodegen ###")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppADCodegen)
-execute_process(COMMAND cmake -DCPPAD_INCLUDE_DIRS=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen
+execute_process(COMMAND cmake -DCPPAD_HOME=${CMAKE_CURRENT_LIST_DIR}/lib/CppAD/include ${CMAKE_CURRENT_LIST_DIR}/lib/CppADCodegen
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/CppADCodegen)
 
 # INCLUDES
