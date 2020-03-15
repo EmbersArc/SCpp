@@ -47,7 +47,6 @@ set(SCPP_INCLUDE_DIRECTORIES
 )
 
 # SOURCES
-# MPC Algorithm
 set(MPC_SOURCES
     # utilities
     scpp_core/utils/src/timing.cpp
