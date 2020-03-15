@@ -59,6 +59,7 @@ void MPCAlgorithm::initialize()
     model->addApplicationConstraints(socp, X, U);
 
     solver = std::make_unique<op::Solver>(socp);
+    solver->initialize();
 
     initialized = true;
     print("[MPC] Controller started.\n");

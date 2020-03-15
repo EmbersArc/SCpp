@@ -61,6 +61,7 @@ void SCAlgorithm::initialize()
                           td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
     solver = std::make_unique<op::Solver>(socp);
+    solver->initialize();
 }
 
 bool SCAlgorithm::iterate()

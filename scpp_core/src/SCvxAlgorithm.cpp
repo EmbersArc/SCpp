@@ -56,6 +56,7 @@ void SCvxAlgorithm::initialize()
     model->addApplicationConstraints(socp, td.X, td.U);
 
     solver = std::make_unique<op::Solver>(socp);
+    solver->initialize();
 }
 
 bool SCvxAlgorithm::iterate()
