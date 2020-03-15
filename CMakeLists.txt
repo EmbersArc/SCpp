@@ -12,9 +12,7 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Boost REQUIRED)
 
 # FMT
-message("\n### Configuring FMT ###")
-add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
-set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
+find_package(fmt REQUIRED)
 
 # SOCP INTERFACE
 message("\n### Configuring socp_interface ###")
