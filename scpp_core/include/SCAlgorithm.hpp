@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "socpSolver.hpp"
+#include "socpInterface.hpp"
 #include "SCProblem.hpp"
 #include "parameterServer.hpp"
 

@@ -4,7 +4,7 @@
 #include <random>
 
 #include "systemModel.hpp"
-#include "socpSolver.hpp"
+#include "socpInterface.hpp"
 #include "parameterServer.hpp"
 
 #include "rocketHoverDefinitions.hpp"
