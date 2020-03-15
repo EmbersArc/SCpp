@@ -72,26 +72,26 @@ set(MPC_SOURCES
     scpp_models/src/starship.cpp
 )
 
-add_library(mpc_lib SHARED ${MPC_SOURCES})
+add_library(scpp SHARED ${MPC_SOURCES})
 
-target_link_libraries(mpc_lib socp_lib fmt stdc++fs dl Eigen3::Eigen)
-target_include_directories(mpc_lib PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
-target_include_directories(mpc_lib SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
+target_link_libraries(scpp socp_interface fmt stdc++fs dl Eigen3::Eigen)
+target_include_directories(scpp PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
+target_include_directories(scpp SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
 set(DEBUG_OPTIONS -Wall -Wextra -Wpedantic)
 set(RELEASE_OPTIONS -O2)
-target_compile_options(mpc_lib PUBLIC "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
-target_compile_options(mpc_lib PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
+target_compile_options(scpp PUBLIC "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
+target_compile_options(scpp PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
 
 
 add_executable(mpc_sim scpp/src/MPC_sim.cpp)
-target_link_libraries(mpc_sim mpc_lib)
+target_link_libraries(mpc_sim scpp)
 
 # add_executable(lqr_sim scpp/src/LQR_sim.cpp)
-# target_link_libraries(lqr_sim mpc_lib)
+# target_link_libraries(lqr_sim scpp)
 
 add_executable(sc_tracking scpp/src/SC_tracking.cpp)
-target_link_libraries(sc_tracking mpc_lib)
+target_link_libraries(sc_tracking scpp)
 
 add_executable(sc_oneshot scpp/src/SC_oneshot.cpp)
-target_link_libraries(sc_oneshot mpc_lib)
+target_link_libraries(sc_oneshot scpp)
