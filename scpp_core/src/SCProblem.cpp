@@ -22,7 +22,6 @@ op::SecondOrderConeProgram buildSCProblem(
     op::Variable v_nu_bound = socp.createVariable("nu_bound", Model::state_dim, td.n_X() - 1); // virtual control
     op::Variable v_norm1_nu = socp.createVariable("norm1_nu");                                 // virtual control norm upper bound
     op::Variable v_delta = socp.createVariable("delta", K);                                    // change of the stacked [ x(k), u(k) ] vector
-    op::Variable v_norm1_delta = socp.createVariable("norm1_delta");                           // 1-norm of the delta(k) variables
     if (dd.variableTime())
     {
         socp.createVariable("sigma");       // total time
@@ -120,26 +119,22 @@ op::SecondOrderConeProgram buildSCProblem(
         op::Affine norm2_args = op::vstack({op::Parameter(0.5) + op::Parameter(-0.5) * v_delta(k),
                                             op::Parameter(&td.X.at(k)) + -v_X.col(k)});
 
-        // if (dd.interpolatedInput() or (not dd.interpolatedInput() and k < K - 1))
-        // {
-        //     norm2_args = op::vstack({norm2_args,
-        //                              op::Parameter(&td.U.at(k)) + -v_U.col(k)});
-        // }
+        if (dd.interpolatedInput() or (not dd.interpolatedInput() and k < K - 1))
+        {
+            norm2_args = op::vstack({norm2_args,
+                                     op::Parameter(&td.U.at(k)) + -v_U.col(k)});
+        }
 
         socp.addConstraint(op::norm2(norm2_args) <= op::Parameter(0.5) + op::Parameter(0.5) * v_delta(k));
     }
 
     /**
-     * Build combined state/input trust region over all K:
-     *  
-     *  norm2([ delta(1), delta(2), ... , delta(K) ]) <= norm2_delta
+     * Minimize combined state/input trust region over all K:
      * 
      */
     {
-        socp.addConstraint(v_delta <= v_norm1_delta);
-
-        // Minimize norm2_delta
-        socp.addMinimizationTerm(op::Parameter(&weight_trust_region_trajectory) * v_norm1_delta);
+        // Minimize trust region cost
+        socp.addMinimizationTerm(op::Parameter(&weight_trust_region_trajectory) * op::sum(v_delta));
     }
 
     return socp;

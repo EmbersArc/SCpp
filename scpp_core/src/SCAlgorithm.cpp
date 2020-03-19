@@ -108,9 +108,11 @@ bool SCAlgorithm::iterate()
     }
     print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
-    double norm1_nu, norm1_delta;
+    double norm1_nu, sum_delta;
+    Eigen::VectorXd delta;
     socp.readSolution("norm1_nu", norm1_nu);
-    socp.readSolution("norm1_delta", norm1_delta);
+    socp.readSolution("delta", delta);
+    sum_delta = delta.sum();
 
     if (norm1_nu < nu_tol)
     {
@@ -126,14 +128,14 @@ bool SCAlgorithm::iterate()
         socp.readSolution("delta_sigma", delta_sigma);
         print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
     }
-    print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, norm1_delta);
+    print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, sum_delta);
 
     print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
 
     print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
 
     // check for convergence
-    return norm1_delta < delta_tol and norm1_nu < nu_tol;
+    return sum_delta < delta_tol and norm1_nu < nu_tol;
 }
 
 void SCAlgorithm::solve(bool warm_start)
