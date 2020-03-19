@@ -29,40 +29,43 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
                                                           const Eigen::Vector3d offset,
                                                           const double g)
 {
+    Model::state_vector_v_t X = td.X;
+    X.push_back(X.back());
+    X.push_back(X.back());
+
     // calculate accelerations
     std::vector<Eigen::Vector3d> acc_passenger_b;
-    const double dt = td.t / (td.n_X() - 1);
+    const double dt = td.t / (X.size() - 1);
 
-    for (size_t k = 0; k < td.n_X() - 1; k++)
+    for (size_t k = 0; k < X.size() - 1; k++)
     {
-
         const Eigen::Vector3d r_p_b = offset;
-        const Eigen::Vector3d v0 = td.X.at(k).segment<3>(4);
-        const Eigen::Vector3d v1 = td.X.at(k + 1).segment<3>(4);
+        const Eigen::Vector3d v0 = X.at(k).segment<3>(4);
+        const Eigen::Vector3d v1 = X.at(k + 1).segment<3>(4);
 
-        Eigen::Quaterniond q0;
-        q0.w() = td.X.at(k)(7);
-        q0.vec() << td.X.at(k).segment<3>(8);
-        q0.normalize();
-        Eigen::Quaterniond q1;
-        q1.w() = td.X.at(k + 1)(7);
-        q1.vec() << td.X.at(k + 1).segment<3>(8);
-        q1.normalize();
+        // Eigen::Quaterniond q0;
+        // q0.w() = X.at(k)(7);
+        // q0.vec() << X.at(k).segment<3>(8);
+        // q0.normalize();
+        // Eigen::Quaterniond q1;
+        // q1.w() = X.at(k + 1)(7);
+        // q1.vec() << X.at(k + 1).segment<3>(8);
+        // q1.normalize();
         // const Eigen::Quaterniond q = q0.slerp(0.5, q1);
 
-        const Eigen::Vector3d w0 = td.X.at(k).segment<3>(11);
-        const Eigen::Vector3d w1 = td.X.at(k + 1).segment<3>(11);
-        const Eigen::Vector3d w = (w1 - w0) / 2;
+        const Eigen::Vector3d w0 = X.at(k).segment<3>(11);
+        const Eigen::Vector3d w1 = X.at(k + 1).segment<3>(11);
+        const Eigen::Vector3d w_b = (w1 - w0) / 2;
 
-        const Eigen::Vector3d vp0_i = v0 + w0.cross(q0 * r_p_b);
-        const Eigen::Vector3d vp1_i = v1 + w1.cross(q1 * r_p_b);
+        const Eigen::Vector3d dw_b = (w1 - w0) / dt;
+        const Eigen::Vector3d dv_i = (v1 - v0) / dt;
 
-        const Eigen::Vector3d dw = (w1 - w0) / dt;
-        const Eigen::Vector3d a_i = (vp1_i - vp0_i) / dt;
-        const Eigen::Vector3d g_I(0., 0., g);
+        const Eigen::Vector3d a_coriolis(0., 0., 0.); // r_p_b is constant
+        const Eigen::Vector3d a_centrifugal = -w_b.cross(w_b.cross(r_p_b));
+        const Eigen::Vector3d a_euler = -dw_b.cross(r_p_b);
+        const Eigen::Vector3d a_imp = dv_i + Eigen::Vector3d(0., 0., g);
 
-        const Eigen::Vector3d a_b = a_i - w.cross(w.cross(r_p_b)) - dw.cross(r_p_b); // + q.inverse() * g_I;
-        acc_passenger_b.push_back(a_b);
+        acc_passenger_b.push_back(a_imp + a_centrifugal + a_coriolis + a_euler);
     }
     return acc_passenger_b;
 }
