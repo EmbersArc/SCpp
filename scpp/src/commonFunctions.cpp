@@ -31,7 +31,6 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
 {
     Model::state_vector_v_t X = td.X;
     X.push_back(X.back());
-    X.push_back(X.back());
 
     // calculate accelerations
     std::vector<Eigen::Vector3d> acc_passenger_b;
