@@ -1,112 +1,4 @@
 ; STARSHIP
-; ----- model definitions -----
-g_I
-{
-    (0)   0.0
-    (1)   0.0
-    (2)   -9.81
-}
-
-J_B
-{
-    (0)   27741458.
-    (1)   27741458.
-    (2)   1316250.
-}
-
-r_T_B
-{
-    (0)   0
-    (1)   0
-    (2)   -25.
-}
-
-; ----- initial values -----
-random_initial_state        false
-m_init 140000.
-; position
-r_init
-{
-    (0)    200.
-    (1)    200.
-    (2)    700.
-}
-; velocity
-v_init
-{
-    (0)     -25.
-    (1)     -25.
-    (2)     -70.
-} 
-; orientation
-rpy_init
-{
-    (0)     70.
-    (1)     -70.
-    (2)     0. ; not controllable
-}
-; angular velocity
-w_init
-{
-    (0)    0.
-    (1)    0.
-    (2)    0. ; not controllable
-}
-
-; ----- final values -----
-final_time      12.
-m_dry       120000.
-; position
-r_final
-{
-    (0)    0.
-    (1)    0.
-    (2)    0.
-}
-; velocity
-v_final
-{
-    (0)     0
-    (1)     0
-    (2)     0.
-}
-; orientation
-rpy_final
-{
-    (0)     0.
-    (1)     0.
-    (2)     0. ; not controllable
-}
-; angular velocity
-w_final
-{
-    (0)    0.
-    (1)    0.
-    (2)    0. ; not controllable
-}
-
-; thrust
-exact_minimum_thrust    true
-T_min       2000000.
-T_max       3000000.
-I_sp            330.
-
-; roll control
-enable_roll_control     false
-t_max                   17500.
-
-; maximum gimbal
-gimbal_max  15.
-; maximum angle
-theta_max   90.
-; glideslope angle
-gamma_gs    45.
-; maximum angluar velocity
-w_B_max     60.
-
-
-
-; FALCON 9
 ; ; ----- model definitions -----
 ; g_I
 ; {
@@ -117,40 +9,40 @@ w_B_max     60.
 
 ; J_B
 ; {
-;     (0)   5000000.
-;     (1)   5000000.
-;     (2)   70000.
+;     (0)   27741458.
+;     (1)   27741458.
+;     (2)   1316250.
 ; }
 
 ; r_T_B
 ; {
 ;     (0)   0
 ;     (1)   0
-;     (2)   -15.
+;     (2)   -25.
 ; }
 
 ; ; ----- initial values -----
 ; random_initial_state        false
-; m_init 24000.
+; m_init 140000.
 ; ; position
 ; r_init
 ; {
-;     (0)    200.
-;     (1)    200.
-;     (2)    800.
+;     (0)    0.
+;     (1)    250.
+;     (2)    500.
 ; }
 ; ; velocity
 ; v_init
 ; {
-;     (0)     -40.
-;     (1)     -40.
-;     (2)     -80.
-; }
+;     (0)     0.
+;     (1)     -15.
+;     (2)     -60.
+; } 
 ; ; orientation
 ; rpy_init
 ; {
-;     (0)     -20.
-;     (1)     20.
+;     (0)     70.
+;     (1)     0.
 ;     (2)     0. ; not controllable
 ; }
 ; ; angular velocity
@@ -158,12 +50,12 @@ w_B_max     60.
 ; {
 ;     (0)    0.
 ;     (1)    0.
-;     (2)    0.
+;     (2)    0. ; not controllable
 ; }
 
 ; ; ----- final values -----
-; final_time      20.
-; m_dry       22000.
+; final_time      11.
+; m_dry       120000.
 ; ; position
 ; r_final
 ; {
@@ -183,21 +75,21 @@ w_B_max     60.
 ; {
 ;     (0)     0.
 ;     (1)     0.
-;     (2)     0.
+;     (2)     0. ; not controllable
 ; }
 ; ; angular velocity
 ; w_final
 ; {
 ;     (0)    0.
 ;     (1)    0.
-;     (2)    0.
+;     (2)    0. ; not controllable
 ; }
 
 ; ; thrust
 ; exact_minimum_thrust    true
-; I_sp                    275.
-; T_min                   200000.
-; T_max                   420000.
+; T_min       2000000.
+; T_max       3000000.
+; I_sp            330.
 
 ; ; roll control
 ; enable_roll_control     false
@@ -208,6 +100,114 @@ w_B_max     60.
 ; ; maximum angle
 ; theta_max   90.
 ; ; glideslope angle
-; gamma_gs    30.
+; gamma_gs    45.
 ; ; maximum angluar velocity
 ; w_B_max     60.
+
+
+
+; FALCON 9
+; ----- model definitions -----
+g_I
+{
+    (0)   0.0
+    (1)   0.0
+    (2)   -9.81
+}
+
+J_B
+{
+    (0)   5000000.
+    (1)   5000000.
+    (2)   70000.
+}
+
+r_T_B
+{
+    (0)   0
+    (1)   0
+    (2)   -15.
+}
+
+; ----- initial values -----
+random_initial_state        false
+m_init 24000.
+; position
+r_init
+{
+    (0)    200.
+    (1)    200.
+    (2)    800.
+}
+; velocity
+v_init
+{
+    (0)     -40.
+    (1)     -40.
+    (2)     -80.
+}
+; orientation
+rpy_init
+{
+    (0)     -20.
+    (1)     20.
+    (2)     0. ; not controllable
+}
+; angular velocity
+w_init
+{
+    (0)    0.
+    (1)    0.
+    (2)    0.
+}
+
+; ----- final values -----
+final_time      20.
+m_dry       22000.
+; position
+r_final
+{
+    (0)    0.
+    (1)    0.
+    (2)    0.
+}
+; velocity
+v_final
+{
+    (0)     0
+    (1)     0
+    (2)     0.
+}
+; orientation
+rpy_final
+{
+    (0)     0.
+    (1)     0.
+    (2)     0.
+}
+; angular velocity
+w_final
+{
+    (0)    0.
+    (1)    0.
+    (2)    0.
+}
+
+; thrust
+exact_minimum_thrust    true
+I_sp                    275.
+T_min                   200000.
+T_max                   420000.
+
+; roll control
+enable_roll_control     false
+t_max                   17500.
+
+; maximum gimbal
+gimbal_max  15.
+; maximum angle
+theta_max   90.
+; glideslope angle
+gamma_gs    30.
+; maximum angluar velocity
+w_B_max     60.
