@@ -4,7 +4,7 @@ from os import listdir
 
 scene = bpy.context.scene
 
-PATH = bpy.path.abspath("//../../output/Starship/SC")
+PATH = bpy.path.abspath("//../../output/RocketQuat/SC")
 path = PATH + "/" + sorted(listdir(PATH))[-1]
 path += "/" + sorted(listdir(path))[-1]
 print(path)

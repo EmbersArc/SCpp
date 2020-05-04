@@ -64,9 +64,9 @@ set(MPC_SOURCES
     scpp_core/src/LQRTracker.cpp
 
     # models
-    scpp_models/src/rocketHover.cpp
+    scpp_models/src/rocketEuler.cpp
     scpp_models/src/rocket2d.cpp
-    scpp_models/src/starship.cpp
+    scpp_models/src/rocketQuat.cpp
 )
 
 add_library(scpp SHARED ${MPC_SOURCES})

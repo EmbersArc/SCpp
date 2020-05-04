@@ -15,7 +15,7 @@ max_thrust = 20
 FPS = scn.render.fps
 
 # set output folder and get highest index
-data_folder = 'output/RocketHover/'
+data_folder = 'output/RocketEuler/'
 data_folder += sorted(os.listdir(data_folder))[-1]
 
 # load data
