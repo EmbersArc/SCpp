@@ -1,10 +1,10 @@
 #include "common.hpp"
-#include "starship.hpp"
+#include "rocketQuat.hpp"
 
 namespace scpp::models
 {
 
-void Starship::systemFlowMap(const state_vector_ad_t &x,
+void RocketQuat::systemFlowMap(const state_vector_ad_t &x,
                              const input_vector_ad_t &u,
                              const param_vector_ad_t &par,
                              state_vector_ad_t &f)
@@ -36,7 +36,7 @@ void Starship::systemFlowMap(const state_vector_ad_t &x,
     f.segment<3>(11) << J_B_inv * (r_T_B.cross(thrust) + torque) - w.cross(w);
 }
 
-void Starship::getInitializedTrajectory(trajectory_data_t &td)
+void RocketQuat::getInitializedTrajectory(trajectory_data_t &td)
 {
     for (size_t k = 0; k < td.n_X(); k++)
     {
@@ -67,7 +67,7 @@ void Starship::getInitializedTrajectory(trajectory_data_t &td)
     td.t = p.final_time;
 }
 
-void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+void RocketQuat::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                          state_vector_v_t &,
                                          input_vector_v_t &U0)
 {
@@ -143,17 +143,17 @@ void Starship::addApplicationConstraints(op::SecondOrderConeProgram &socp,
     }
 }
 
-void Starship::nondimensionalize()
+void RocketQuat::nondimensionalize()
 {
     p.nondimensionalize();
 }
 
-void Starship::redimensionalize()
+void RocketQuat::redimensionalize()
 {
     p.redimensionalize();
 }
 
-void Starship::updateProblemParameters()
+void RocketQuat::updateProblemParameters()
 {
     p_dyn.gimbal_const = std::tan(p.gimbal_max);
     p_dyn.gs_const = std::tan(p.gamma_gs);
@@ -165,14 +165,14 @@ void Starship::updateProblemParameters()
     }
 }
 
-void Starship::getNewModelParameters(param_vector_t &param)
+void RocketQuat::getNewModelParameters(param_vector_t &param)
 {
     param << p.alpha_m, p.g_I, p.J_B, p.r_T_B;
 
     updateProblemParameters();
 }
 
-void Starship::nondimensionalizeTrajectory(trajectory_data_t &td)
+void RocketQuat::nondimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -186,7 +186,7 @@ void Starship::nondimensionalizeTrajectory(trajectory_data_t &td)
     }
 }
 
-void Starship::redimensionalizeTrajectory(trajectory_data_t &td)
+void RocketQuat::redimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -200,7 +200,7 @@ void Starship::redimensionalizeTrajectory(trajectory_data_t &td)
     }
 }
 
-void Starship::Parameters::randomizeInitialState()
+void RocketQuat::Parameters::randomizeInitialState()
 {
     // std::mt19937 eng(time(nullptr));
     // auto dist = std::uniform_real_distribution<double>(-1., 1.);
@@ -226,12 +226,12 @@ void Starship::Parameters::randomizeInitialState()
     // x_init.segment(7, 3) << quaternionToVector(eulerToQuaternionXYZ(euler));
 }
 
-void Starship::loadParameters()
+void RocketQuat::loadParameters()
 {
     p.loadFromFile(getParameterFolder() + "/model.info");
 }
 
-void Starship::Parameters::loadFromFile(const std::string &path)
+void RocketQuat::Parameters::loadFromFile(const std::string &path)
 {
     ParameterServer param(path);
 
@@ -283,7 +283,7 @@ void Starship::Parameters::loadFromFile(const std::string &path)
     x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0., 0., 0.;
 }
 
-void Starship::Parameters::nondimensionalize()
+void RocketQuat::Parameters::nondimensionalize()
 {
     m_scale = x_init(0);
     r_scale = x_init.segment(1, 3).norm();
@@ -306,7 +306,7 @@ void Starship::Parameters::nondimensionalize()
     t_max /= m_scale * r_scale * r_scale;
 }
 
-void Starship::Parameters::redimensionalize()
+void RocketQuat::Parameters::redimensionalize()
 {
     alpha_m /= r_scale;
     r_T_B *= r_scale;

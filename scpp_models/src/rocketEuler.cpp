@@ -1,10 +1,10 @@
-#include "rocketHover.hpp"
+#include "rocketEuler.hpp"
 #include "common.hpp"
 
 namespace scpp::models
 {
 
-void RocketHover::systemFlowMap(const state_vector_ad_t &x,
+void RocketEuler::systemFlowMap(const state_vector_ad_t &x,
                                 const input_vector_ad_t &u,
                                 const param_vector_ad_t &par,
                                 state_vector_ad_t &f)
@@ -30,13 +30,13 @@ void RocketHover::systemFlowMap(const state_vector_ad_t &x,
     f.segment<2>(8) << (J_B_inv * (r_T_B.cross(u)) - w.cross(w)).head<2>();
 }
 
-void RocketHover::getOperatingPoint(state_vector_t &x, input_vector_t &u)
+void RocketEuler::getOperatingPoint(state_vector_t &x, input_vector_t &u)
 {
     x << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     u = -p.g_I * p.m;
 }
 
-void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+void RocketEuler::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                                             state_vector_v_t &,
                                             input_vector_v_t &)
 {
@@ -93,17 +93,17 @@ void RocketHover::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                        op::Parameter([this] { return std::tan(p.gimbal_max); }) * v_U.row(2));
 }
 
-void RocketHover::nondimensionalize()
+void RocketEuler::nondimensionalize()
 {
     p.nondimensionalize();
 }
 
-void RocketHover::redimensionalize()
+void RocketEuler::redimensionalize()
 {
     p.redimensionalize();
 }
 
-void RocketHover::nondimensionalizeTrajectory(trajectory_data_t &td)
+void RocketEuler::nondimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -115,7 +115,7 @@ void RocketHover::nondimensionalizeTrajectory(trajectory_data_t &td)
     }
 }
 
-void RocketHover::redimensionalizeTrajectory(trajectory_data_t &td)
+void RocketEuler::redimensionalizeTrajectory(trajectory_data_t &td)
 {
     for (auto &x : td.X)
     {
@@ -127,7 +127,7 @@ void RocketHover::redimensionalizeTrajectory(trajectory_data_t &td)
     }
 }
 
-void RocketHover::getInitializedTrajectory(trajectory_data_t &td)
+void RocketEuler::getInitializedTrajectory(trajectory_data_t &td)
 {
     for (size_t k = 0; k < td.n_X(); k++)
     {
@@ -142,17 +142,17 @@ void RocketHover::getInitializedTrajectory(trajectory_data_t &td)
     td.t = p.final_time;
 }
 
-void RocketHover::loadParameters()
+void RocketEuler::loadParameters()
 {
     p.loadFromFile(getParameterFolder() + "/model.info");
 }
 
-void RocketHover::getNewModelParameters(param_vector_t &param)
+void RocketEuler::getNewModelParameters(param_vector_t &param)
 {
     param << p.m, p.g_I, p.J_B, p.r_T_B;
 }
 
-void RocketHover::Parameters::loadFromFile(const std::string &path)
+void RocketEuler::Parameters::loadFromFile(const std::string &path)
 {
     ParameterServer param(path);
 
@@ -199,7 +199,7 @@ void RocketHover::Parameters::loadFromFile(const std::string &path)
     r_scale = x_init.segment(0, 3).norm();
 }
 
-void RocketHover::Parameters::nondimensionalize()
+void RocketEuler::Parameters::nondimensionalize()
 {
     m /= m_scale;
     r_T_B /= r_scale;
@@ -217,7 +217,7 @@ void RocketHover::Parameters::nondimensionalize()
     T_max /= m_scale * r_scale;
 }
 
-void RocketHover::Parameters::redimensionalize()
+void RocketEuler::Parameters::redimensionalize()
 {
     m *= m_scale;
     r_T_B *= r_scale;

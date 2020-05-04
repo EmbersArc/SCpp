@@ -7,7 +7,7 @@
 #include "socpInterface.hpp"
 #include "parameterServer.hpp"
 
-#include "rocketHoverDefinitions.hpp"
+#include "rocketEulerDefinitions.hpp"
 
 namespace scpp::models
 {
@@ -16,12 +16,12 @@ namespace scpp::models
  * @brief A 3D rocket model.
  * 
  */
-class RocketHover : public SystemModel<RocketHover, STATE_DIM, INPUT_DIM, PARAM_DIM>
+class RocketEuler : public SystemModel<RocketEuler, STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    RocketHover() = default;
+    RocketEuler() = default;
 
-    inline static const std::string modelName = "RocketHover";
+    inline static const std::string modelName = "RocketEuler";
 
     void systemFlowMap(
         const state_vector_ad_t &x,

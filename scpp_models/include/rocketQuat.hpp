@@ -8,7 +8,7 @@
 #include "parameterServer.hpp"
 #include "common.hpp"
 
-#include "starshipDefinitions.hpp"
+#include "rocketQuatDefinitions.hpp"
 
 namespace scpp::models
 {
@@ -17,12 +17,12 @@ namespace scpp::models
  * @brief A 3D rocket landing model.
  * 
  */
-class Starship : public SystemModel<Starship, STATE_DIM, INPUT_DIM, PARAM_DIM>
+class RocketQuat : public SystemModel<RocketQuat, STATE_DIM, INPUT_DIM, PARAM_DIM>
 {
 public:
-    Starship() = default;
+    RocketQuat() = default;
 
-    inline static const std::string modelName = "Starship";
+    inline static const std::string modelName = "RocketQuat";
 
     void systemFlowMap(
         const state_vector_ad_t &x,
