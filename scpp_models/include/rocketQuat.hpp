@@ -66,8 +66,6 @@ public:
         double gamma_gs;
         double w_B_max;
 
-        Eigen::Vector3d rpy_init;
-
         state_vector_t x_init;
         state_vector_t x_final;
         double final_time;

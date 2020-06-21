@@ -238,8 +238,8 @@ void RocketQuat::Parameters::loadFromFile(const std::string &path)
     bool random_initial_state;
     double I_sp;
     double m_init, m_dry;
-    Eigen::Vector3d r_init, v_init, w_init;
-    Eigen::Vector3d r_final, v_final;
+    Eigen::Vector3d r_init, v_init, rpy_init, w_init;
+    Eigen::Vector3d r_final, v_final, rpy_final, w_final;
 
     param.loadMatrix("g_I", g_I);
     param.loadMatrix("J_B", J_B);
@@ -249,9 +249,11 @@ void RocketQuat::Parameters::loadFromFile(const std::string &path)
     param.loadMatrix("v_init", v_init);
     param.loadMatrix("rpy_init", rpy_init);
     param.loadMatrix("w_init", w_init);
+    param.loadMatrix("w_final", w_final);
     param.loadScalar("m_dry", m_dry);
     param.loadMatrix("r_final", r_final);
     param.loadMatrix("v_final", v_final);
+    param.loadMatrix("rpy_final", rpy_final);
     param.loadScalar("T_min", T_min);
     param.loadScalar("T_max", T_max);
     param.loadScalar("t_max", t_max);
@@ -268,19 +270,22 @@ void RocketQuat::Parameters::loadFromFile(const std::string &path)
     deg2rad(gimbal_max);
     deg2rad(theta_max);
     deg2rad(gamma_gs);
-    deg2rad(w_init);
     deg2rad(w_B_max);
     deg2rad(rpy_init);
+    deg2rad(rpy_final);
+    deg2rad(w_init);
+    deg2rad(w_final);
 
     alpha_m = 1. / (I_sp * fabs(g_I(2)));
 
     const auto q_init = eulerToQuaternionXYZ(rpy_init);
+    const auto q_final = eulerToQuaternionXYZ(rpy_final);
     x_init << m_init, r_init, v_init, q_init.w(), q_init.vec(), w_init;
     if (random_initial_state)
     {
         randomizeInitialState();
     }
-    x_final << m_dry, r_final, v_final, 1., 0., 0., 0., 0., 0., 0.;
+    x_final << m_dry, r_final, v_final, q_final.w(), q_final.vec(), w_final;
 }
 
 void RocketQuat::Parameters::nondimensionalize()
