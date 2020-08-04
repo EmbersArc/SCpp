@@ -4,3 +4,6 @@
 [submodule "lib/CppADCodegen"]
 	path = lib/CppADCodegen
 	url = https://github.com/joaoleal/CppADCodeGen.git
+[submodule "lib/Epigraph"]
+	path = lib/Epigraph
+	url = https://github.com/EmbersArc/Epigraph
