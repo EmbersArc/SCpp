@@ -4,7 +4,6 @@
 #include <random>
 
 #include "systemModel.hpp"
-#include "socpInterface.hpp"
 #include "parameterServer.hpp"
 
 #include "rocket2dDefinitions.hpp"
@@ -31,7 +30,7 @@ public:
 
     void getOperatingPoint(state_vector_t &x, input_vector_t &u) override;
 
-    void addApplicationConstraints(op::SecondOrderConeProgram &socp,
+    void addApplicationConstraints(cvx::OptimizationProblem &socp,
                                    state_vector_v_t &X0,
                                    input_vector_v_t &U0) override;
 
@@ -59,6 +58,7 @@ public:
         double T_max;
 
         double gamma_gs;
+        double tan_gamma_gs;
         double gimbal_max;
         double theta_max;
         double v_I_max;

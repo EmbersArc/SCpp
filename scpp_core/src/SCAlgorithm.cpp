@@ -60,8 +60,7 @@ void SCAlgorithm::initialize()
                           weight_trust_region_trajectory, weight_virtual_control,
                           td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
-    solver = std::make_unique<op::Solver>(socp);
-    solver->initialize();
+    solver = std::make_unique<cvx::eicos::EiCOSSolver>(socp);
 }
 
 bool SCAlgorithm::iterate()
@@ -76,7 +75,7 @@ bool SCAlgorithm::iterate()
     print("\n");
     print("Solving problem.\n");
     timer = tic();
-    const bool success = solver->solveProblem(false);
+    const bool success = solver->solve(false);
     print("Solver message:\n");
     print("> {}\n", solver->getResultString());
     print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -102,17 +101,18 @@ bool SCAlgorithm::iterate()
 
     // check feasibility
     timer = tic();
-    if (!socp.isFeasible())
-    {
-        throw std::runtime_error("Solver produced an invalid solution.\n");
-    }
     print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
 
-    double norm1_nu, sum_delta;
-    Eigen::VectorXd delta;
-    socp.readSolution("norm1_nu", norm1_nu);
-    socp.readSolution("delta", delta);
-    sum_delta = delta.sum();
+    cvx::Scalar v_norm1_nu;
+    socp.getVariable("norm1_nu", v_norm1_nu);
+    cvx::VectorX v_delta;
+    socp.getVariable("delta", v_delta);
+    cvx::Scalar v_delta_sigma;
+    socp.getVariable("norm1_nu", v_delta_sigma);
+
+    double norm1_nu = eval(v_norm1_nu);
+    double sum_delta = eval(v_delta).sum();
+    double delta_sigma = eval(v_delta_sigma);
 
     if (norm1_nu < nu_tol)
     {
@@ -124,8 +124,6 @@ bool SCAlgorithm::iterate()
     print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, norm1_nu);
     if (free_final_time)
     {
-        double delta_sigma;
-        socp.readSolution("delta_sigma", delta_sigma);
         print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
     }
     print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, sum_delta);
@@ -199,11 +197,16 @@ void SCAlgorithm::readSolution()
 {
     if (free_final_time)
     {
-        socp.readSolution("sigma", td.t);
+        cvx::Scalar v_sigma;
+        socp.getVariable("sigma", v_sigma);
+        td.t = eval(v_sigma);
     }
-    Eigen::MatrixXd X, U;
-    socp.readSolution("X", X);
-    socp.readSolution("U", U);
+
+    cvx::MatrixX v_X, v_U;
+    socp.getVariable("X", v_X);
+    socp.getVariable("U", v_U);
+    Eigen::MatrixXd X = eval(v_X);
+    Eigen::MatrixXd U = eval(v_U);
 
     for (size_t k = 0; k < td.n_X(); k++)
     {

@@ -67,13 +67,10 @@ void RocketQuat::getInitializedTrajectory(trajectory_data_t &td)
     td.t = p.final_time;
 }
 
-void RocketQuat::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                         state_vector_v_t &,
-                                         input_vector_v_t &U0)
+void RocketQuat::addApplicationConstraints(cvx::OptimizationProblem &socp,
+                                           state_vector_v_t &,
+                                           input_vector_v_t &U0)
 {
-    op::Variable v_X = socp.getVariable("X");
-    op::Variable v_U = socp.getVariable("U");
-
     // Initial state
     socp.addConstraint(v_X.col(0) == op::Parameter(&p.x_init));
 

@@ -4,13 +4,13 @@
 namespace scpp
 {
 
-op::SecondOrderConeProgram buildSCvxProblem(
+cvx::OptimizationProblem buildSCvxProblem(
     double &trust_region,
     double &weight_virtual_control,
     trajectory_data_t &td,
     discretization_data_t &dd)
 {
-    op::SecondOrderConeProgram socp;
+    cvx::OptimizationProblem socp;
 
     op::Variable v_X = socp.createVariable("X", Model::state_dim, td.n_X());                   // states
     op::Variable v_U = socp.createVariable("U", Model::input_dim, td.n_U());                   // inputs

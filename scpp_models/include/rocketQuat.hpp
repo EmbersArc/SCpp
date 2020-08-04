@@ -32,7 +32,7 @@ public:
 
     void getInitializedTrajectory(trajectory_data_t &td) override;
 
-    void addApplicationConstraints(op::SecondOrderConeProgram &socp,
+    void addApplicationConstraints(cvx::OptimizationProblem &socp,
                                    state_vector_v_t &X0,
                                    input_vector_v_t &U0) override;
 

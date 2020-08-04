@@ -101,7 +101,7 @@ private:
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;
 
-    op::SecondOrderConeProgram socp;
+    cvx::OptimizationProblem socp;
 
     std::unique_ptr<op::Solver> solver;
 

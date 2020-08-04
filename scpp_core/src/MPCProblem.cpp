@@ -4,7 +4,7 @@
 namespace scpp
 {
 
-op::SecondOrderConeProgram buildMPCProblem(
+cvx::OptimizationProblem buildMPCProblem(
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
     Model::state_vector_t &x_init,
@@ -18,7 +18,7 @@ op::SecondOrderConeProgram buildMPCProblem(
     bool constant_dynamics,
     bool intermediate_cost_active)
 {
-    op::SecondOrderConeProgram socp;
+    cvx::OptimizationProblem socp;
 
     op::Variable v_X = socp.createVariable("X", Model::state_dim, X.size()); // states
     op::Variable v_U = socp.createVariable("U", Model::input_dim, U.size()); // inputs

@@ -4,7 +4,7 @@
 
 namespace scpp
 {
-op::SecondOrderConeProgram buildMPCProblem(
+cvx::OptimizationProblem buildMPCProblem(
     Model::state_vector_v_t &X,
     Model::input_vector_v_t &U,
     Model::state_vector_t &x_init,
