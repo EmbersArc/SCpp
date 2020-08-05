@@ -58,8 +58,7 @@ void MPCAlgorithm::initialize()
                            constant_dynamics, intermediate_cost_active);
     model->addApplicationConstraints(socp, X, U);
 
-    solver = std::make_unique<op::Solver>(socp);
-    solver->initialize();
+    solver = std::make_unique<cvx::eicos::EiCOSSolver>(socp);
 
     initialized = true;
     print("[MPC] Controller started.\n");
@@ -102,7 +101,7 @@ void MPCAlgorithm::solve()
         model->nondimensionalize();
     }
 
-    solver->solveProblem(false);
+    solver->solve(false);
 
     print("Solver message:\n");
     print("> {}\n", solver->getResultString());
@@ -118,15 +117,17 @@ void MPCAlgorithm::solve()
 
 void MPCAlgorithm::readSolution()
 {
-    Eigen::MatrixXd X, U;
-    socp.readSolution("X", X);
-    socp.readSolution("U", U);
+    cvx::MatrixX v_X, v_U;
+    socp.getVariable("X", v_X);
+    socp.getVariable("U", v_U);
+    Eigen::MatrixXd X = eval(v_X);
+    Eigen::MatrixXd U = eval(v_U);
 
     for (size_t k = 0; k < K; k++)
     {
         this->X[k] = X.col(k);
     }
-    for (size_t k = 0; k < K - 1; k++)
+    for (size_t k = 0; k < K-1; k++)
     {
         this->U[k] = U.col(k);
     }
