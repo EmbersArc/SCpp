@@ -1,7 +1,6 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "socpInterface.hpp"
 #include "parameterServer.hpp"
 
 namespace scpp
@@ -101,9 +100,9 @@ private:
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;
 
-    op::SecondOrderConeProgram socp;
+    cvx::OptimizationProblem socp;
 
-    std::unique_ptr<op::Solver> solver;
+    std::unique_ptr<cvx::eicos::EiCOSSolver> solver;
 
     bool state_weights_set = false;
     bool input_weights_set = false;

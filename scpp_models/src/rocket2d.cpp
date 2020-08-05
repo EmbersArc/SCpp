@@ -36,44 +36,43 @@ void Rocket2d::getOperatingPoint(state_vector_t &x, input_vector_t &u)
     u = -p.g_I * p.m;
 }
 
-void Rocket2d::addApplicationConstraints(op::SecondOrderConeProgram &socp,
+void Rocket2d::addApplicationConstraints(cvx::OptimizationProblem &socp,
                                          state_vector_v_t &,
                                          input_vector_v_t &)
 {
-    op::Variable v_X = socp.getVariable("X");
-    op::Variable v_U = socp.getVariable("U");
-
+    cvx::MatrixX v_X, v_U;
+    socp.getVariable("X", v_X);
+    socp.getVariable("U", v_U);
+    
     if (p.constrain_initial_final)
     {
         // Initial and final state
-        socp.addConstraint(op::Parameter(&p.x_init) == v_X.col(0));
-        socp.addConstraint(op::Parameter(&p.x_final) == v_X.col(v_X.cols() - 1));
-        socp.addConstraint(op::Parameter(1.0) * v_U(0, v_U.cols() - 1) == 0.);
+        socp.addConstraint(cvx::equalTo(cvx::dynpar(p.x_init), v_X.col(0)));
+        socp.addConstraint(cvx::equalTo(cvx::dynpar(p.x_final), v_X.rightCols(1)));
+        socp.addConstraint(cvx::equalTo(v_U(0, v_U.cols() - 1), 0.));
     }
 
     // State Constraints:
     // Glideslope
-    socp.addConstraint(op::norm2(v_X.row(0), 0) <=
-                       op::Parameter([this]() { return std::tan(p.gamma_gs); }) * v_X.row(1));
-    // Max Velocity
-    socp.addConstraint(op::norm2(v_X.block(2, 0, 2, v_X.cols()), 0) <=
-                       op::Parameter(&p.v_I_max));
-    // Max Tilt Angle
-    socp.addConstraint(op::norm2(v_X.row(4), 0) <=
-                       op::Parameter(&p.theta_max));
+    socp.addConstraint(cvx::lessThan(v_X.row(0).colwise().norm(),
+                       cvx::dynpar(p.tan_gamma_gs) * v_X.row(1)));
+    // // Max Velocity
+    socp.addConstraint(cvx::lessThan(v_X.block(2,0,2,v_X.cols()).colwise().norm(),
+                                     cvx::dynpar(p.v_I_max)));
+    // // Max Tilt Angle
+    socp.addConstraint(cvx::box(-cvx::dynpar(p.theta_max),
+                                 v_X.row(4),
+                                 cvx::dynpar(p.theta_max)));
     // Max Rotation Velocity
-    socp.addConstraint(op::norm2(v_X.row(5), 0) <=
-                       op::Parameter(&p.w_B_max));
+    socp.addConstraint(cvx::box(-cvx::dynpar(p.w_B_max),
+                                 v_X.row(5),
+                                 cvx::dynpar(p.w_B_max)));
 
     // Control Constraints
-    // Minimum Gimbal Angle
-    socp.addConstraint(v_U.row(0) >= -op::Parameter(&p.gimbal_max));
-    // Maximum Gimbal Angle
-    socp.addConstraint(op::Parameter(&p.gimbal_max) >= v_U.row(0));
-    // Minimum Thrust
-    socp.addConstraint(v_U.row(1) >= op::Parameter(&p.T_min));
-    // Maximum Thrust
-    socp.addConstraint(op::Parameter(&p.T_max) >= v_U.row(1));
+    // Gimbal Range
+    socp.addConstraint(cvx::box(-cvx::dynpar(p.gimbal_max), v_U.row(0), cvx::dynpar(p.gimbal_max)));
+    // Thrust Range
+    socp.addConstraint(cvx::box(cvx::dynpar(p.T_min), v_U.row(1), cvx::dynpar(p.T_max)));
 }
 
 void Rocket2d::nondimensionalize()
@@ -116,6 +115,7 @@ void Rocket2d::loadParameters()
 
 void Rocket2d::getNewModelParameters(param_vector_t &)
 {
+    p.tan_gamma_gs = std::tan(p.gamma_gs);
 }
 
 void Rocket2d::Parameters::loadFromFile(const std::string &path)

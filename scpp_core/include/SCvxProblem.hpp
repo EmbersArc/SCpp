@@ -5,7 +5,7 @@
 namespace scpp
 {
 
-op::SecondOrderConeProgram buildSCvxProblem(
+cvx::OptimizationProblem buildSCvxProblem(
     double &trust_region,
     double &weight_virtual_control,
     trajectory_data_t &td,

@@ -4,7 +4,7 @@
 
 namespace scpp
 {
-op::SecondOrderConeProgram buildSCProblem(
+cvx::OptimizationProblem buildSCProblem(
     double &weight_time,
     double &weight_trust_region_time,
     double &weight_trust_region_trajectory,

@@ -1,9 +1,9 @@
-[submodule "socp_mpc/socp_interface"]
-	path = lib/socp_interface
-	url = https://github.com/EmbersArc/socp_interface.git
 [submodule "lib/CppAD"]
 	path = lib/CppAD
 	url = https://github.com/coin-or/CppAD.git
 [submodule "lib/CppADCodegen"]
 	path = lib/CppADCodegen
 	url = https://github.com/joaoleal/CppADCodeGen.git
+[submodule "lib/Epigraph"]
+	path = lib/Epigraph
+	url = https://github.com/EmbersArc/Epigraph

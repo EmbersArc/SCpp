@@ -15,8 +15,11 @@ find_package(Boost REQUIRED)
 find_package(fmt REQUIRED)
 
 # SOCP INTERFACE
-message("\n### Configuring socp_interface ###")
-add_subdirectory(lib/socp_interface)
+message("\n### Configuring Epigraph ###")
+set(ENABLE_OSQP  FALSE)
+set(ENABLE_ECOS  FALSE)
+set(ENABLE_EICOS TRUE)
+add_subdirectory(lib/Epigraph)
 
 # CppAD
 message("\n### Configuring CppAD ###")
@@ -36,6 +39,7 @@ set(SCPP_SYSTEM_INCLUDE_DIRECTORIES
     lib/CppAD/include
     lib/CppADCodegen/include
     build/lib/CppADCodegen/include
+    lib/Epigraph/include
 )
 set(SCPP_INCLUDE_DIRECTORIES
     scpp_core/include
@@ -45,7 +49,7 @@ set(SCPP_INCLUDE_DIRECTORIES
 )
 
 # SOURCES
-set(MPC_SOURCES
+set(SCPP_SOURCES
     # utilities
     scpp_core/utils/src/timing.cpp
     scpp/src/commonFunctions.cpp
@@ -64,14 +68,13 @@ set(MPC_SOURCES
     scpp_core/src/LQRTracker.cpp
 
     # models
-    scpp_models/src/rocketEuler.cpp
     scpp_models/src/rocket2d.cpp
     scpp_models/src/rocketQuat.cpp
 )
 
-add_library(scpp SHARED ${MPC_SOURCES})
+add_library(scpp SHARED ${SCPP_SOURCES})
 
-target_link_libraries(scpp socp_interface fmt stdc++fs dl Eigen3::Eigen)
+target_link_libraries(scpp epigraph fmt stdc++fs dl Eigen3::Eigen)
 target_include_directories(scpp PUBLIC ${SCPP_INCLUDE_DIRECTORIES})
 target_include_directories(scpp SYSTEM PUBLIC ${SCPP_SYSTEM_INCLUDE_DIRECTORIES})
 
@@ -81,14 +84,14 @@ target_compile_options(scpp PUBLIC "$<$<CONFIG:DEBUG>:${DEBUG_OPTIONS}>")
 target_compile_options(scpp PUBLIC "$<$<CONFIG:RELEASE>:${RELEASE_OPTIONS}>")
 
 
-add_executable(mpc_sim scpp/src/MPC_sim.cpp)
-target_link_libraries(mpc_sim scpp)
+# add_executable(mpc_sim scpp/src/MPC_sim.cpp)
+# target_link_libraries(mpc_sim scpp)
 
 # add_executable(lqr_sim scpp/src/LQR_sim.cpp)
 # target_link_libraries(lqr_sim scpp)
 
-add_executable(sc_tracking scpp/src/SC_tracking.cpp)
-target_link_libraries(sc_tracking scpp)
+# add_executable(sc_tracking scpp/src/SC_tracking.cpp)
+# target_link_libraries(sc_tracking scpp)
 
 add_executable(sc_oneshot scpp/src/SC_oneshot.cpp)
 target_link_libraries(sc_oneshot scpp)

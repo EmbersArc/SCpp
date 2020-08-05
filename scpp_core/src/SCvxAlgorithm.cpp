@@ -55,8 +55,7 @@ void SCvxAlgorithm::initialize()
     socp = buildSCvxProblem(trust_region, weight_virtual_control, td, dd);
     model->addApplicationConstraints(socp, td.X, td.U);
 
-    solver = std::make_unique<op::Solver>(socp);
-    solver->initialize();
+    solver = std::make_unique<cvx::eicos::EiCOSSolver>(socp);
 }
 
 bool SCvxAlgorithm::iterate()
@@ -79,7 +78,7 @@ bool SCvxAlgorithm::iterate()
         print("\n");
         print("Solving problem.\n");
         timer = tic();
-        const bool success = solver->solveProblem(false);
+        const bool success = solver->solve(false);
         print("Solver message:\n");
         print("> {}\n", solver->getResultString());
         print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
@@ -91,28 +90,21 @@ bool SCvxAlgorithm::iterate()
             std::terminate();
         }
 
-        // check feasibility
-        timer = tic();
-        if (!socp.isFeasible())
-        {
-            throw std::runtime_error("Solver produced an invalid solution.\n");
-        }
-        print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
-
         readSolution();
 
         // compare linear and nonlinear costs
         timer = tic();
         const double nonlinear_cost_dynamics = getNonlinearCost();
-        double linear_cost_dynamics;
-        socp.readSolution("norm1_nu", linear_cost_dynamics);
+
+        cvx::Scalar v_norm1_nu;
+        socp.getVariable("norm1_nu", v_norm1_nu);
 
         // TODO: Consider linearized model constraints
         const double nonlinear_cost_constraints = 0.;
         const double linear_cost_constraints = 0.;
 
         const double nonlinear_cost = nonlinear_cost_dynamics + nonlinear_cost_constraints; // J
-        const double linear_cost = linear_cost_dynamics + linear_cost_constraints;          // L
+        const double linear_cost = eval(v_norm1_nu) + linear_cost_constraints;          // L
 
         if (not last_nonlinear_cost)
         {
@@ -231,9 +223,11 @@ void SCvxAlgorithm::solve(bool warm_start)
 
 void SCvxAlgorithm::readSolution()
 {
-    Eigen::MatrixXd X, U;
-    socp.readSolution("X", X);
-    socp.readSolution("U", U);
+    cvx::MatrixX v_X, v_U;
+    socp.getVariable("X", v_X);
+    socp.getVariable("U", v_U);
+    Eigen::MatrixXd X = eval(v_X);
+    Eigen::MatrixXd U = eval(v_U);
 
     for (size_t k = 0; k < td.n_X(); k++)
     {

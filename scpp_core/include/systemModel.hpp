@@ -2,9 +2,7 @@
 
 #include <Eigen/Dense>
 
-#include "fmt/format.h"
-
-#include "secondOrderConeProgram.hpp"
+#include "epigraph.hpp"
 #include "systemDynamics.hpp"
 #include "trajectoryData.hpp"
 #include "discretizationData.hpp"
@@ -75,7 +73,7 @@ public:
      * @param X     Last state trajectory.
      * @param U     Last input trajectory.
      */
-    virtual void addApplicationConstraints(op::SecondOrderConeProgram &,
+    virtual void addApplicationConstraints(cvx::OptimizationProblem &,
                                            state_vector_v_t &,
                                            input_vector_v_t &){};
 

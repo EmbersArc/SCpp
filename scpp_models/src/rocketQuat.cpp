@@ -67,15 +67,16 @@ void RocketQuat::getInitializedTrajectory(trajectory_data_t &td)
     td.t = p.final_time;
 }
 
-void RocketQuat::addApplicationConstraints(op::SecondOrderConeProgram &socp,
-                                         state_vector_v_t &,
-                                         input_vector_v_t &U0)
+void RocketQuat::addApplicationConstraints(cvx::OptimizationProblem &socp,
+                                           state_vector_v_t &,
+                                           input_vector_v_t &U0)
 {
-    op::Variable v_X = socp.getVariable("X");
-    op::Variable v_U = socp.getVariable("U");
+    cvx::MatrixX v_X, v_U;
+    socp.getVariable("X", v_X);
+    socp.getVariable("U", v_U);
 
     // Initial state
-    socp.addConstraint(v_X.col(0) == op::Parameter(&p.x_init));
+    socp.addConstraint(cvx::equalTo(v_X.col(0), cvx::dynpar(p.x_init)));
 
     // Final State
     // mass and roll are free
@@ -84,30 +85,30 @@ void RocketQuat::addApplicationConstraints(op::SecondOrderConeProgram &socp,
                      8, 9,
                      11, 12, 13})
     {
-        socp.addConstraint(v_X(i, v_X.cols() - 1) == op::Parameter(&p.x_final(i)));
+        socp.addConstraint(cvx::equalTo(v_X(i, v_X.cols() - 1), cvx::dynpar(p.x_final(i))));
     }
 
     // State Constraints:
     // Mass
-    socp.addConstraint(v_X.row(0) >= op::Parameter(&p.x_final(0)));
+    socp.addConstraint(cvx::greaterThan(v_X.row(0), cvx::dynpar(p.x_final(0))));
 
     // Glide Slope
-    socp.addConstraint(op::norm2(v_X.block(1, 0, 2, v_X.cols()), 0) <=
-                       op::Parameter(&p_dyn.gs_const) * v_X.block(3, 0, 1, v_X.cols()));
+    socp.addConstraint(cvx::lessThan(v_X.block(1, 0, 2, v_X.cols()).colwise().norm(),
+                       cvx::dynpar(p_dyn.gs_const) * v_X.block(3, 0, 1, v_X.cols())));
 
     // Max Tilt Angle
-    socp.addConstraint(op::norm2(v_X.block(8, 0, 2, v_X.cols()), 0) <=
-                       op::Parameter(&p_dyn.tilt_const));
+    socp.addConstraint(cvx::lessThan(v_X.block(8, 0, 2, v_X.cols()).colwise().norm(),
+                       cvx::dynpar(p_dyn.tilt_const)));
 
     // Max Rotation Velocity
-    socp.addConstraint(op::norm2(v_X.block(11, 0, 3, v_X.cols()), 0) <=
-                       op::Parameter(&p.w_B_max));
+    socp.addConstraint(cvx::lessThan(v_X.block(11, 0, 3, v_X.cols()).colwise().norm(),
+                       cvx::dynpar(p.w_B_max)));
 
     // Control Constraints:
     // Final Input
-    socp.addConstraint(v_U.col(v_U.cols() - 1)(0) == 0.);
-    socp.addConstraint(v_U.col(v_U.cols() - 1)(1) == 0.);
-    socp.addConstraint(v_U.col(v_U.cols() - 1)(3) == 0.);
+    socp.addConstraint(cvx::equalTo(v_U.col(v_U.cols() - 1)(0), 0.));
+    socp.addConstraint(cvx::equalTo(v_U.col(v_U.cols() - 1)(1), 0.));
+    socp.addConstraint(cvx::equalTo(v_U.col(v_U.cols() - 1)(3), 0.));
 
     if (p.exact_minimum_thrust)
     {
@@ -115,31 +116,30 @@ void RocketQuat::addApplicationConstraints(op::SecondOrderConeProgram &socp,
         p_dyn.thrust_const.resize(3, U0.size());
 
         // Linearized Minimum Thrust
-        socp.addConstraint(op::sum(op::Parameter(&p_dyn.thrust_const).cwiseProduct(v_U.topRows(3)), 0) >=
-                           op::Parameter(&p.T_min));
+        socp.addConstraint(cvx::greaterThan(cvx::dynpar(p_dyn.thrust_const).cwiseProduct(v_U.topRows(3)).colwise().sum(),
+                           cvx::dynpar(p.T_min)));
     }
     else
     {
         // Simplified Minimum Thrust
-        socp.addConstraint(v_U.row(2) >= op::Parameter(&p.T_min));
+        socp.addConstraint(cvx::greaterThan(v_U.row(2), cvx::dynpar(p.T_min)));
     }
 
     // Maximum Thrust
-    socp.addConstraint(op::norm2(v_U.topRows(3), 0) <= op::Parameter(&p.T_max));
+    socp.addConstraint(cvx::lessThan(v_U.topRows(3).colwise().norm(), cvx::dynpar(p.T_max)));
 
     // Maximum Gimbal Angle
-    socp.addConstraint(op::norm2(v_U.topRows(2), 0) <=
-                       op::Parameter(&p_dyn.gimbal_const) * v_U.row(2));
+    socp.addConstraint(cvx::lessThan(v_U.topRows(2).colwise().norm(),
+                       cvx::dynpar(p_dyn.gimbal_const) * v_U.row(2)));
 
     if (p.enable_roll_control)
     {
-        socp.addConstraint(v_U.row(3) <= op::Parameter(&p.t_max));
-        socp.addConstraint(v_U.row(3) >= -op::Parameter(&p.t_max));
+        socp.addConstraint(cvx::box(-cvx::dynpar(p.t_max), v_U.row(3),cvx::dynpar(p.t_max)));
     }
     else
     {
-        socp.addConstraint(v_X.row(13) == 0.);
-        socp.addConstraint(v_U.row(3) == 0.);
+        socp.addConstraint(cvx::equalTo(v_X.row(13) , 0.));
+        socp.addConstraint(cvx::equalTo(v_U.row(3) , 0.));
     }
 }
 

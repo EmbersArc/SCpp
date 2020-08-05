@@ -1,7 +1,7 @@
 #pragma once
 
 #include "activeModel.hpp"
-#include "socpInterface.hpp"
+#include "epigraph.hpp"
 #include "parameterServer.hpp"
 
 namespace scpp
@@ -96,9 +96,9 @@ private:
     trajectory_data_t td;
     std::vector<trajectory_data_t> all_td;
 
-    op::SecondOrderConeProgram socp;
+    cvx::OptimizationProblem socp;
 
-    std::unique_ptr<op::Solver> solver;
+    std::unique_ptr<cvx::eicos::EiCOSSolver> solver;
 };
 
 } // namespace scpp

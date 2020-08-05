@@ -1,7 +1,6 @@
 #include <experimental/filesystem>
 
 #include "SCAlgorithm.hpp"
-#include "SCvxAlgorithm.hpp"
 #include "timing.hpp"
 #include "commonFunctions.hpp"
 
