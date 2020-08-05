@@ -63,14 +63,13 @@ set(SCPP_SOURCES
     scpp_core/src/SCAlgorithm.cpp
     scpp_core/src/SCvxProblem.cpp
     scpp_core/src/SCvxAlgorithm.cpp
-    # scpp_core/src/LQR.cpp
-    # scpp_core/src/LQRAlgorithm.cpp
-    # scpp_core/src/LQRTracker.cpp
+    scpp_core/src/LQR.cpp
+    scpp_core/src/LQRAlgorithm.cpp
+    scpp_core/src/LQRTracker.cpp
 
     # models
-    # scpp_models/src/rocketEuler.cpp
     scpp_models/src/rocket2d.cpp
-    # scpp_models/src/rocketQuat.cpp
+    scpp_models/src/rocketQuat.cpp
 )
 
 add_library(scpp SHARED ${SCPP_SOURCES})

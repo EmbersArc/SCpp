@@ -99,10 +99,6 @@ bool SCAlgorithm::iterate()
 
     readSolution();
 
-    // check feasibility
-    timer = tic();
-    print("{:<{}}{:.2f}ms\n", "Time, solution check:", 50, toc(timer));
-
     cvx::Scalar v_norm1_nu;
     socp.getVariable("norm1_nu", v_norm1_nu);
     cvx::VectorX v_delta;

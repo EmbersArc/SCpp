@@ -4,7 +4,6 @@
 #include <random>
 
 #include "systemModel.hpp"
-#include "socpInterface.hpp"
 #include "parameterServer.hpp"
 #include "common.hpp"
 
