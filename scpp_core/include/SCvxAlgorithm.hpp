@@ -98,7 +98,7 @@ private:
 
     cvx::OptimizationProblem socp;
 
-    std::unique_ptr<op::Solver> solver;
+    std::unique_ptr<cvx::eicos::EiCOSSolver> solver;
 };
 
 } // namespace scpp
