@@ -7,7 +7,7 @@ enum dimensions
 {
     STATE_DIM = 6,
     INPUT_DIM = 2,
-    PARAM_DIM = 0
+    PARAM_DIM = 6
 };
 
 }

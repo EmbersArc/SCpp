@@ -30,7 +30,7 @@ public:
 
     void getOperatingPoint(state_vector_t &x, input_vector_t &u) override;
 
-    void addApplicationConstraints(cvx::OptimizationProblem &socp,
+    void addApplicationConstraints(std::shared_ptr<cvx::OptimizationProblem> socp,
                                    state_vector_v_t &X0,
                                    input_vector_v_t &U0) override;
 
@@ -50,6 +50,9 @@ public:
 
     struct Parameters
     {
+        double m_scale;
+        double r_scale;
+
         double m;
         double J_B;
         Eigen::Vector2d g_I;
@@ -61,7 +64,6 @@ public:
         double tan_gamma_gs;
         double gimbal_max;
         double theta_max;
-        double v_I_max;
         double w_B_max;
 
         double eta_init;

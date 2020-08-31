@@ -69,4 +69,12 @@ std::vector<Eigen::Vector3d> getAccelerationRotatingFrame(const trajectory_data_
     return acc_passenger_b;
 }
 
+std::string getTimeString(){
+    using sc = std::chrono::system_clock ;
+    std::time_t t = sc::to_time_t(sc::now());
+    char buf[20];
+    std::strftime(buf, 20, "%Y_%m_%d_%H_%M_%S", std::localtime(&t));
+    return std::string(buf);
+}
+
 } // namespace scpp

@@ -96,9 +96,9 @@ private:
     trajectory_data_t td;
     std::vector<trajectory_data_t> all_td;
 
-    cvx::OptimizationProblem socp;
+    std::shared_ptr<cvx::OptimizationProblem> socp;
 
-    std::unique_ptr<cvx::eicos::EiCOSSolver> solver;
+    std::unique_ptr<cvx::ecos::ECOSSolver> solver;
 };
 
 } // namespace scpp

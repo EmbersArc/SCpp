@@ -100,9 +100,9 @@ private:
     Eigen::MatrixXi X_indices;
     Eigen::MatrixXi U_indices;
 
-    cvx::OptimizationProblem socp;
+    std::shared_ptr<cvx::OptimizationProblem> socp;
 
-    std::unique_ptr<cvx::eicos::EiCOSSolver> solver;
+    std::unique_ptr<cvx::ecos::ECOSSolver> solver;
 
     bool state_weights_set = false;
     bool input_weights_set = false;

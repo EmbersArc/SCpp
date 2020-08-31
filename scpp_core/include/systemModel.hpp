@@ -73,7 +73,7 @@ public:
      * @param X     Last state trajectory.
      * @param U     Last input trajectory.
      */
-    virtual void addApplicationConstraints(cvx::OptimizationProblem &,
+    virtual void addApplicationConstraints(std::shared_ptr<cvx::OptimizationProblem>,
                                            state_vector_v_t &,
                                            input_vector_v_t &){};
 

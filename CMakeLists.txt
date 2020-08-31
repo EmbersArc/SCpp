@@ -17,8 +17,8 @@ find_package(fmt REQUIRED)
 # SOCP INTERFACE
 message("\n### Configuring Epigraph ###")
 set(ENABLE_OSQP  FALSE)
-set(ENABLE_ECOS  FALSE)
-set(ENABLE_EICOS TRUE)
+set(ENABLE_ECOS  TRUE)
+set(ENABLE_EICOS FALSE)
 add_subdirectory(lib/Epigraph)
 
 # CppAD
@@ -70,6 +70,8 @@ set(SCPP_SOURCES
     # models
     scpp_models/src/rocket2d.cpp
     scpp_models/src/rocketQuat.cpp
+
+    scpp/src/sc_dynamic.cpp
 )
 
 add_library(scpp SHARED ${SCPP_SOURCES})

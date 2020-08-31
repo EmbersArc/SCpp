@@ -2,40 +2,40 @@
 g_I
 {
     (0)   0.0
-    (1)   -1.0
+    (1)   -9.81 ; m/s²
 }
 
-J_B         1e-2
+J_B     5000000.
 
 r_T_B
 {
     (0)   0.
-    (1)   -1e-2
+    (1)   -15.
 }
 
-m       2.
+m       24000.
 
 ; ----- initial values -----
 ; position
 r_init
 {
-    (0)    2.
-    (1)    4.
+    (0)    -200.
+    (1)    800.
 }
 ; velocity
 v_init
 {
     (0)     0.
-    (1)     -2.
+    (1)     -100.
 }
 ; orientation
-eta_init    30.
+eta_init    -20.
 
 ; angular velocity
 w_init      0.
 
 ; ----- final values -----
-final_time      4.5
+final_time      12.
 ; position
 r_final
 {
@@ -45,8 +45,8 @@ r_final
 ; velocity
 v_final
 {
-    (0)     0
-    (1)     0
+    (0)     0.
+    (1)     -1.
 }
 ; orientation
 eta_final   0.
@@ -59,15 +59,13 @@ constrain_initial_final     true
 add_slack_variables         false
 
 ; thrust
-T_min       1.
-T_max       5.
+T_min       10000.
+T_max       420000.
 ; maximum gimbal
-gimbal_max  10.
+gimbal_max  15.
 ; glideslope angle
 gamma_gs    45.
 ; maximum angle
 theta_max   60.
-; maximum velocity
-v_I_max     3.
 ; maximum angluar velocity
-w_B_max     120.
+w_B_max     20.

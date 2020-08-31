@@ -1,12 +1,12 @@
 free_final_time                     true
 interpolate_input                   true
 
-K                                   40
+K                                   25
 
-nondimensionalize                   false
+nondimensionalize                   true
 
 weight_time                         1.
-weight_trust_region_time            10.
+weight_trust_region_time            1.
 weight_trust_region_trajectory      1.
 weight_virtual_control              1000.
 

@@ -31,7 +31,7 @@ public:
 
     void getInitializedTrajectory(trajectory_data_t &td) override;
 
-    void addApplicationConstraints(cvx::OptimizationProblem &socp,
+    void addApplicationConstraints(std::shared_ptr<cvx::OptimizationProblem> socp,
                                    state_vector_v_t &X0,
                                    input_vector_v_t &U0) override;
 

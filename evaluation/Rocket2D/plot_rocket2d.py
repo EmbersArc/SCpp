@@ -7,9 +7,8 @@ figures_i = 0
 figures_N = 100
 FOLDER = ""
 
-rocket_length = 0.2
-thrust_length = 0.1
-
+rocket_length = 20
+thrust_length = 20
 
 def my_plot(fig):
     global figures_i

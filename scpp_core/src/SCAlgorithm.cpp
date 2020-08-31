@@ -11,250 +11,245 @@ using std::vector;
 namespace scpp
 {
 
-SCAlgorithm::SCAlgorithm(Model::ptr_t model)
-{
-    this->model = model;
-    loadParameters();
-
-    all_td.reserve(max_iterations);
-}
-
-void SCAlgorithm::loadParameters()
-{
-    ParameterServer param(model->getParameterFolder() + "/SC.info");
-
-    param.loadScalar("K", K);
-
-    param.loadScalar("free_final_time", free_final_time);
-
-    param.loadScalar("nondimensionalize", nondimensionalize);
-
-    param.loadScalar("delta_tol", delta_tol);
-    param.loadScalar("max_iterations", max_iterations);
-    param.loadScalar("nu_tol", nu_tol);
-
-    param.loadScalar("weight_time", weight_time);
-    param.loadScalar("weight_virtual_control", weight_virtual_control);
-    param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
-
-    param.loadScalar("interpolate_input", interpolate_input);
-
-    if (free_final_time)
+    SCAlgorithm::SCAlgorithm(Model::ptr_t model)
     {
-        param.loadScalar("weight_trust_region_time", weight_trust_region_time);
-    }
-}
-
-void SCAlgorithm::initialize()
-{
-    print("Computing dynamics.\n");
-    const double timer_dynamics = tic();
-    model->initializeModel();
-    print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
-
-    dd.initialize(K, interpolate_input, free_final_time);
-
-    td.initialize(K, interpolate_input);
-
-    socp = buildSCProblem(weight_time, weight_trust_region_time,
-                          weight_trust_region_trajectory, weight_virtual_control,
-                          td, dd);
-    model->addApplicationConstraints(socp, td.X, td.U);
-    solver = std::make_unique<cvx::eicos::EiCOSSolver>(socp);
-}
-
-bool SCAlgorithm::iterate()
-{
-    // discretize
-    const double timer_iteration = tic();
-    double timer = tic();
-    discretization::multipleShooting(model, td, dd);
-    print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
-
-    // solve the problem
-    print("\n");
-    print("Solving problem.\n");
-    timer = tic();
-    const bool success = solver->solve(false);
-    print("Solver message:\n");
-    print("> {}\n", solver->getResultString());
-    print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
-    print("\n");
-
-    timer = tic();
-    std::vector<bool> defects = calculateDefects();
-    print("{:<{}}{:.2f}ms\n", "Time, defects:", 50, toc(timer));
-    print("Defect pattern:\n");
-    for (bool defect : defects)
-    {
-        print("{}", defect ? "x" : "-");
-    }
-    print("\n\n");
-
-    if (not success)
-    {
-        print("Solver failed to find a solution. Terminating.\n");
-        std::terminate();
-    }
-
-    readSolution();
-
-    cvx::Scalar v_norm1_nu;
-    socp.getVariable("norm1_nu", v_norm1_nu);
-    cvx::VectorX v_delta;
-    socp.getVariable("delta", v_delta);
-    cvx::Scalar v_delta_sigma;
-    socp.getVariable("norm1_nu", v_delta_sigma);
-
-    double norm1_nu = eval(v_norm1_nu);
-    double sum_delta = eval(v_delta).sum();
-    double delta_sigma = eval(v_delta_sigma);
-
-    if (norm1_nu < nu_tol)
-    {
-        weight_trust_region_trajectory *= 2.;
-    }
-
-    // print iteration summary
-    print("\n");
-    print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, norm1_nu);
-    if (free_final_time)
-    {
-        print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
-    }
-    print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, sum_delta);
-
-    print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
-
-    print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
-
-    // check for convergence
-    return sum_delta < delta_tol and norm1_nu < nu_tol;
-}
-
-void SCAlgorithm::solve(bool warm_start)
-{
-    print("Solving model {}\n", Model::getModelName());
-
-    if (nondimensionalize)
-        model->nondimensionalize();
-
-    if (warm_start)
-    {
-        if (nondimensionalize)
-            model->nondimensionalizeTrajectory(td);
-    }
-    else
-    {
+        this->model = model;
         loadParameters();
-        model->getInitializedTrajectory(td);
+
+        all_td.reserve(max_iterations);
     }
 
-    model->updateModelParameters();
-
-    const double timer_total = tic();
-
-    size_t iteration = 0;
-    bool converged = false;
-
-    all_td.push_back(td);
-
-    while (iteration < max_iterations and not converged)
+    void SCAlgorithm::loadParameters()
     {
-        iteration++;
+        ParameterServer param(model->getParameterFolder() + "/SC.info");
 
-        print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
-        converged = iterate();
+        param.loadScalar("K", K);
+
+        param.loadScalar("free_final_time", free_final_time);
+
+        param.loadScalar("nondimensionalize", nondimensionalize);
+
+        param.loadScalar("delta_tol", delta_tol);
+        param.loadScalar("max_iterations", max_iterations);
+        param.loadScalar("nu_tol", nu_tol);
+
+        param.loadScalar("weight_time", weight_time);
+        param.loadScalar("weight_virtual_control", weight_virtual_control);
+        param.loadScalar("weight_trust_region_trajectory", weight_trust_region_trajectory);
+
+        param.loadScalar("interpolate_input", interpolate_input);
+
+        if (free_final_time)
+        {
+            param.loadScalar("weight_trust_region_time", weight_trust_region_time);
+        }
+    }
+
+    void SCAlgorithm::initialize()
+    {
+        print("Computing dynamics.\n");
+        const double timer_dynamics = tic();
+        model->initializeModel();
+        print("{:<{}}{:.2f}ms\n", "Time, dynamics:", 50, toc(timer_dynamics));
+
+        dd.initialize(K, interpolate_input, free_final_time);
+
+        td.initialize(K, interpolate_input);
+
+        socp = buildSCProblem(weight_time, weight_trust_region_time,
+                              weight_trust_region_trajectory, weight_virtual_control,
+                              td, dd);
+        model->addApplicationConstraints(socp, td.X, td.U);
+        solver = std::make_unique<cvx::ecos::ECOSSolver>(*socp);
+    }
+
+    bool SCAlgorithm::iterate()
+    {
+        // discretize
+        const double timer_iteration = tic();
+        double timer = tic();
+        discretization::multipleShooting(model, td, dd);
+        print("{:<{}}{:.2f}ms\n", "Time, discretization:", 50, toc(timer));
+
+        // solve the problem
+        print("\n");
+        print("Solving problem.\n");
+        timer = tic();
+        const bool success = solver->solve(false);
+        print("Solver message:\n");
+        print("> {}\n", solver->getResultString());
+        print("{:<{}}{:.2f}ms\n", "Time, solver:", 50, toc(timer));
+        print("\n");
+
+        timer = tic();
+        std::vector<bool> defects = calculateDefects();
+        print("{:<{}}{:.2f}ms\n", "Time, defects:", 50, toc(timer));
+        print("Defect pattern:\n");
+        for (bool defect : defects)
+        {
+            print("{}", defect ? "x" : "-");
+        }
+        print("\n\n");
+
+        if (not success)
+        {
+            print("Solver failed to find a solution. Terminating.\n");
+            std::terminate();
+        }
+
+        readSolution();
+
+        double norm1_nu;
+        socp->getVariableValue("norm1_nu", norm1_nu);
+
+        Eigen::VectorXd delta;
+        socp->getVariableValue("delta", delta);
+        double sum_delta = delta.sum();
+
+        double delta_sigma;
+        socp->getVariableValue("delta_sigma", delta_sigma);
+
+        if (norm1_nu < nu_tol)
+        {
+            weight_trust_region_trajectory *= 2.;
+        }
+
+        // print iteration summary
+        print("\n");
+        print("{:<{}}{: .4f}\n", "Norm Virtual Control", 50, norm1_nu);
+        if (free_final_time)
+        {
+            print("{:<{}}{: .4f}\n", "Time Trust Region Delta", 50, delta_sigma);
+        }
+        print("{:<{}}{: .4f}\n\n", "Trajectory Trust Region Delta", 50, sum_delta);
+
+        print("{:<{}}{: .4f}s\n\n", "Trajectory Time", 50, td.t);
+
+        print("{:<{}}{:.2f}ms\n\n", "Time, iteration:", 50, toc(timer_iteration));
+
+        // check for convergence
+        return sum_delta < delta_tol and norm1_nu < nu_tol;
+    }
+
+    void SCAlgorithm::solve(bool warm_start)
+    {
+        print("Solving model {}\n", Model::getModelName());
+
+        if (nondimensionalize)
+            model->nondimensionalize();
+
+        if (warm_start)
+        {
+            if (nondimensionalize)
+                model->nondimensionalizeTrajectory(td);
+        }
+        else
+        {
+            loadParameters();
+            model->getInitializedTrajectory(td);
+        }
+
+        model->updateModelParameters();
+
+        const double timer_total = tic();
+
+        size_t iteration = 0;
+        bool converged = false;
 
         all_td.push_back(td);
-    }
 
-    print("{:=^{}}\n\n", "", 60);
-
-    if (converged)
-    {
-        print("Converged after {} iterations.\n\n", iteration);
-    }
-    else
-    {
-        print("No convergence after {} iterations.\n\n", max_iterations);
-    }
-
-    if (nondimensionalize)
-    {
-        model->redimensionalize();
-        model->updateModelParameters();
-        model->redimensionalizeTrajectory(td);
-    }
-    print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
-}
-
-void SCAlgorithm::readSolution()
-{
-    if (free_final_time)
-    {
-        cvx::Scalar v_sigma;
-        socp.getVariable("sigma", v_sigma);
-        td.t = eval(v_sigma);
-    }
-
-    cvx::MatrixX v_X, v_U;
-    socp.getVariable("X", v_X);
-    socp.getVariable("U", v_U);
-    Eigen::MatrixXd X = eval(v_X);
-    Eigen::MatrixXd U = eval(v_U);
-
-    for (size_t k = 0; k < td.n_X(); k++)
-    {
-        td.X[k] = X.col(k);
-    }
-    for (size_t k = 0; k < td.n_U(); k++)
-    {
-        td.U[k] = U.col(k);
-    }
-}
-
-void SCAlgorithm::getSolution(trajectory_data_t &trajectory) const
-{
-    trajectory = td;
-}
-
-void SCAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectories)
-{
-    if (nondimensionalize)
-    {
-        auto all_td_redim = all_td;
-        for (auto &td_redim : all_td_redim)
+        while (iteration < max_iterations and not converged)
         {
-            model->redimensionalizeTrajectory(td_redim);
+            iteration++;
+
+            print("{:=^{}}\n", format("<Iteration {}>", iteration), 60);
+            converged = iterate();
+
+            all_td.push_back(td);
         }
-        all_trajectories = all_td_redim;
+
+        print("{:=^{}}\n\n", "", 60);
+
+        if (converged)
+        {
+            print("Converged after {} iterations.\n\n", iteration);
+        }
+        else
+        {
+            print("No convergence after {} iterations.\n\n", max_iterations);
+        }
+
+        if (nondimensionalize)
+        {
+            model->redimensionalize();
+            model->updateModelParameters();
+            model->redimensionalizeTrajectory(td);
+        }
+        print("{:<{}}{:.2f}ms\n", "Time, total:", 50, toc(timer_total));
     }
-    else
+
+    void SCAlgorithm::readSolution()
     {
-        all_trajectories = all_td;
+        if (free_final_time)
+        {
+            socp->getVariableValue("sigma", td.t);
+        }
+
+        Eigen::MatrixXd X, U;
+        socp->getVariableValue("X", X);
+        socp->getVariableValue("U", U);
+
+        for (size_t k = 0; k < td.n_X(); k++)
+        {
+            td.X[k] = X.col(k);
+        }
+        for (size_t k = 0; k < td.n_U(); k++)
+        {
+            td.U[k] = U.col(k);
+        }
     }
-}
 
-std::vector<bool> SCAlgorithm::calculateDefects()
-{
-    std::vector<bool> pattern;
-
-    for (size_t k = 0; k < K - 1; k++)
+    void SCAlgorithm::getSolution(trajectory_data_t &trajectory) const
     {
-        Model::state_vector_t x = td.X.at(k);
-        const Model::input_vector_t u0 = td.U.at(k);
-        const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
-
-        const double dt = td.t / (K - 1);
-        simulate(model, dt, u0, u1, x);
-
-        const double defect = (x - td.X.at(k + 1)).squaredNorm();
-
-        pattern.push_back(defect > nu_tol);
+        trajectory = td;
     }
 
-    return pattern;
-}
+    void SCAlgorithm::getAllSolutions(std::vector<trajectory_data_t> &all_trajectories)
+    {
+        if (nondimensionalize)
+        {
+            auto all_td_redim = all_td;
+            for (auto &td_redim : all_td_redim)
+            {
+                model->redimensionalizeTrajectory(td_redim);
+            }
+            all_trajectories = all_td_redim;
+        }
+        else
+        {
+            all_trajectories = all_td;
+        }
+    }
+
+    std::vector<bool> SCAlgorithm::calculateDefects()
+    {
+        std::vector<bool> pattern;
+
+        for (size_t k = 0; k < K - 1; k++)
+        {
+            Model::state_vector_t x = td.X.at(k);
+            const Model::input_vector_t u0 = td.U.at(k);
+            const Model::input_vector_t u1 = interpolate_input ? td.U.at(k + 1) : u0;
+
+            const double dt = td.t / (K - 1);
+            simulate(model, dt, u0, u1, x);
+
+            const double defect = (x - td.X.at(k + 1)).squaredNorm();
+
+            pattern.push_back(defect > nu_tol);
+        }
+
+        return pattern;
+    }
 
 } // namespace scpp
